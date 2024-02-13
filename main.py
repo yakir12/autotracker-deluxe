@@ -57,7 +57,7 @@ dir_analysis = dir + 'analysis_data/'
 
 
 if not os.path.exists('data/' + input_str1 + '/'):
-    os.mkdir('data/' + input_str1 + '/')
+    os.makedirs('data/' + input_str1 + '/')
 else:
     pass
 

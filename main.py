@@ -157,7 +157,9 @@ class FileCopyGUI2:
     def copy_file(self):
         global format_calibration
         source_path = self.source_entry.get()
-        dest_path = dir
+        filetype = source_path.split(".")[-1]
+        filename = "raw." + filetype
+        dest_path = dir + filename
         shutil.copy(source_path, dest_path)
         source_filename, source_ext = os.path.splitext(source_path)
         format_raw = source_ext[1:]

@@ -7,6 +7,9 @@ assignees: ''
 
 ---
 
+**Software branch**
+Which branch are you using?
+
 **Description**
 A clear and concise description of what the bug is.
 

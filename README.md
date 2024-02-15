@@ -35,8 +35,8 @@ You will need to do this every time you want to use the software.
 
 #### MacOS
 Open Finder and find the code folder you just downloaded.
-Hold control (command) and click on the folder, then select
-'Open in Terminal'.
+Hold control and click on the folder, then select
+'Services' -> 'New Terminal at Folder'.
 
 A terminal window should open.
 
@@ -56,6 +56,7 @@ In the terminal, run:
 
 and press enter. You should only need to do this the first time you download the software.
 
+---
 #### (Optional) Using a virtual environment
 You may want to use a [virtual environment](https://docs.python.org/3/library/venv.html) for sequestration or testing. This creates a sandboxed python environment where modifications will not interact with your main python installation.
 
@@ -83,6 +84,7 @@ You can deactivate the environment using:
 
 You can use [Anaconda](https://www.anaconda.com/download) to achieve the same effect if you know what you're doing.
 
+---
 
 ## Usage instructions
 

@@ -5,13 +5,26 @@ from time import time as timer
 
 # create checkerboard pattern
 def make_checkerboard(n_rows, n_columns, square_size):
+    """
+    Create checkerboard image with one pixel per millimetre of world space.
 
+    :param n_rows: The number of rows in the pattern.
+    :param n_columns: The number of columns in the pattern.
+    :param square_size: The size of each checkerboard square in mm.
+    :return: The checkerboard image and a tuple storing the checkerboard size (-1 in each dim)    
+    """
+    # Create binarised checkerboard
     rows_grid, columns_grid = np.meshgrid(range(n_rows), range(n_columns), indexing='ij')
     high_res_checkerboard = np.mod(rows_grid, 2) + np.mod(columns_grid, 2) == 1
+
+    # Create block matrix at full resolution (1px/mm).
     square = np.ones((square_size,square_size))
     checkerboard = np.kron(high_res_checkerboard, square)
 
+    # CV docs suggest this should be the number of inner corners
+    # per dimension
     checkerboard_size = (n_columns-1, n_rows-1)
+
 
     return checkerboard, checkerboard_size
 
@@ -21,7 +34,7 @@ def calib(dir, format_calibration, checkerboard, checkerboard_size):
     path = dir + 'calibration' + '.' + format_calibration
 
     def frame_capture(calib_frame, checkerboard, checkerboard_size):
-
+        
         calib_obj_bw = 255 - np.uint8(checkerboard)
         ret_obj, corners_obj = cv2.findChessboardCorners(calib_obj_bw, checkerboard_size, None)
 
@@ -29,11 +42,13 @@ def calib(dir, format_calibration, checkerboard, checkerboard_size):
 
         # Find the chess board corners
         for i in range(1):
+            # ret_img should be true on success
             ret_img, corners_img = cv2.findChessboardCorners(calib_frame_gray, checkerboard_size,  cv2.CALIB_CB_ADAPTIVE_THRESH)
             if ret_img == True:
                 break
             else:
                 calib_frame_gray = 255 - np.uint8(calib_frame_gray)
+
 
         return ret_img, corners_obj, corners_img
 

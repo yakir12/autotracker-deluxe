@@ -74,9 +74,10 @@ def calib(dir, format_calibration, checkerboard, checkerboard_size):
             start = timer()
             cv2.putText(frame, 'Press p to freeze frame and view options, q to quit', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
             cv2.imshow('frame',frame)
+            cv2.setTrackbarPos('capture','frame', int(cap.get(cv2.CAP_PROP_POS_FRAMES)))
 
             if cv2.waitKey(1) & 0xFF == ord('p'):
-                cv2.setTrackbarPos('capture','frame', int(cap.get(cv2.CAP_PROP_POS_FRAMES)))
+                
                 cap.set(cv2.CAP_PROP_POS_FRAMES,cv2.getTrackbarPos('capture','frame'))
                 frame = cap.read()[1]
                 cv2.putText(frame, 'Press p to detect checkerboard corners', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)

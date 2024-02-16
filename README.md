@@ -95,7 +95,7 @@ Open the code folder in the terminal as you did during the installation process 
    
    `$: python main.py` 
    
-   A window should open requesting user information.
+   A window should open requesting user information. (This may take a moment. Look for a small window.)
 2. Enter a Username and Session ID. For example 'Elin' and '2023-02-09_beetle01'.
 3. Click Submit, then close the window.
 4. A new window should open asking you to select a calibraiton video. Click 'Browse'.

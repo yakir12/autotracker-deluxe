@@ -113,7 +113,9 @@ class FileCopyGUI:
     def copy_file(self):
         global format_calibration
         source_path = self.source_entry.get()
-        dest_path = dir
+        filetype = source_path.split(".")[-1]
+        filename = "calibration." + filetype
+        dest_path = dir + filename
         shutil.copy(source_path, dest_path)
         source_filename, source_ext = os.path.splitext(source_path)
         format_calibration = source_ext[1:]
@@ -219,8 +221,8 @@ class Application(tk.Frame):
 
     def function0_call(self):
         checkerboard_window = tk.Toplevel()
-        checkerboard_window.geometry('400x150+500+200')
-        def_params(master=checkerboard_window)
+        checkerboard_window.geometry('400x300+500+200')
+        def_params(master=checkerboard_window) # Class instantiation
 
 
     def function1_call(self):
@@ -312,6 +314,21 @@ class def_params(tk.Frame):
         self.pack()
         self.create_widgets()
 
+    def __custom_dimension_input_validation(self, input):
+        """
+        Validate custom input for checkerboard dimensions.
+        :param input: The complete contents of the input Entry.
+        :return: True for valid Entry contents.
+        """
+
+        # Check for validity. The input is the full string in the
+        # Entry, so the empty string must be valid to allow the user
+        # to clear the box.
+        if input.isdigit() or input == '':
+            return True
+        
+        return False
+
     def create_widgets(self):
         self.function_label = tk.Label(self, text="Select a checkerboard:")
         self.function_label.pack()
@@ -323,6 +340,29 @@ class def_params(tk.Frame):
         self.function1.pack(anchor="w")
         self.function1 = tk.Radiobutton(self, text="Checkerboard 3 (6 by 9)", variable=self.function_var, value="Checkerboard 3")
         self.function1.pack(anchor="w")
+
+        #
+        # Add custom option 
+        #
+        self.rbt_custom_selection = tk.Radiobutton(self, text='Custom dimensions', variable=self.function_var, value='Custom')
+        self.rbt_custom_selection.pack(anchor='w')
+        
+        self.lbl_custom_width = tk.Label(self, text='Custom columns (>3)')
+        self.lbl_custom_width.pack(anchor='w')
+
+        self.ent_custom_width = tk.Entry(
+            self, 
+            validate='key', 
+            validatecommand=(self.register(self.__custom_dimension_input_validation), '%P'))
+        self.ent_custom_width.pack(anchor='w')
+
+        self.lbl_custom_height = tk.Label(self, text='Custom rows (>3)')
+        self.lbl_custom_height.pack(anchor='w')
+        self.ent_custom_height = tk.Entry(
+            self, 
+            validate='key', 
+            validatecommand=(self.register(self.__custom_dimension_input_validation), '%P'))
+        self.ent_custom_height.pack(anchor='w')
 
         self.function2 = tk.Label(self, text="Enter checkerboard size (mm):")
         self.function2.pack(anchor="w")
@@ -356,6 +396,22 @@ class def_params(tk.Frame):
             n_columns = 9
             # square_size = checkerboard_size_entry
             print("\nCheckerboard 3 selected!\nCheckerboard size:",square_size,'mm')
+
+        elif selected_function == "Custom":
+            n_rows = int(self.ent_custom_height.get())
+            n_columns = int(self.ent_custom_width.get())
+            if n_rows <= 3:
+                print("error: too few rows ({})".format(n_rows))
+                return
+            if n_columns <= 3: 
+                print("error: too few columns ({})".format(n_columns))                 
+                return
+
+            print("Custom checkerboard dimension selected.")
+            print("Dimensions: {} x {}".format(n_columns, n_rows))
+            print("Square size: {}mm".format(square_size))
+
+            
 
         n_rows = np.array(n_rows)
         n_columns = np.array(n_columns)

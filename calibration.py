@@ -67,62 +67,70 @@ def calib(dir, format_calibration, checkerboard, checkerboard_size):
     objpoints = []
     extrinsic_calib_frame_id = 0
 
-    while cap.isOpened():
-        success, frame = cap.read()
 
+    while cap.isOpened() and cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
+        success, frame = cap.read()
+        
         if success:
             start = timer()
             cv2.putText(frame, 'Press p to freeze frame and view options, q to quit', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
             cv2.imshow('frame',frame)
             cv2.setTrackbarPos('capture','frame', int(cap.get(cv2.CAP_PROP_POS_FRAMES)))
 
-            if cv2.waitKey(1) & 0xFF == ord('p'):
-                
+            kp = cv2.waitKey(1)
+            if kp == ord('p'):
                 cap.set(cv2.CAP_PROP_POS_FRAMES,cv2.getTrackbarPos('capture','frame'))
                 frame = cap.read()[1]
                 cv2.putText(frame, 'Press p to detect checkerboard corners', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
                 cv2.imshow('frame', frame)
 
-                if cv2.waitKey(0) & 0xFF == ord('p'):
-                    # frame = cv2.detailEnhance(frame, sigma_s=10, sigma_r=0.2)
-                    ret_img, corners_obj, corners_img = frame_capture(frame, checkerboard, checkerboard_size)
+                while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
+                    # Cannot use quit key while paused.
+                    if cv2.waitKey(1) == ord('p'):  
+                        # frame = cv2.detailEnhance(frame, sigma_s=10, sigma_r=0.2)
+                        ret_img, corners_obj, corners_img = frame_capture(frame, checkerboard, checkerboard_size)
 
-                    if ret_img == True:
-                        corners_obj = np.array(corners_obj)
-                        corners_obj = corners_obj.reshape(corners_obj.shape[0],corners_obj.shape[2])
-                        temp = np.zeros( (corners_obj.shape[0], corners_obj.shape[1]+1) )
-                        temp[:,:-1] = corners_obj
-                        corners_obj = temp
+                        if ret_img == True:
+                            corners_obj = np.array(corners_obj)
+                            corners_obj = corners_obj.reshape(corners_obj.shape[0],corners_obj.shape[2])
+                            temp = np.zeros( (corners_obj.shape[0], corners_obj.shape[1]+1) )
+                            temp[:,:-1] = corners_obj
+                            corners_obj = temp
 
-                        corners_img = np.array(corners_img)
-                        corners_img = corners_img.reshape(corners_img.shape[0],corners_img.shape[2])
+                            corners_img = np.array(corners_img)
+                            corners_img = corners_img.reshape(corners_img.shape[0],corners_img.shape[2])
 
-                        objpoints.append([corners_obj])
-                        imgpoints.append([corners_img])
+                            objpoints.append([corners_obj])
+                            imgpoints.append([corners_img])
 
-                        # Draw and display the corners
-                        cv2.drawChessboardCorners(frame, checkerboard_size, corners_img, ret_img)
-                        cv2.putText(frame, 'Press p to detect checkerboard corners', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
-                        cv2.putText(frame, 'Press p to proceed', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
-                        cv2.imshow('frame', frame)
-                        frame_test = frame
-
-                        if cv2.waitKey(0) & 0xFF == ord('p'):
-                            cv2.putText(frame, 'Press p to proceed', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
-                            cv2.putText(frame, 'Press o to set current frame as ground frame, spacebar to skip and proceed', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
+                            # Draw and display the corners
+                            cv2.drawChessboardCorners(frame, checkerboard_size, corners_img, ret_img)
+                            # cv2.putText(frame, 'Press p to detect checkerboard corners', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+                            cv2.putText(frame, 'Press o to set current frame as ground frame and proceed, press p to skip', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
                             cv2.imshow('frame', frame)
-                            if cv2.waitKey(0) & 0xFF == ord('o'):
-                                extrinsic_calib_frame_id = cap.get(cv2.CAP_PROP_POS_FRAMES)
-                                frame_extrinsic = cap.read()[1]
-                                # frame_extrinsic = cv2.detailEnhance(frame_extrinsic, sigma_s=10, sigma_r=0.2)
-                            pass
+                            frame_test = frame
 
+                            while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
+                                kp = cv2.waitKey(1)
+                                if kp == ord('p'):
+                                    #cv2.putText(frame, 'Press p to proceed', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+                                    #cv2.putText(frame, 'Press o to set current frame as ground frame, spacebar to skip and proceed', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
+                                    #cv2.imshow('frame', frame)
+                                    break
+                                elif kp == ord('o'):
+                                    extrinsic_calib_frame_id = cap.get(cv2.CAP_PROP_POS_FRAMES)
+                                    frame_extrinsic = cap.read()[1]
+                                    # frame_extrinsic = cv2.detailEnhance(frame_extrinsic, sigma_s=10, sigma_r=0.2)
+                                    break
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+                            break # If we reach here then break out of the chessboard detection loop
+                        else:
+                            break
+
+            elif kp == ord('q'):
                 cap.release()
                 cv2.destroyAllWindows()
                 break
-
 
             diff = timer() - start
             while  diff < 1/fps:
@@ -159,8 +167,9 @@ def calib(dir, format_calibration, checkerboard, checkerboard_size):
     frame_dst = cv2.remap(frame_extrinsic, mapx, mapy, interpolation=cv2.INTER_LINEAR)
 
     cv2.imshow('frame', frame_dst)
-    if cv2.waitKey(0) & 0xFF == ord('q'):
-        cv2.destroyAllWindows()
+    while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
+        if cv2.waitKey(1) == ord('q'):
+            cv2.destroyAllWindows()
 
     calib_obj_bw = 255 - np.uint8(checkerboard)
     ret_obj, corners_obj = cv2.findChessboardCorners(calib_obj_bw, checkerboard_size, None)

@@ -6,7 +6,7 @@ import shutil
 
 from calibration import make_checkerboard, calib
 from autotrack import autotracker
-#from analysis import analyze
+from analysis import analyze
 
 import cv2
 import numpy as np
@@ -291,16 +291,16 @@ class Application(tk.Frame):
 
     def function4_call(self):
 
-        with open(dir + 'tracking_data/' + 'coordinates' + '.csv', newline='') as csvfile:
+        with open(dir + 'tracking_data/' + 'coordinates'  + '_' + input_str2 + '.csv', newline='') as csvfile:
             r = np.loadtxt(csvfile,delimiter=',')
 
-        with open(dir + 'tracking_data/' + 'time' + '.csv', newline='') as csvfile:
+        with open(dir + 'tracking_data/' + 'time' + '_' + input_str2 + '.csv', newline='') as csvfile:
             tau = np.loadtxt(csvfile,delimiter=',')
 
-        with open(dir + 'tracking_data/' + 'track_split_time' + '.csv', newline='') as csvfile:
+        with open(dir + 'tracking_data/' + 'track_split' + '_' + input_str2 +  '.csv', newline='') as csvfile:
             tau_split = np.loadtxt(csvfile,delimiter=',')
 
-        with open(dir + 'tracking_data/' + 'fps' + '.csv', newline='') as csvfile:
+        with open(dir + 'tracking_data/' + 'fps' + '_' + input_str2 + '.csv', newline='') as csvfile:
             fps = np.loadtxt(csvfile,delimiter=',')
 
         analyze(dir, r, tau, tau_split, fps)

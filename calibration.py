@@ -169,13 +169,15 @@ def calib(dir, format_calibration, checkerboard, checkerboard_size):
     cv2.imshow('frame', frame_dst)
     while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
         if cv2.waitKey(1) == ord('q'):
-            cv2.destroyAllWindows()
+            break
+
+    cv2.destroyAllWindows()
 
     calib_obj_bw = 255 - np.uint8(checkerboard)
     ret_obj, corners_obj = cv2.findChessboardCorners(calib_obj_bw, checkerboard_size, None)
     corners_obj = np.array(corners_obj)
     corners_obj = corners_obj.reshape(corners_obj.shape[0],corners_obj.shape[2])
-    temp = np.zeros((corners_obj.shape[0],corners_obj.shape[1]+1))
+    ftemp = np.zeros((corners_obj.shape[0],corners_obj.shape[1]+1))
     temp[:,:-1] = corners_obj
     corners_obj = temp
     corners_obj = np.float32(corners_obj)

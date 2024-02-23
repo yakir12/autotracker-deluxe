@@ -3,6 +3,7 @@ import numpy as np
 
 from time import time as timer
 
+
 # create checkerboard pattern
 def make_checkerboard(n_rows, n_columns, square_size):
     """
@@ -52,9 +53,15 @@ def calib(dir, format_calibration, checkerboard, checkerboard_size):
 
         return ret_img, corners_obj, corners_img
 
+
+    # 'global' trackbar update context
+    trackbar_external_callback = False    
     def onChange(trackbarValue):
-      cap.set(cv2.CAP_PROP_POS_FRAMES,trackbarValue)
-      cv2.imshow('frame',cap.read()[1])
+      # If trackbar was updated externally (i.e. by the user),
+      # update the capture position and
+      if trackbar_external_callback:
+        cap.set(cv2.CAP_PROP_POS_FRAMES,trackbarValue)          
+        cv2.imshow('frame',cap.read()[1])
 
     cap = cv2.VideoCapture(path)
     length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -75,8 +82,10 @@ def calib(dir, format_calibration, checkerboard, checkerboard_size):
             start = timer()
             cv2.putText(frame, 'Press p to freeze frame and view options, q to quit', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
             cv2.imshow('frame',frame)
-            cv2.setTrackbarPos('capture','frame', int(cap.get(cv2.CAP_PROP_POS_FRAMES)))
-
+            trackbar_external_callback = False
+            cv2.setTrackbarPos('capture', 'frame', int(cap.get(cv2.CAP_PROP_POS_FRAMES)))
+            trackbar_external_callback = True
+           
             kp = cv2.waitKey(1)
             if kp == ord('p'):
                 cap.set(cv2.CAP_PROP_POS_FRAMES,cv2.getTrackbarPos('capture','frame'))

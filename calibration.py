@@ -113,9 +113,12 @@ def calib(dir, format_calibration, checkerboard, checkerboard_size):
                             imgpoints.append([corners_img])
 
                             # Draw and display the corners
+                            # Re-extract the same frame to update the text.
+                            cap.set(cv2.CAP_PROP_POS_FRAMES,cv2.getTrackbarPos('capture','frame'))
+                            frame = cap.read()[1]                            
                             cv2.drawChessboardCorners(frame, checkerboard_size, corners_img, ret_img)
                             # cv2.putText(frame, 'Press p to detect checkerboard corners', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
-                            cv2.putText(frame, 'Press o to set current frame as ground frame and proceed, press p to skip', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
+                            cv2.putText(frame, 'Press o to set current frame as ground frame and proceed, press p to proceed.', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
                             cv2.imshow('frame', frame)
                             frame_test = frame
 

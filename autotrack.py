@@ -132,16 +132,26 @@ def autotracker(dir, track_filename, label, format_track, desired_tracker):
         color_list = (randint(127, 250), randint(127, 250), 0)
         # cv2.destroyAllWindows()
 
+
+        #
+        # Work out median background frame?
+        #
         cap_temp = cap
         frames_temp = []
 
+        # Take ten frames prior to current frame and use these to determine a
+        # median frame  
         for i in range(10):
+            # Set capture position to 0 or position - i, whatever is greater.
             cap_temp.set(cv2.CAP_PROP_POS_FRAMES, max(cap.get(cv2.CAP_PROP_POS_FRAMES)-i, 0))
             ret, frame_temp = cap_temp.read()
             frames_temp.append(frame_temp)
 
         medianFrame = np.median(frames_temp, axis=0).astype(dtype=np.uint8)
 
+        #
+        # Subtract median (background) frame and use this to create a mask.
+        #
         cap = cv2.VideoCapture(input_dir)
         cap.set(cv2.CAP_PROP_POS_FRAMES, start)
 
@@ -155,6 +165,9 @@ def autotracker(dir, track_filename, label, format_track, desired_tracker):
         ROI_init = frame[int(bounding_box[1]):int(bounding_box[1])+int(bounding_box[3]), int(bounding_box[0]):int(bounding_box[0])+int(bounding_box[2])]
         tracker.init(frame, bounding_box)
 
+        #   
+        # Init tracking structures 
+        #
         t_stamp = []
         traj = []
         phi = []
@@ -168,40 +181,69 @@ def autotracker(dir, track_filename, label, format_track, desired_tracker):
         cv2.namedWindow('ROI', cv2.WINDOW_NORMAL)
         # cv2.resizeWindow('ROI', 30, 30)
 
-        # process video
+        #   
+        # Tracking display loop
+        #
         while cap.isOpened():
-
           # cap.set(cv2.CAP_PROP_POS_FRAMES, curr_pos)
           # curr_pos +=1
 
-          if cap.get(cv2.CAP_PROP_POS_FRAMES) >= end:
-              break
+            if cap.get(cv2.CAP_PROP_POS_FRAMES) >= end:
+                break
 
-          success, frame = cap.read()
-          flag = 0
+            # Read frame
+            success, frame = cap.read()
+            flag = 0
 
-          if success:
-            track_success, bbox = tracker.update(frame)
-            point_1 = (int(bbox[0]), int(bbox[1]))
-            point_2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
-            c = (np.array(point_1) + np.array(point_2))/2
+            if success:
+                # Get tracker data
+                track_success, bbox = tracker.update(frame)
 
-            frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            diff_frame = cv2.absdiff(frame_gray, medianFrame_gray)
-            th, diff_frame = cv2.threshold(diff_frame, 25, 255, cv2.THRESH_BINARY)
-            frame_mask = cv2.bitwise_and(frame, frame, mask=diff_frame)
-            ROI = frame_mask[int(bbox[1]):int(bbox[1])+int(bbox[3]), int(bbox[0]):int(bbox[0])+int(bbox[2])]
+                # Determine bbox centre bbox == (x,y,width,height)
+                # Top left
+                point_1 = (int(bbox[0]), int(bbox[1]))
 
-            ROI_gray = cv2.cvtColor(ROI, cv2.COLOR_BGR2GRAY)
-            contours,hierarchy = cv2.findContours(ROI_gray, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-            if len(contours) != 0:
-                for i in range(len(contours)):
-                    if cv2.contourArea(contours[i]) >= 30 and cv2.contourArea(contours[i]) <= 600:
-                        ell = cv2.fitEllipseDirect(contours[i])
-                        cv2.ellipse(ROI,ell,color_list,1)
-                        phi.append((cap.get(cv2.CAP_PROP_POS_FRAMES)/fps,ell[2]))
-                        c = np.array(point_1) + np.array(ell[1])
-                        flag = 1
+                # Bottom right
+                point_2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
+
+                # Midpoint (bbox centre)   
+                c = (np.array(point_1) + np.array(point_2))/2
+
+
+                #
+                # Perform background subtraction on frame
+                #
+                frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                diff_frame = cv2.absdiff(frame_gray, medianFrame_gray)
+                th, diff_frame = cv2.threshold(diff_frame, 25, 255, cv2.THRESH_BINARY)
+
+                # Extract just the beetle in the frame
+                frame_mask = cv2.bitwise_and(frame, frame, mask=diff_frame)
+
+                # Create new frame which is just the bbox (slice out of masked
+                # frame)
+                ROI = frame_mask[int(bbox[1]):int(bbox[1])+int(bbox[3]), int(bbox[0]):int(bbox[0])+int(bbox[2])]
+
+                ROI_gray = cv2.cvtColor(ROI, cv2.COLOR_BGR2GRAY)
+                contours,hierarchy = cv2.findContours(ROI_gray, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+                if len(contours) != 0:
+                    for i in range(len(contours)):
+                        # Select only contours of a specific area (is this 
+                        # resolution dependent?)
+                        if cv2.contourArea(contours[i]) >= 30 and cv2.contourArea(contours[i]) <= 600:
+                            # If area within range, fit ellipse
+                            # I think ellipse is tuple of form (centre, size, angle)
+                            ell = cv2.fitEllipseDirect(contours[i])
+                            cv2.ellipse(ROI,ell,color_list,1)
+                            # Store time and angle
+                            phi.append((cap.get(cv2.CAP_PROP_POS_FRAMES)/fps,ell[2]))
+                            # Store bbox top left + size of ellipse?
+                            c = np.array(point_1) + np.array(ell[1])
+                            flag = 1
+
+                            # If the algorithm detects multiple contours in the 
+                            # size range then it will take the ellipse fit to 
+                            # the last detected contour.
 
             # pause to reinitialize if tracker fails
             if cv2.waitKey(1) & 0xFF == ord('p'):
@@ -316,8 +358,8 @@ def autotracker(dir, track_filename, label, format_track, desired_tracker):
                 break
 
         # no more video frames left
-          else:
-            break
+            else:
+                break
 
         cv2.destroyAllWindows()
 

@@ -256,25 +256,39 @@ class Application(tk.Frame):
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         result = cv2.VideoWriter(dir + 'processed' + '.' + 'mp4', fourcc, fps_processed, frame_size)
 
-        cv2.namedWindow('Processed', cv2.WINDOW_NORMAL)
-
+        total_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        frame_idx = 1
         while cap.isOpened():
             success, frame = cap.read()
-
             if success:
                 frame_dst = cv2.remap(frame, mapx, mapy, interpolation=cv2.INTER_LINEAR)
-
                 frame_height,  frame_width = frame_dst.shape[:2]
                 frame_warp = cv2.warpPerspective(frame_dst, H, (frame_width, frame_height))
-
-                cv2.imshow('Processed',frame_warp)
                 result.write(frame_warp)
-
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
-
+                print("Completed frame {}/{}".format(frame_idx, total_frames))
+                frame_idx += 1
             else:
                 break
+
+        # cv2.namedWindow('Processed', cv2.WINDOW_NORMAL)
+
+        # while cap.isOpened():
+        #     success, frame = cap.read()
+
+        #     if success:
+        #         frame_dst = cv2.remap(frame, mapx, mapy, interpolation=cv2.INTER_LINEAR)
+
+        #         frame_height,  frame_width = frame_dst.shape[:2]
+        #         frame_warp = cv2.warpPerspective(frame_dst, H, (frame_width, frame_height))
+
+        #         cv2.imshow('Processed',frame_warp)
+        #         result.write(frame_warp)
+
+        #         if cv2.waitKey(1) & 0xFF == ord('q'):
+        #             break
+
+        #     else:
+        #         break
 
         cap.release()
         result.release()

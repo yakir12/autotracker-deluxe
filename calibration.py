@@ -36,6 +36,7 @@ def calib(dir, format_calibration, checkerboard, checkerboard_size):
 
     def frame_capture(calib_frame, checkerboard, checkerboard_size):
         
+        # Generate object coordinates (pixel to mm transformation)
         calib_obj_bw = 255 - np.uint8(checkerboard)
         ret_obj, corners_obj = cv2.findChessboardCorners(calib_obj_bw, checkerboard_size, None)
 
@@ -185,6 +186,9 @@ def calib(dir, format_calibration, checkerboard, checkerboard_size):
 
     cv2.destroyAllWindows()
 
+    #
+    # Find 'object' corner locations
+    #    
     calib_obj_bw = 255 - np.uint8(checkerboard)
     ret_obj, corners_obj = cv2.findChessboardCorners(calib_obj_bw, checkerboard_size, None)
     corners_obj = np.array(corners_obj)
@@ -195,6 +199,9 @@ def calib(dir, format_calibration, checkerboard, checkerboard_size):
     corners_obj = np.float32(corners_obj)
     corners_obj = np.array([list(corners_obj)])
 
+    #
+    # Find checkerboard corners in a calibrated image.
+    #
     ret_dst, corners_dst = cv2.findChessboardCorners(cv2.cvtColor(frame_dst, cv2.COLOR_BGR2GRAY), checkerboard_size, cv2.CALIB_CB_ADAPTIVE_THRESH)
     corners_dst = np.squeeze(np.array(corners_dst))
     # corners_dst = corners_dst.reshape(corners_dst.shape[0],corners_dst.shape[2])
@@ -202,7 +209,12 @@ def calib(dir, format_calibration, checkerboard, checkerboard_size):
     corners_dst = np.array([list(corners_dst)])
     # print(corners_dst.shape)
 
-    scale = np.array([0.04/np.mean(np.linalg.norm(np.squeeze(corners_dst)[1:checkerboard_size[0]] - np.squeeze(corners_dst)[0:checkerboard_size[0]-1],axis=1))])
+    # No clue...
+    scale = np.array(
+        [0.04/np.mean(
+            np.linalg.norm(
+                np.squeeze(corners_dst)[1:checkerboard_size[0]] - np.squeeze(corners_dst)[0:checkerboard_size[0]-1], axis=1))]
+        )
     # print(scale)
 
     # Homography
@@ -219,6 +231,8 @@ def calib(dir, format_calibration, checkerboard, checkerboard_size):
     map_dst_bounds = map_dst_bounds[:, np.newaxis, :]
     map_dst_bounds = np.float32(map_dst_bounds)
 
+
+    # Adjusting for camera perspective?
     M = cv2.getPerspectiveTransform(map_dst_bounds, dst_bounds)
     H = np.matmul(M,H)
 

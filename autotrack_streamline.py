@@ -351,21 +351,28 @@ def write_track_to_file(points, filepath):
     :param points: The 2D points which make up the track.
     :param filepath: The filepath for storage.
     """
-    # Generate track file if it doesn't exist
-    if not os.path.isfile(filepath):
-        pd.DataFrame().to_csv(filepath)
-
-    df = pd.read_csv(filepath)
-    columns = df.columns.to_list()
-
-    if len(columns) == 1:
-        # A new file will have one column called 'Unnamed'                
-        track_idx = 0
-    else:
+    # If file doesn't exist, we need to create it
+    new_file = not os.path.isfile(filepath)
+    if new_file:
         # Column names are 'track_i_d' where i is the 
         # index of the track and d is the dimension
         # (x or y)
-        track_idx = int(columns[-1].split("_")[1]) + 1
+        x_label = 'track_0_x'
+        y_label = 'track_0_y'
+        df = pd.DataFrame(columns=[x_label, y_label])
+        df.loc[:, x_label] = [x for (x,_) in points]
+        df.loc[:, y_label] = [y for (_,y) in points]        
+        df.to_csv(filepath)
+        print("New track file created at {}".format(filepath))
+        return 
+
+    #
+    # Otherwise, open file, determine track number, and write new data
+    # to dataframe.
+    #
+    df = pd.read_csv(filepath, index_col=[0])
+    columns = df.columns.to_list()
+    track_idx = int(columns[-1].split("_")[1]) + 1
     
     x_col = 'track_{}_x'.format(track_idx)
     y_col = 'track_{}_y'.format(track_idx)
@@ -375,11 +382,28 @@ def write_track_to_file(points, filepath):
     new_cols = pd.DataFrame(columns=[x_col, y_col])
     new_cols.loc[:, x_col] = xs
     new_cols.loc[:, y_col] = ys
-    print(new_cols)
 
-    # NOT YET WORKING, need to implement ragged join
-    # df = df.join(new_cols)
-    # print(df)
-    # df.to_csv(filepath)
+    # Add new columns to main dataframe.
+    df = ragged_join(df,new_cols)
+    df.to_csv(filepath)
 
-    # print("Track {} added to {}.".format(track_idx, filepath))
+    print("Track {} added to {}.".format(track_idx, filepath))
+
+
+def ragged_join(dfA, dfB):
+    """
+    Implements a ragged horizontal join for dataframes.
+
+    Where two dataframes have different lengths of index, this function will
+    replace the index of the shorter dataframe with that of the longer one, then
+    join the two dataframes and return the new complete dataframe.
+
+    :param dfA: The main dataframe to which you want to add columns
+    :param dfB: The additional columns (also a DataFrame)
+    """
+    # If A longer, reindex B and join onto A
+    if len(dfA.index) > len(dfB.index):
+        return dfA.join(dfB.reindex(index=dfA.index))
+    
+    # If B longer, reindex A and join B onto A.
+    return dfA.reindex(index=dfB.index).join(dfB)

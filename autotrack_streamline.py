@@ -150,12 +150,16 @@ def autotracker(dir,
                                 centroid = np.nan
                                 bbox = None
                         else:
-                            # Save tracks to sane format here!
+                            # Write last track to file
+                            write_track_to_file(centroid_track, working_csv)                            
+
+                            # Reset online tracking info.
                             tracking = False
                             bbox = None
                             centroid = np.nan 
+                            centroid_track = []
 
-                            write_track_to_file(centroid_track, working_csv)
+
 
                             
             elif kp == ord('q'):

@@ -213,7 +213,8 @@ def calib(dir, format_calibration, checkerboard, checkerboard_size):
     scale = np.array(
         [0.04/np.mean(
             np.linalg.norm(
-                np.squeeze(corners_dst)[1:checkerboard_size[0]] - np.squeeze(corners_dst)[0:checkerboard_size[0]-1], axis=1))]
+                np.squeeze(corners_dst)[1:checkerboard_size[0]] - np.squeeze(corners_dst)[0:checkerboard_size[0]-1], 
+                axis=1))]
         )
     # print(scale)
 

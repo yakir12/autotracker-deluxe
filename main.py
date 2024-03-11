@@ -5,8 +5,11 @@ from tkinter import filedialog
 import shutil
 
 from calibration import make_checkerboard, calib
-from autotrack import autotracker
+#from autotrack import autotracker
+from autotrack_streamline import autotracker
 from analysis import analyze
+
+import track_processing as tp
 
 import cv2
 import numpy as np
@@ -177,6 +180,10 @@ root.mainloop()
 
 
 # Calibration, Tracking and Analysis
+
+input_str1 = 'rob'
+input_str2 = 'analysis'
+dir = 'data/{}/{}/'.format(input_str1, input_str2)
 class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
@@ -184,21 +191,42 @@ class Application(tk.Frame):
         self.pack()
         self.create_widgets()
 
+
     def create_widgets(self):
         self.function_label = tk.Label(self, text="a) You are running main.py in the directory Dropbox/Tracking/offline \nb) Run the functions below in order, as the results of a step are used as inputs to successive steps. \nc) The directory structure for data storage and retrieval is [current directory]/data/[user]/[session]/ (if you are looking to access the files) \nd) The results of each step are automatically saved to the above folder when completed, so you can quit and resume from that step at a later time without loss of data. \n\nSelect a function and click Run to proceed:", justify='left')
         self.function_label.pack()
 
-        self.function_var = tk.StringVar(value="0. Define parameters")
-        self.function0 = tk.Radiobutton(self, text="0. Choose checkerboard type", variable=self.function_var, value="0. Define parameters")
-        self.function0.pack(anchor="w")
-        self.function1 = tk.Radiobutton(self, text="1. Extract calibration parameters", variable=self.function_var, value="1. Extract calibration parameters")
-        self.function1.pack(anchor="w")
-        self.function2 = tk.Radiobutton(self, text="2. Calibrate video", variable=self.function_var, value="2. Calibrate video")
-        self.function2.pack(anchor="w")
-        self.function3 = tk.Radiobutton(self, text="3. Tracking", variable=self.function_var, value="3. Tracking")
-        self.function3.pack(anchor="w")
-        self.function4 = tk.Radiobutton(self, text="4. Analysis", variable=self.function_var, value="4. Analysis")
-        self.function4.pack(anchor="w")
+        functions = ["{}. Define checkerboard parameters",
+                     "{}. Extract calibration parameters",
+                     "{}. Autotracker",
+                     "{}. Calibrate and smooth tracks",
+                     "{}. Analysis"
+        ]
+
+        indices = list(range(len(functions)))
+        functions = [f.format(i) for (i,f) in zip(indices, functions)]
+
+        self.function_var = tk.StringVar(value=functions[0])
+        self.rb_references = dict()
+        for f in functions:
+            rb = tk.Radiobutton(self, 
+                                text=f, 
+                                variable=self.function_var, 
+                                value=f)
+            rb.pack(anchor='w')
+            self.rb_references[f] = rb
+
+        
+        # self.function0 = tk.Radiobutton(self, text="0. Choose checkerboard type", variable=self.function_var, value="0. Define parameters")
+        # self.function0.pack(anchor="w")
+        # self.function1 = tk.Radiobutton(self, text="1. Extract calibration parameters", variable=self.function_var, value="1. Extract calibration parameters")
+        # self.function1.pack(anchor="w")
+        # self.function2 = tk.Radiobutton(self, text="2. Calibrate video", variable=self.function_var, value="2. Calibrate video")
+        # self.function2.pack(anchor="w")
+        # self.function3 = tk.Radiobutton(self, text="3. Tracking", variable=self.function_var, value="3. Tracking")
+        # self.function3.pack(anchor="w")
+        # self.function4 = tk.Radiobutton(self, text="4. Analysis", variable=self.function_var, value="4. Analysis")
+        # self.function4.pack(anchor="w")
 
         self.run_button = tk.Button(self, text="Run", command=self.run_function)
         self.run_button.pack()
@@ -208,24 +236,26 @@ class Application(tk.Frame):
 
     def run_function(self):
         selected_function = self.function_var.get()
-        if selected_function == "0. Define parameters":
-            self.function0_call()
-        elif selected_function == "1. Extract calibration parameters":
-            self.function1_call()
-        elif selected_function == "2. Calibrate video":
-            self.function2_call()
-        elif selected_function == "3. Tracking":
-            self.function3_call()
-        elif selected_function == "4. Analysis":
-            self.function4_call()
+        functions = list(self.rb_references.keys())
 
-    def function0_call(self):
+        if selected_function == functions[0]:
+            self.specify_calibration_board()
+        elif selected_function == functions[1]:
+            self.extract_calibration_parameters()
+        elif selected_function == functions[2]:
+            self.autotrack()
+        elif selected_function == functions[4]:
+            self.analysis()
+        elif selected_function == functions[3]:
+            self.calibrate_and_smooth_tracks()
+
+    def specify_calibration_board(self):
         checkerboard_window = tk.Toplevel()
         checkerboard_window.geometry('400x300+500+200')
         def_params(master=checkerboard_window) # Class instantiation
 
 
-    def function1_call(self):
+    def extract_calibration_parameters(self):
 
         with open(dir + 'calib_data/' + 'format_calibration' + '.txt', "r") as text_file:
             format_calibration = text_file.read()
@@ -239,8 +269,7 @@ class Application(tk.Frame):
 
         print("\nCalibration parameters extracted!")
 
-    def function2_call(self):
-
+    def calibrate_video(self):
         with open(dir + 'calib_data/' + 'format_raw' + '.txt', "r") as text_file:
             format_raw = text_file.read()
 
@@ -256,6 +285,8 @@ class Application(tk.Frame):
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         result = cv2.VideoWriter(dir + 'processed' + '.' + 'mp4', fourcc, fps_processed, frame_size)
 
+        cv2.namedWindow('Processed', cv2.WINDOW_NORMAL)
+
         total_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
         frame_idx = 1
         while cap.isOpened():
@@ -268,43 +299,46 @@ class Application(tk.Frame):
                 print("Completed frame {}/{}".format(frame_idx, total_frames))
                 frame_idx += 1
             else:
-                break
-
-        # cv2.namedWindow('Processed', cv2.WINDOW_NORMAL)
-
-        # while cap.isOpened():
-        #     success, frame = cap.read()
-
-        #     if success:
-        #         frame_dst = cv2.remap(frame, mapx, mapy, interpolation=cv2.INTER_LINEAR)
-
-        #         frame_height,  frame_width = frame_dst.shape[:2]
-        #         frame_warp = cv2.warpPerspective(frame_dst, H, (frame_width, frame_height))
-
-        #         cv2.imshow('Processed',frame_warp)
-        #         result.write(frame_warp)
-
-        #         if cv2.waitKey(1) & 0xFF == ord('q'):
-        #             break
-
-        #     else:
-        #         break
+                break        
 
         cap.release()
         result.release()
         cv2.destroyAllWindows()
 
-    def function3_call(self):
+    def autotrack(self):
         print("3. Tracking called!")
 
         desired_tracker = 'BOOSTING'
-        track_filename = 'processed'
-        format_track = 'mp4'
+        track_filename = 'raw'
+        format_track = 'mov'
         autotracker(dir, track_filename, input_str2, format_track, desired_tracker)
 
+    def calibrate_and_smooth_tracks(self):
+        camera_matrix = np.load(dir + 'calib_data/mtx.dat', 
+                                allow_pickle=True)
+        dist_coefficients = np.load(dir + 'calib_data/dist.dat', 
+                                    allow_pickle=True)
+        raw_data_filepath = dir + 'raw_tracks.csv'
+        calibrated_filepath = dir + 'calibrated_tracks.csv'
+        zeroed_filepath = dir + 'zeroed_tracks.csv'
+        smoothed_filepath = dir + 'smoothed_tracks.csv'
 
-    def function4_call(self):
+        H = np.load(dir + 'calib_data/H.dat', allow_pickle=True)
+        
+        # tp.calibrate_tracks(camera_matrix, 
+        #                     dist_coefficients, 
+        #                     raw_data_filepath,
+        #                     calibrated_filepath,
+        #                     homography=H)
+        
+        tp.zero_tracks(calibrated_filepath,
+                       zeroed_filepath)
+        
+        tp.smooth_tracks(zeroed_filepath, smoothed_filepath)
+        tp.plot_tracks(smoothed_filepath)
+        
 
+    def analysis(self):
         with open(dir + 'tracking_data/' + 'coordinates'  + '_' + input_str2 + '.csv', newline='') as csvfile:
             r = np.loadtxt(csvfile,delimiter=',')
 

@@ -105,7 +105,11 @@ Click 'Browse'.
 7. Find the video you want to track. Click 'Open', then click 'Upload file', then close the window.
 8. A new window should open for offline tracking.
 
-**Note:** The vision component of the software can be used but the analysis portion is unavailable at present. This means you can upload video files and a calibration file, calibrate your video, and autotrack the beetle; but you cannot analyse/plot a track.
+**Note:** The software currently provides beetle tracking, and track smoothing.
+The software does not provide calibration for these tracks (it's implemented
+but doesn't work properly at the moment). All distances are in pixels and 
+if your video is significantly distorted then your tracks will be too.
+Tracks are output to structured CSVs to allow you to perform your own analysis.
 
 ### Offline tracking
 Each stage can be engaged independently by selecting the appropriate radio button and clicking 'Run'. The instructions below assume you have done this.
@@ -123,18 +127,45 @@ Each stage can be engaged independently by selecting the appropriate radio butto
 
 **Note:** You should select only a single 'ground' frame. 
 
-#### 2. Calibrate video
-1. A new window will open playing the video to be tracked
-2. Let this video play up to the end of the desired track
-3. Press q to close
+#### 2. Autotracker
+1. A new window will open playing the video to be tracked (at high speed)
+2. Let the video play or skip to a point you wish to start tracking
+3. Press P to pause the video, then T to start a track.
+4. Select a rectangle (region of interest, ROI) which contains the beetle (be generous). Press Enter and close the window.
+5. Press P to play and the tracked point will be indicated by a red dot.
+6. Press T to finish the current track.
+7. Goto (2)
 
-#### 3. Tracking
-1. Use the sliders to select a start and end frame for tracking
-2. Press the spacebar
-3. In the new window, click and drag to form a rectangle around the beetle.
-4. Press spacebar
-5. Watch the tracking happen, as if by magic!
+You can produce any number of tracks from the video. The tracks will be appended
+to the track file (`data/<user>/<session>/raw_tracks.csv`). 
+
+**Notes**
+1. If you want to cancel your ROI selection, press C then close the window.
+2. If you press T by mistake and don't want to track, press T again to cancel. If you didn't play the video while tracking was enabled, the track file won't be modified.
+3. You cannot use Q to quit while the video is paused. You can just close the window.
+4. Do not use the trackbar while tracking. This will probably break things.
+5. The coordinates produced are the centre of mass of the 'blob' which contains
+   the beetle and its ball on a given frame. 
+
+#### 3. Calibrate and smooth tracks
+This option runs in full when you click 'Run'. At present this will:
+1. Zero the tracks (translate them so they all start at the same origin, (0,0)).
+2. Smooth the tracks using a basic univariate spline
+3. Produce and display a plot showing the smoothed tracks.
+
+The zeroing and smoothing stages both produce CSV files with the results. You 
+can take these and open them in Excel or LibreOffice (or your preferred analysis
+environment) and do whatever analysis/plotting you want. These files are
+in `data/<user>/<session>`, `zeroed_tracks.csv`, and `smoothed_tracks.csv` 
+respectively
+
+The plot is only used to see what the software has produced (i.e. to check that
+the software is working as expected), you are expected to produce your own 'nice' 
+plots as required.
 
 #### 4. Analysis
-Not yet available
+This option ties into the older analysis code. Given that the underlying 
+track storage has changed, this option is no longer compatible with tracks
+produced by the new tracking stage. It is currently included for legacy
+reasons but will be removed soon.
 

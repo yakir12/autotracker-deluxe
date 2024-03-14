@@ -6,21 +6,51 @@ from random import randint
 import pandas as pd
 import os
 
+def get_video_file_extension(directory, filename):
+    """
+    Assuming there is a videofile in the working directory with name of the form
+    <filename>.<format>, this function will return <format> given <filename>.
+
+    :param directory: The directory in which to look
+    :param filename: <filename> as above.
+    :return: The file format as a string without the '.'
+    """
+    entries = os.listdir(directory)
+
+    # Look for all files where 'filename' forms the complete segment before the
+    # period.
+    matching = [e for e in entries if e.split('.')[0] == filename]
+
+    # All filenames are handled internally so if this assertion fails it 
+    # implies a file has been created which breaks the unique filename 
+    # assumption of this function. (i.e. this is a bug, not user error.)
+    assert(len(matching) == 1)
+
+    # Decompose the matching entry and check it has a second half. The 'split'
+    # filtering used above will succeed even if the string does not contain a
+    # '.' delimeter. Again, failure here indicates a bug.
+    components = matching[0].split('.')
+    assert(len(components) == 2)
+    
+    # Return the file extension
+    return components[1]
+    
+
 def autotracker(dir, 
                 track_filename, 
                 label, 
-                format_track, 
                 desired_tracker,
                 working_csv='raw_tracks.csv'):
     """
     :param dir: Full path to data directory (e.g. data/<uname>/<session>/)
     :param track_filename: Calibrated video file for tracking.
     :param label: Session ID
-    :param format_track: Calibrated video file format
     :param desired_tracker: Tracker parameter passed to OpenCV
     :param working_csv: The filename of the csv file in which to store track
                         data.
     """
+    format_track = get_video_file_extension(dir, track_filename)
+
     input_dir = dir + track_filename + "." + format_track
     working_csv = dir + working_csv
 

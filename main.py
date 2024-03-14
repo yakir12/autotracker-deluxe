@@ -307,8 +307,7 @@ class Application(tk.Frame):
 
         desired_tracker = 'BOOSTING'
         track_filename = 'raw'
-        format_track = 'mov'
-        autotracker(dir, track_filename, input_str2, format_track, desired_tracker)
+        autotracker(dir, track_filename, input_str2, desired_tracker)
 
     def calibrate_and_smooth_tracks(self):
         camera_matrix = np.load(dir + 'calib_data/mtx.dat', 

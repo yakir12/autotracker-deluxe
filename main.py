@@ -327,7 +327,7 @@ class Application(tk.Frame):
         #                     calibrated_filepath,
         #                     homography=H)
         
-        tp.zero_tracks(calibrated_filepath,
+        tp.zero_tracks(raw_data_filepath,
                        zeroed_filepath)
         
         tp.smooth_tracks(zeroed_filepath, smoothed_filepath)

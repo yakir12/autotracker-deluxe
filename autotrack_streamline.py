@@ -254,7 +254,7 @@ def autotracker(dir,
                             color=(0,0,255),
                             thickness=cv2.FILLED)
                 else:
-                    centroid = np.nan
+                    centroid = (np.nan, np.nan)
                 
                 cv2.imshow(roi_window,bin_roi)
 

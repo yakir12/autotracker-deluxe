@@ -5,14 +5,13 @@ from dtrack_params import dtrack_params
 
 import json
 
-
 class ProjectFrame(tk.Frame):
     def __init__(self, parent, **kwargs):
         super().__init__(parent, **kwargs)
         
-        self.__labelframe = tk.LabelFrame(self, text='Session info')
+        self.__labelframe = tk.LabelFrame(self, text='Project information')
         self.__label = tk.Label(self.__labelframe, 
-                                text='Current session')
+                                text='Project directory: ')
         self.__btn_select =  tk.Button(self.__labelframe,
                                        text='Select project',
                                        command=self.__select_callback)
@@ -23,10 +22,10 @@ class ProjectFrame(tk.Frame):
         
         # If the user has previously worked on a project and that project
         # still exists, populate the project entry with the relevant info.
-        cached_project = dtrack_params['current_project']
+        cached_project = dtrack_params['project_directory']
         if not (cached_project == None):
             if os.path.exists(cached_project):
-                self.__ent_project.insert(0, cached_project)
+                self.__update_project_entry()
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
@@ -58,10 +57,36 @@ class ProjectFrame(tk.Frame):
             directory = ""
             print("Error: selected directory does not exist.")
 
-        dtrack_params["current_project"] = directory
+        # Check to see if a project file exists
+        proj_file_name = directory.split("/")[-1] + ".dt2p"
+        proj_file_path = directory + "/" + proj_file_name
+        if not os.path.isfile(proj_file_path):
+            # Check that path doesn't already exist
+            confirm_message =\
+              "A project file (*.dt2p) does not exist in this directory." +\
+              "Do you wish to create one?\n\n" +\
+              "(This could either be because the selected directory is not a" +\
+              " dtrack2 project or because the project was created before the" +\
+              " introduction of project files.)"
 
-        self.__ent_project.delete(0, tk.END)
-        self.__ent_project.insert(0, dtrack_params['current_project'])
+            confirm = messagebox.askokcancel(title="Confirm directory", 
+                                             message=confirm_message,
+                                             icon='question')
+            if confirm:
+                with open(proj_file_path, "w") as f:
+                    project = dict()
+                    json.dump(project, f)
+            else:
+                # If the user didn't create a project file, abort project 
+                # selection
+                return
+
+        # Update dtrack_params file
+        self.__update_project_params(directory)
+
+        # Update the Entry widget to display the current project
+        self.__update_project_entry()
+
 
     def __new_callback(self):
         """
@@ -80,13 +105,12 @@ class ProjectFrame(tk.Frame):
         # Check that path doesn't already exist
         parent = full_path.split(".")[0]
         confirm_message =\
-              "The following directory will be created\n{}\n\n".format(parent)+\
+              "A project directory will be created\n{}\n\n".format(parent)+\
               "Do you wish to proceed?"
 
         confirm = messagebox.askokcancel(title="Confirm directory", 
                                          message=confirm_message,
                                          icon='question')
-
         
         if confirm:
             # Create parent directory
@@ -95,22 +119,37 @@ class ProjectFrame(tk.Frame):
             full_path = parent + "/" + filename
 
             # Create project (JSON) file
-
-            # This could be replaced with nicer project file init when I know
-            # what's actually going to go into project files...  I think this
-            # could also be made nicer by using a custom file dialog.
-            # Could also create all the necessary sub-directories at this point.
             with open(full_path, "w") as f:
                 project = dict()
                 json.dump(project, f)
 
-        dtrack_params["current_project"] = parent
-
-        self.__ent_project.delete(0, tk.END)
-        self.__ent_project.insert(0, dtrack_params['current_project'])
-
+        self.__update_project_params(parent)
+        self.__update_project_entry()
 
     def get_session(self):
         return self.__ent_project.get()
+    
+    def __update_project_entry(self):
+        """
+        Update the contents of the current project entry to match the 
+        parameters stored in dtrack_params.
+        """
+        self.__ent_project.delete(0, tk.END)
+        self.__ent_project.insert(0, dtrack_params['project_directory'])
 
+    def __update_project_params(self, project_directory):
+        """
+        Given a project directory, set the relevant dtrack_params to that project
+        and the associated project file. This should ensure the value is correct
+        for any sub-routines.
         
+        Note: it is assumed that the project file has been created which occurs
+        in the new project callback.
+
+        :param project_directory:
+        """
+        dtrack_params["project_directory"] = project_directory
+        filename = project_directory.split("/")[-1] + ".dt2p"
+        filepath = project_directory + "/" + filename
+        dtrack_params["project_file"] = filepath
+

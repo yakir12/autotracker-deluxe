@@ -1,13 +1,20 @@
 import tkinter as tk
 from wrapped_label import WrappedLabelFrame
 
+from video_selector import VideoSelector
+from autotrack_streamline import autotracker
+from calibration import calib
+
+
 class ToolFrame(tk.Frame):
     def __init__(self, parent, **kwargs):
         super().__init__(parent, **kwargs)
 
         self.__labelframe = tk.LabelFrame(self, text='Tools')
         self.__frm_button_frame = tk.Frame(self.__labelframe)
-        self.__btn_run = tk.Button(self.__frm_button_frame, text='Run')
+        self.__btn_run = tk.Button(self.__frm_button_frame, 
+                                   text='Run',
+                                   command=self.__run_callback)
         self.__btn_quit = tk.Button(self.__frm_button_frame,
                                     text='Quit',
                                     command=self.winfo_toplevel().destroy)        
@@ -130,4 +137,27 @@ class ToolFrame(tk.Frame):
                 )            
             self.__txtvar_information.set("")
         
-        
+    def __run_callback(self):
+        """
+        Callback tied to 'Run' button. Will select what tool to run based
+        on the current radiobutton selection.
+        """
+        var = self.__int_option.get()
+
+        if var == 1:
+            # Select videos
+            selector_window = VideoSelector(self)
+            selector_window.mainloop()
+        elif var == 2:
+            # Checkerboard config
+            pass
+        elif var == 3:
+            # Calibration
+            pass
+        elif var == 4:
+            # Autotracking
+            pass
+        elif var == 5:
+            # Post-processing
+            pass
+

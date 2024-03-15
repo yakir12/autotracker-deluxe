@@ -9,7 +9,8 @@ class ParamFilePassthrough():
 
         # This feels overcomplicated just to store the previous project but
         # there's scope to add stuff.
-        self.__valid_keys = ["current_project"]
+        self.__valid_keys = ["project_directory",
+                             "project_file"]
 
         # If parameter file does not exist, create it as an emtpy json file.
         if not os.path.exists(self.__fname):

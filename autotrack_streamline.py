@@ -92,6 +92,7 @@ def autotracker(dir,
     # State variables
     #
     tracking = False
+    segmentation_success = False
     bbox = None
     centroid = np.nan
     centroid_track = []
@@ -107,13 +108,18 @@ def autotracker(dir,
                 frame_centroid = (int(bbox[0] + centroid[0]),
                                   int(bbox[1] + centroid[1]))
 
+
+                colour = (0,255,0)
+                if not segmentation_success:
+                    colour = (0,0,255)
+
                 # Draw tracked point on clean frame. Clean frame used 
                 # specifically so that pause behaviour is intuitive (track 
                 # point still shown when paused).
                 cv2.circle(clean_frame,
                            frame_centroid,
                            radius=5,
-                           color=(0, 0, 255),
+                           color=colour,
                            thickness=cv2.FILLED)
                 
 
@@ -163,7 +169,7 @@ def autotracker(dir,
                         if not tracking:
                             bbox = cv2.selectROI('Select ROI',
                                                 clean_frame, 
-                                                fromCenter=False, 
+                                                fromCenter=True, 
                                                 showCrosshair=True)
                         
                             # Bbox is cv Rect, tuple (x, y, width, height) where
@@ -233,7 +239,6 @@ def autotracker(dir,
                 # Slice region of interst out of binary frame
                 bin_roi = mask_frame[int(bbox[1]):int(bbox[1] + bbox[3]),
                                      int(bbox[0]):int(bbox[0] + bbox[2])]
-                
 
                 # May want to erode/dilate here.  
                 morph_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, 
@@ -253,13 +258,14 @@ def autotracker(dir,
                             radius=3, 
                             color=(0,0,255),
                             thickness=cv2.FILLED)
+                    segmentation_success = True
                 else:
-                    centroid = (np.nan, np.nan)
+                    # If no area, set tracking to centre of bbox
+                    segmentation_succes = False
+                    centroid = (bbox[2]/2, bbox[3]/2)
                 
                 cv2.imshow(roi_window,bin_roi)
 
-                print("Centroid: {}".format(centroid))
-                print("BBOX: {}".format(bbox))
 
                 frame_centroid = (int(bbox[0] + centroid[0]),
                                   int(bbox[1] + centroid[1]))

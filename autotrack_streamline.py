@@ -258,6 +258,9 @@ def autotracker(dir,
                 
                 cv2.imshow(roi_window,bin_roi)
 
+                print("Centroid: {}".format(centroid))
+                print("BBOX: {}".format(bbox))
+
                 frame_centroid = (int(bbox[0] + centroid[0]),
                                   int(bbox[1] + centroid[1]))
                 centroid_track.append(frame_centroid)

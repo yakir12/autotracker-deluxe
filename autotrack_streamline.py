@@ -83,11 +83,17 @@ def autotracker(dir,
 
 
     # Extract greyscale background frame
-    bg_frame = compute_background_frame(cap, 
-                                        method='first_N_median',
-                                        N=10)
-    bg_gray = cv2.cvtColor(bg_frame, cv2.COLOR_BGR2GRAY)
+    # bg_frame = compute_background_frame(cap, 
+    #                                     method='first_N_median',
+    #                                     N=10)
+    # bg_gray = cv2.cvtColor(bg_frame, cv2.COLOR_BGR2GRAY)
 
+    bg_hsv = compute_background_frame(cap, 
+                                      method='random_N_mean',
+                                      N=25).astype(np.uint8)
+    
+    bg_v = cv2.cvtColor(bg_hsv, cv2.COLOR_BGR2HSV)[:,:,2]
+    
     #
     # State variables
     #
@@ -99,11 +105,12 @@ def autotracker(dir,
         
     while cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE):
         success, clean_frame = cap.read()
+        display_frame = clean_frame.copy()
         tracking_status_str = "(TRACKING) " if tracking else ""
 
         if success:
             # Frame and trackbar update
-            if (not (bbox==None)) and (not (centroid == np.nan)):
+            if (not (bbox==None)) and (not np.isnan(centroid).any()):
                 # If centroid defined then we are tracking.
                 frame_centroid = (int(bbox[0] + centroid[0]),
                                   int(bbox[1] + centroid[1]))
@@ -116,18 +123,26 @@ def autotracker(dir,
                 # Draw tracked point on clean frame. Clean frame used 
                 # specifically so that pause behaviour is intuitive (track 
                 # point still shown when paused).
-                cv2.circle(clean_frame,
+                cv2.circle(display_frame,
                            frame_centroid,
                            radius=5,
                            color=colour,
                            thickness=cv2.FILLED)
                 
-
-            frame = clean_frame.copy()
+                cv2.rectangle(display_frame,
+                              pt1=(int(bbox[0]), int(bbox[1])),
+                              pt2=(int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3])),
+                              color=colour,
+                              thickness=3
+                             )
+            
+            frame = display_frame.copy()
+            
             write_on_frame(frame, 
                            '{} Press p to pause and view options, q to quit.'
                            .format(tracking_status_str))
 
+            
             cv2.imshow(window_name, frame)
             trackbar_external_callback = False
             cv2.setTrackbarPos(trackbar_name, 
@@ -195,8 +210,6 @@ def autotracker(dir,
                             centroid = np.nan 
                             centroid_track = []
 
-
-
                             
             elif kp == ord('q'):
                 break
@@ -215,11 +228,16 @@ def autotracker(dir,
                     print("FAILED")
 
                 frame_gray = cv2.cvtColor(clean_frame, cv2.COLOR_BGR2GRAY)
-                diff = cv2.absdiff(frame_gray, bg_gray)
+                frame_hsv = cv2.cvtColor(clean_frame, cv2.COLOR_BGR2HSV)
+                frame_v = frame_hsv[:,:,2]
+
+                diff = cv2.absdiff(frame_v, bg_v)
                 _, mask_frame = cv2.threshold(diff, 
-                                              25, 
+                                              15, 
                                               255,
                                               cv2.THRESH_BINARY)
+
+
                 #
                 # Old verison, pulled out a masked grayscale ROI and then
                 # found contours in this frame. This is equivalent to finding
@@ -261,11 +279,10 @@ def autotracker(dir,
                     segmentation_success = True
                 else:
                     # If no area, set tracking to centre of bbox
-                    segmentation_succes = False
+                    segmentation_success = False
                     centroid = (bbox[2]/2, bbox[3]/2)
                 
-                cv2.imshow(roi_window,bin_roi)
-
+                cv2.imshow(roi_window, bin_roi)
 
                 frame_centroid = (int(bbox[0] + centroid[0]),
                                   int(bbox[1] + centroid[1]))
@@ -346,6 +363,10 @@ def compute_background_frame(capture, method='first_N_median', N=10):
     For the method option:
     'first_N_median' takes the median of the first N frames 
     'first_N_mean' takes the mean of the first N frames
+    'first_N_median_HSV' As first_N_median but in HSV colourspace
+    
+    'random_N_mean' Takes the mean of a random sample of N frames from the video.
+    This meathod is slow and should only be used to pre-compute a background.
 
     N = 10 by default
     
@@ -376,6 +397,57 @@ def compute_background_frame(capture, method='first_N_median', N=10):
         
         background_frame =\
               np.mean(background_sample, axis=0).astype(dtype=np.uint8)
+        
+    elif method == 'first_N_median_HSV':
+        capture.set(cv2.CAP_PROP_POS_FRAMES, 0)          
+        background_sample = []
+        for i in range(N):
+            success, frame = capture.read()
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            background_sample.append(frame)
+        
+        background_frame =\
+              np.median(background_sample, axis=0).astype(dtype=np.uint8)        
+        
+    elif method == 'random_N_mean':
+        # This method is slow, do not use it in real time.
+
+        # Create RandomState for repeatability, should be configurable/refreshable
+        # in future.
+        random_state = np.random.RandomState(seed=493570483)
+
+        frame_count = capture.get(cv2.CAP_PROP_FRAME_COUNT)
+        
+        if N > frame_count:
+            # If N is too big, set N to frame count.
+            N = frame_count 
+
+        # Generate a series of indices up to the maximum frame index and
+        # choose N indices from this set without replacement (random subset
+        # of frame indices).
+        sample_indices = random_state.choice(range(int(frame_count)), 
+                                            size=int(N), 
+                                            replace=False)
+
+        # Initialise mean to first of sample frames
+        capture.set(cv2.CAP_PROP_POS_FRAMES, sample_indices[0])
+        success, frame = capture.read()
+        mean_frame = frame
+
+        print('Computing mean background frame...') 
+        counter = 1
+        for idx in range(1, len(sample_indices)):
+            capture.set(cv2.CAP_PROP_POS_FRAMES, idx)
+            success, frame = capture.read()
+
+            # Compute mean frame as rolling average
+            # mean = (mean*(n-1) + x) / n
+            mean_frame = (mean_frame*counter + frame) / (counter + 1)
+
+            counter += 1 # Increment counter
+
+        background_frame = mean_frame
+
     else:
         print("Background construction method ({}) not recognised."
               .format(method))
@@ -450,3 +522,4 @@ def ragged_join(dfA, dfB):
     
     # If B longer, reindex A and join B onto A.
     return dfA.reindex(index=dfB.index).join(dfB)
+

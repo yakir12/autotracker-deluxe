@@ -88,10 +88,10 @@ def autotracker(dir,
     #                                     N=10)
     # bg_gray = cv2.cvtColor(bg_frame, cv2.COLOR_BGR2GRAY)
 
-    bg_hsv = compute_background_frame(cap, 
-                                      method='random_N_mean',
-                                      N=25).astype(np.uint8)
-    
+    # Background frame not currently in use as bbox centre is used.
+    bg_hsv = compute_background_frame(cap,
+                                      method='first_N_median',
+                                      N=10)
     bg_v = cv2.cvtColor(bg_hsv, cv2.COLOR_BGR2HSV)[:,:,2]
     
     #
@@ -281,6 +281,10 @@ def autotracker(dir,
                     # If no area, set tracking to centre of bbox
                     segmentation_success = False
                     centroid = (bbox[2]/2, bbox[3]/2)
+
+                # Just use bounding box centre, do not use centroid.
+                segmentation_success = False
+                centroid = (bbox[2]/2, bbox[3]/2)                    
                 
                 cv2.imshow(roi_window, bin_roi)
 

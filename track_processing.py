@@ -193,9 +193,12 @@ def zero_tracks(raw_track_file, dest_filepath, origin=(0,0)):
 
 
 def plot_tracks(input_file, 
-                draw_arena=True, 
+                draw_arena=False, 
                 arena_radius=35, 
-                draw_mean_displacement=False):
+                draw_mean_displacement=False,
+                save=True,
+                project_directory="",
+                format="pdf"):
     """
     Helper method to test calibration, this is only intended to check distance
     tranformations have been performed successfully, this is not for any 
@@ -216,6 +219,7 @@ def plot_tracks(input_file,
     mosaic = [['si_tracks']]
     fig, axs = plt.subplot_mosaic(mosaic)
     ax = axs['si_tracks']
+    ax.set_aspect('equal')     
 
     if draw_arena:
         def define_circle(radius):
@@ -229,7 +233,7 @@ def plot_tracks(input_file,
         starter = define_circle(50) # 5cm starting circle 
         ax.plot(arena[0], arena[1], color='k')
         ax.plot(starter[0], starter[1], color='k')
-        ax.set_aspect('equal') # If we're drawing the arena, fair assumption
+
         
     displacements = []
     # Iterate over raw data and calibrate each set of x,y points
@@ -244,7 +248,8 @@ def plot_tracks(input_file,
         # Check lengths match (fail otherwise)
         assert len(x_data) == len(y_data)
 
-        ax.plot(x_data, y_data, alpha=0.5)
+        legend_entry = "Track {}".format(int(col_idx/2) + 1)
+        ax.plot(x_data, y_data, alpha=0.5, label=legend_entry)
         
         # Track average displacement
 
@@ -265,4 +270,10 @@ def plot_tracks(input_file,
           " you will need to adjust your calibration.")
     print("Plotted: {}".format(input_file))
 
+    plt.legend()
+
+    if save:
+        filename = project_directory + "/" + "tracks.{}".format(format)
+        plt.savefig(filename, bbox_inches="tight")
+    
     plt.show()

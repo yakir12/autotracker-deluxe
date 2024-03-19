@@ -331,7 +331,11 @@ class Application(tk.Frame):
                        zeroed_filepath)
         
         tp.smooth_tracks(zeroed_filepath, smoothed_filepath)
-        tp.plot_tracks(smoothed_filepath)
+        tp.plot_tracks(smoothed_filepath, 
+                       project_directory=dir,
+                       draw_arena=False,
+                       save=True,
+                       format="eps")
         
 
     def analysis(self):

@@ -3,6 +3,8 @@ import numpy as np
 
 from time import time as timer
 
+import matplotlib.pyplot as plt
+
 
 # create checkerboard pattern
 def make_checkerboard(n_rows, n_columns, square_size):
@@ -25,7 +27,6 @@ def make_checkerboard(n_rows, n_columns, square_size):
     # CV docs suggest this should be the number of inner corners
     # per dimension
     checkerboard_size = (n_columns-1, n_rows-1)
-
 
     return checkerboard, checkerboard_size
 

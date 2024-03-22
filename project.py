@@ -15,7 +15,10 @@ class ProjectFilePassthrough():
         self.__valid_keys = ["calibration_video", 
                              "tracking_video",
                              "original_tracking_video",
-                             "original_calibration_video"]
+                             "original_calibration_video",
+                             "chessboard_rows",
+                             "chessboard_columns",
+                             "chessboard_square_size"]
 
     def __getitem__(self,key):
         self.refresh()

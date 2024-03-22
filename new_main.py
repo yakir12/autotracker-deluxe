@@ -6,7 +6,6 @@ import signal
 def destruction_handler(event):
     root.destroy()
 
-
 window_width = 800
 window_height = 400
 x_padding = 10

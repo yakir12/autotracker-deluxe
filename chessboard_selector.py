@@ -2,6 +2,9 @@ import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
 
+import cv2
+import numpy as np
+
 from calibration import make_checkerboard
 from project import project_file
 
@@ -65,7 +68,8 @@ class ChessboardSelector(tk.Toplevel):
                                                  to=60,
                                                  state="readonly",
                                                  background='white', 
-                                                 textvariable=self.__stv_square_size)
+                                                 textvariable=self.__stv_square_size,
+                                                 command=self.__update_checkerboard)
 
         self.__lbl_rows = tk.Label(self.__lbf_dims_selector,
                                    text="Rows")
@@ -112,9 +116,8 @@ class ChessboardSelector(tk.Toplevel):
         # Checkerboard example children
         info_string = "This is the pattern the calibration algorithm will" +\
                       " look for! The algorithm looks for 'inner corners'" +\
-                      " which is why the displayed board is one square" +\
-                      " smaller in each dimension. This pattern should be " +\
-                      " visible in full in your checkerboard (i.e. no tape" +\
+                      " which are displayed over the board. The pattern should be " +\
+                      " visible in full in your video (i.e. no tape" +\
                       " covering part of the square)."
         self.__cnv_chessboard = tk.Canvas(self.__lbf_chessboard_example)
         self.__lbl_info = tk.Label(self.__lbf_chessboard_example,
@@ -143,13 +146,25 @@ class ChessboardSelector(tk.Toplevel):
     def __update_checkerboard(self):
         # Make the chessboard, note that the 'square_size' parameter chosen 
         # is arbitrary. This is just for display so it doesn't matter.
-        sq_size = 30
-        n_rows = int(self.__spb_row_selector.get()) - 1
-        n_cols = int(self.__spb_col_selector.get()) - 1
-        chessboard, _ = make_checkerboard(n_rows,
+        sq_size = int(self.__spb_sq_size_selector.get())# 30
+        n_rows = int(self.__spb_row_selector.get())
+        n_cols = int(self.__spb_col_selector.get())
+        
+        chessboard, chessboard_size = make_checkerboard(n_rows,
                                           n_cols,
                                           sq_size)
         chessboard *= 255 # Make '1' entries white.
+
+
+        success, corners = cv2.findChessboardCorners(chessboard.astype(np.uint8), 
+                                                     chessboard_size)
+        chessboard = cv2.cvtColor(chessboard.astype(np.uint8), cv2.COLOR_GRAY2BGR)        
+        chessboard = cv2.drawChessboardCorners(chessboard.astype(np.uint8),
+                                               patternSize=chessboard_size,
+                                               corners=corners, 
+                                               patternWasFound=success)
+        
+        
         
         self.__chessboard_image = ImageTk.PhotoImage(Image.fromarray(chessboard))
         self.__cnv_chessboard.create_image(0, 0, anchor='nw', image=self.__chessboard_image)

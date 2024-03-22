@@ -5,6 +5,9 @@ from time import time as timer
 
 import matplotlib.pyplot as plt
 
+from project import project_file
+from dtrack_params import dtrack_params
+
 
 # create checkerboard pattern
 def make_checkerboard(n_rows, n_columns, square_size):
@@ -31,10 +34,20 @@ def make_checkerboard(n_rows, n_columns, square_size):
     return checkerboard, checkerboard_size
 
 # calibration
-def calib(dir, format_calibration, checkerboard, checkerboard_size):
+def calib():
+    # Pull out required info from project and params files
+    path = project_file["calibration_video"]
+    checkerboard_rows = project_file["chessboard_rows"]
+    checkerboard_columns = project_file["chessboard_columns"]
+    checkerboard_square_size = project_file["chessboard_columns"]
+    
+    checkerboard, checkerboard_size = make_checkerboard(checkerboard_rows,
+                                                        checkerboard_columns,
+                                                        checkerboard_square_size)
 
-    path = dir + 'calibration' + '.' + format_calibration
+    #path = dir + 'calibration' + '.' + format_calibration
 
+    dir = dtrack_params["project_directory"]
     def frame_capture(calib_frame, checkerboard, checkerboard_size):
         
         # Generate object coordinates (pixel to mm transformation)
@@ -241,11 +254,11 @@ def calib(dir, format_calibration, checkerboard, checkerboard_size):
 
 
     # save calib_data
-    mapx.dump(dir + 'calib_data/' + 'mapx.dat')
-    mapy.dump(dir + 'calib_data/' + 'mapy.dat')
-    mtx.dump(dir + 'calib_data/' + 'mtx.dat')
-    dist.dump(dir + 'calib_data/' + 'dist.dat')
-    id.dump(dir + 'calib_data/' + 'id.dat')
-    frame_size.dump(dir + 'calib_data/' + 'frame_size.dat')
-    H.dump(dir + 'calib_data/' + 'H.dat')
-    np.savetxt(dir + 'calib_data/' + 'scale' + '.csv', scale, delimiter=',')
+    mapx.dump(dir + '/calib_data/' + 'mapx.dat')
+    mapy.dump(dir + '/calib_data/' + 'mapy.dat')
+    mtx.dump(dir + '/calib_data/' + 'mtx.dat')
+    dist.dump(dir + '/calib_data/' + 'dist.dat')
+    id.dump(dir + '/calib_data/' + 'id.dat')
+    frame_size.dump(dir + '/calib_data/' + 'frame_size.dat')
+    H.dump(dir + '/calib_data/' + 'H.dat')
+    np.savetxt(dir + '/calib_data/' + 'scale' + '.csv', scale, delimiter=',')

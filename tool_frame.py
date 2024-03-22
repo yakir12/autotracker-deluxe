@@ -153,8 +153,7 @@ class ToolFrame(tk.Frame):
             chessboard_selector = ChessboardSelector(self)
             chessboard_selector.mainloop()
         elif var == 3:
-            # Calibration
-            pass
+            calib()
         elif var == 4:
             # Autotracking
             pass

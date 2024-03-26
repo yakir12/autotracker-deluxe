@@ -5,6 +5,7 @@ from video_selector import VideoSelector
 from chessboard_selector import ChessboardSelector
 from autotrack_streamline import autotracker
 from calibration import calib
+from track_processing import calibrate_and_smooth_tracks
 
 
 class ToolFrame(tk.Frame):
@@ -155,9 +156,7 @@ class ToolFrame(tk.Frame):
         elif var == 3:
             calib()
         elif var == 4:
-            # Autotracking
-            pass
+            autotracker()
         elif var == 5:
-            # Post-processing
-            pass
+            calibrate_and_smooth_tracks()
 

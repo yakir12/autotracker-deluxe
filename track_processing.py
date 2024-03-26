@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import numpy.ma as ma
 import pandas as pd
@@ -6,6 +7,8 @@ from scipy.interpolate import UnivariateSpline
 
 import matplotlib.pyplot as plt
 
+
+from dtrack_params import dtrack_params
 
 def calibrate_tracks(camera_matrix, 
                      distortion_coefficients, 
@@ -266,3 +269,36 @@ def plot_tracks(input_file,
     print("Plotted: {}".format(input_file))
 
     plt.show()
+
+
+
+def calibrate_and_smooth_tracks():
+    calibration_directory= os.path.join(dtrack_params["project_directory"],
+                                        'calib_data')
+    
+    camera_matrix = np.load(os.path.join(calibration_directory, 'mtx.dat'), 
+                            allow_pickle=True)
+    dist_coefficients = np.load(os.path.join(calibration_directory, 'dist.dat'),
+                                allow_pickle=True)
+    
+    raw_data_filepath = os.path.join(dtrack_params["project_directory"],
+                                     'raw_tracks.csv')
+    calibrated_filepath = os.path.join(dtrack_params["project_directory"],
+                                       'calibrated_tracks.csv')
+    zeroed_filepath = os.path.join(dtrack_params["project_directory"],
+                                   'zeroed_tracks.csv')    
+    smoothed_filepath = os.path.join(dtrack_params["project_directory"],
+                                     'smoothed_tracks.csv')
+
+    H = np.load(os.path.join(calibration_directory, 'H.dat'), allow_pickle=True)
+    
+    # calibrate_tracks(camera_matrix, 
+    #                  dist_coefficients, 
+    #                  raw_data_filepath,
+    #                  calibrated_filepath,
+    #                  homography=H)
+    
+    zero_tracks(calibrated_filepath, zeroed_filepath)
+    
+    smooth_tracks(zeroed_filepath, smoothed_filepath)
+    plot_tracks(smoothed_filepath)

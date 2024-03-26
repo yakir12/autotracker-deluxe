@@ -23,10 +23,19 @@ class ProjectFilePassthrough():
     def __getitem__(self,key):
         self.refresh()
 
+        assert(key in self.__valid_keys)
+
         with open(self.__fname, "r") as f:
                 params = json.load(f)
 
-        return params[key]
+        try:
+            item = params[key]
+        except KeyError:
+            # If the item has not yet been set, then we return the 
+            # empty string.
+            item = ""
+
+        return item
     
     def __setitem__(self, key, value):
         self.refresh()

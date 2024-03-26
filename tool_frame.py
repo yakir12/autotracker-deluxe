@@ -3,7 +3,7 @@ from wrapped_label import WrappedLabelFrame
 
 from video_selector import VideoSelector
 from chessboard_selector import ChessboardSelector
-from autotrack_streamline import autotracker
+from autotrack import autotracker
 from calibration import calib
 from track_processing import calibrate_and_smooth_tracks
 

@@ -7,7 +7,7 @@ class WrappedLabelFrame(tk.Frame):
         #self.config(background='red')
 
         # Inner label is exposed for ease
-        self.__text = tk.StringVar("")
+        self.__text = tk.StringVar()
         self.__label = tk.Label(self, 
                                 textvariable=self.__text,
                                 wraplength=500,

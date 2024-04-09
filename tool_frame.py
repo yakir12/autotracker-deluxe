@@ -54,7 +54,7 @@ class ToolFrame(tk.Frame):
                              value=5,
                              command=self.__update_info)
         
-        self.__txtvar_information = tk.StringVar("")
+        self.__txtvar_information = tk.StringVar()
         self.__lfm_information = tk.LabelFrame(self.__labelframe,
                                                text="Information", 
                                                relief='sunken')

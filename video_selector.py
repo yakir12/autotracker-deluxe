@@ -108,7 +108,7 @@ class VideoSelector(tk.Toplevel):
         calib_video = self.__slt_calibration_video.get_entry_information()
         track_video = self.__slt_tracking_video.get_entry_information()
 
-        if self.__blv_copy:
+        if self.__blv_copy.get():
             # Preserve filename
             calib_video_filename = calib_video.split("/")[-1]
             track_video_filename = track_video.split("/")[-1]
@@ -123,8 +123,15 @@ class VideoSelector(tk.Toplevel):
                   dtrack_params['project_directory'] + "/" + track_video_filename
 
             # Copy video files locally
-            shutil.copy(calib_video, local_calib_name)    
-            shutil.copy(track_video, local_track_name)
+            try:
+                shutil.copy(calib_video, local_calib_name)    
+            except shutil.SameFileError:
+                pass
+
+            try:
+                shutil.copy(track_video, local_track_name)
+            except shutil.SameFileError:
+                pass
 
             print("Video files copied to:")
             print(local_calib_name)

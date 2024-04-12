@@ -179,6 +179,21 @@ the software is working as expected), you are expected to produce your own 'nice
 plots as required.
 
 ## Miscellany
+### Interlaced video
+Some videos are stored in an interlaced format. In the software, this appears as a 'combing' or 'tearing' effect:
+
+![Example of combing artifact from interlaced video](images/interlacing.png)
+
+This is particularly problematic for calibration. If you have the option, turn this off in your camera. If you are working with pre-existing videos, you can deinterlace them by using ffmpeg.
+
+`$ ffmpeg -i input.file -vf yadif output.file`
+
+Replace `input.file` and `output.file` with the name of your input and output files and 'file' with the file extension.
+
+You will probably need to install ffmpeg separately. You can use any other tool you know of which can produce a deinterlaced video file.
+
+Running the command above on a non-interlaced file doesn't seem to cause any problems.
+
 ### Params file
 When you run the software it should create a file called 'params.json' in the software directory. Do not modify this file by hand. It stores the path of the current project and path to the project file which are relied on internally.
 

@@ -192,7 +192,9 @@ def calib():
     # extrinsic calibration
     id = np.array([extrinsic_calib_frame_id])
     frame_dst = cv2.remap(frame_extrinsic, mapx, mapy, interpolation=cv2.INTER_LINEAR)
-
+    
+    cv2.putText(frame_dst, 'Check distortion, press q to close.', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
+    cv2.putText(frame_dst, 'If region of interest appears distorted, repeat the calibration process.', (50,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
     cv2.imshow('frame', frame_dst)
     while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
         if cv2.waitKey(1) == ord('q'):

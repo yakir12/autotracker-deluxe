@@ -1,4 +1,4 @@
 data/*
 test.py
 params.json
-calibration_image_cache
+calibration_image_cache/*

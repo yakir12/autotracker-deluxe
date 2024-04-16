@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import os
 
 from time import time as timer
 
@@ -256,11 +257,15 @@ def calib():
 
 
     # save calib_data
-    mapx.dump(dir + '/calib_data/' + 'mapx.dat')
-    mapy.dump(dir + '/calib_data/' + 'mapy.dat')
-    mtx.dump(dir + '/calib_data/' + 'mtx.dat')
-    dist.dump(dir + '/calib_data/' + 'dist.dat')
-    id.dump(dir + '/calib_data/' + 'id.dat')
-    frame_size.dump(dir + '/calib_data/' + 'frame_size.dat')
-    H.dump(dir + '/calib_data/' + 'H.dat')
-    np.savetxt(dir + '/calib_data/' + 'scale' + '.csv', scale, delimiter=',')
+    calib_dir = os.path.join(dir, 'calib_data')
+    if not os.path.exists(calib_dir):
+        os.mkdir(calib_dir)
+
+    mapx.dump(os.path.join(calib_dir, 'mapx.dat'))
+    mapy.dump(os.path.join(calib_dir, 'mapy.dat'))
+    mtx.dump(os.path.join(calib_dir, 'mtx.dat'))
+    dist.dump(os.path.join(calib_dir, 'dist.dat'))
+    id.dump(os.path.join(calib_dir, 'id.dat'))
+    frame_size.dump(os.path.join(calib_dir, 'frame_size.dat'))
+    H.dump(os.path.join(calib_dir, 'H.dat'))
+    np.savetxt(os.path.join(calib_dir, 'scale.csv'), scale, delimiter=',')

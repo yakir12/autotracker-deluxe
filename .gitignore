@@ -2,3 +2,4 @@ data/*
 test.py
 params.json
 calibration_image_cache/*
+__pycache__/*

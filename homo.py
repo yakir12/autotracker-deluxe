@@ -37,14 +37,6 @@ def define_object_chessboard(n_rows, n_columns, square_size,):
 
     return chessboard, chessboard_size
 
-
-def undistort_image(frame, mtx=None, dist=None):
-    # Include camera matrix and distortion
-    frame_dist = cv2.undistort(frame, 
-                               cameraMatrix=mtx,
-                               distCoeffs=dist)
-    return frame_dist
-
 def cache_calibration_video_frames(video_path, 
                                    object_chessboard,
                                    chessboard_size,
@@ -151,6 +143,8 @@ def generate_calibration_from_cache(object_chessboard,
                                     chessboard_size,
                                     cache_path='calibration_image_cache'):
     # Work out object points
+    # Flip chessboard
+    object_chessboard = ((np.ones(object_chessboard.shape) * 255) - object_chessboard).astype(np.uint8)
     object_points = []
     object_success, obj_points = cv2.findChessboardCorners(object_chessboard, 
                                                            chessboard_size)
@@ -197,8 +191,7 @@ def generate_calibration_from_cache(object_chessboard,
     # online discussion on OpenCV calibration
     flags = cv2.CALIB_FIX_K3 + cv2.CALIB_FIX_K2 + cv2.CALIB_ZERO_TANGENT_DIST
     
-    print(len(image_points))
-    ret, mtx, dist, rvecs, tvecs =\
+    rproj_err, mtx, dist, rvecs, tvecs =\
           cv2.calibrateCamera(object_points, 
                               image_points,
                               frame_size,
@@ -206,12 +199,93 @@ def generate_calibration_from_cache(object_chessboard,
                               None,
                               flags=flags)
     optmtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, frame_size, 1, frame_size)
+
+    # Compute perspective transform (extrinsic)
+    extrinsic_path = os.path.join(cache_path, 'extrinsic', '000.png')
+    extrinsic_img = cv2.imread(extrinsic_path)
+    undistorted_extrinsic =\
+          cv2.undistort(extrinsic_img, mtx, dist, newCameraMatrix=optmtx)
+    
+    success, ext_points = cv2.findChessboardCorners(undistorted_extrinsic,
+                                                 chessboard_size)
+    
+    if not success:
+        print("Extrinsic calibration failed: chessboard could not be found" +
+              " in undistorted image. Either the intrinsic calibration is bad" +
+              " and has distorted the chessboard, or there is no chessboard " +
+              "present.")
+        return None
+    
+    # Compute the perspective transformation between an undistorted image plane and the 
+    # ground plane.
+    
+
+    
+
+
+    homography, _ = cv2.findHomography(ext_points, obj_points)  
+    print(homography)
+    dsize = (undistorted_extrinsic.shape[1], undistorted_extrinsic.shape[0])
+
+    # EXTRA PERSPECTIVE TRANSFORM
+    # Place target image corners (homogenous coordinates) into a matrix
+    dst_bounds = np.transpose(np.array([[0, 0, 1],
+                                        [undistorted_extrinsic.shape[1], 0, 1],
+                                        [undistorted_extrinsic.shape[1], undistorted_extrinsic.shape[0], 1],
+                                        [0, undistorted_extrinsic.shape[0], 1]]))
+    
+    # Remap them using the homography 
+    map_dst_bounds = np.matmul(homography,dst_bounds)
+
+    # Reformat point representation for OpenCV
+    dst_bounds = np.transpose(dst_bounds[0:2])
+    dst_bounds = np.float32(dst_bounds)       
+    map_dst_bounds = np.transpose(map_dst_bounds[0:2])
+    map_dst_bounds = np.float32(map_dst_bounds)
+
+    # Work out the transformation between the remapped bounds and the original bounds.
+    M = cv2.getPerspectiveTransform(map_dst_bounds, dst_bounds)
+    homography = np.matmul(M,homography)
+    # EXTRA PERSPECTIVE TRANSFORM
+
+    perspective = cv2.warpPerspective(undistorted_extrinsic,
+                                      homography,
+                                      dsize)
+    
+    sample_image = cv2.imread('calibration_image_cache/extrinsic/000.png')
+    imheight = sample_image.shape[0]
+    
+    border = (255 * np.ones((imheight, 100, 3))).astype(np.uint8) # generate white border
+    
+    print(sample_image.shape)
+    print(undistorted_extrinsic.shape)
+    print(perspective.shape)
+    print(border.shape)
+
+    complete_frame = np.concatenate((sample_image, 
+                                     border, 
+                                     undistorted_extrinsic, 
+                                     border, 
+                                     perspective),  axis=1)
+
+    cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
+    
+    while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
+        cv2.imshow('frame', complete_frame)
+        if cv2.waitKey(1) == 'q':
+            break
+    
+
+    # Compile results
     results = dict()
     results["mtx"] = mtx
     results["dist"] = dist
     results["optmtx"] = optmtx
     results["rvecs"] = rvecs
     results["tvecs"] = tvecs
+    results["rproj_err"] = rproj_err
+    results["homography"] = homography
+    results["scale"] = 1
 
     return results
 
@@ -241,7 +315,35 @@ if __name__ == "__main__":
     
     calibration = generate_calibration_from_cache(object_chessboard,
                                                   chessboard_size)
-    print(calibration)
+    
+
+    # sample_image = cv2.imread('calibration_image_cache/intrinsic/000.png')
+    # imheight = sample_image.shape[0]
+    
+    # border = (255 * np.ones((imheight, 100, 3))).astype(np.uint8) # generate white border
+    
+    # print(sample_image.shape)
+
+    # dst = cv2.undistort(sample_image, 
+    #                     calibration['mtx'],
+    #                     calibration['dist'],
+    #                     None, 
+    #                     calibration['optmtx'])
+    
+    # print(dst.shape)
+
+    # complete_frame = np.concatenate((sample_image, border, dst),  axis=1)
+
+    # print(calibration["rvecs"])
+
+    # cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
+    # while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
+    #     cv2.imshow('frame',complete_frame)
+    #     if cv2.waitKey(1) == 'q':
+    #         break
+    
+
+    
 
                                                 
     

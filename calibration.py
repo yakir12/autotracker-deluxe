@@ -189,7 +189,7 @@ def calib():
 
 
 
-    # extrinsic calibration
+    # Compute a calibrated example image.
     id = np.array([extrinsic_calib_frame_id])
     frame_dst = cv2.remap(frame_extrinsic, mapx, mapy, interpolation=cv2.INTER_LINEAR)
     
@@ -225,7 +225,11 @@ def calib():
     corners_dst = np.array([list(corners_dst)])
     # print(corners_dst.shape)
 
-    # No clue...
+    # I think this is determining the scaling parameter to use to get back into
+    # world coordiantes by comparing the object checkerboard size and the 
+    # detected checkerboard size. That said I'm not sure how this computation is
+    # being expressed. I also think this should be done after perspective 
+    # transformation but not sure.
     scale = np.array(
         [0.04/np.mean(
             np.linalg.norm(
@@ -234,10 +238,14 @@ def calib():
         )
     # print(scale)
 
-    # Homography
+    # Extrinsic calibration - finding homography (correspondance) between
+    # the object checkerboard image and the undistorted image.
     H, status = cv2.findHomography(corners_dst, corners_obj)
 
-    dst_bounds = np.transpose(np.array([[0,0,1],[frame_dst.shape[1],0,1],[frame_dst.shape[1],frame_dst.shape[0],1],[0,frame_dst.shape[0],1]]))
+    dst_bounds = np.transpose(np.array([[0, 0, 1],
+                                        [frame_dst.shape[1], 0, 1],
+                                        [frame_dst.shape[1], frame_dst.shape[0], 1],
+                                        [0, frame_dst.shape[0], 1]]))
     map_dst_bounds = np.matmul(H,dst_bounds)
 
     dst_bounds = np.transpose(dst_bounds[0:2])

@@ -19,6 +19,13 @@ class ProjectFilePassthrough():
                              "chessboard_rows",
                              "chessboard_columns",
                              "chessboard_square_size"]
+        
+        # Set some sensible defaults for things which may have
+        # default values.
+        self.__defaults = dict()
+        self.__defaults["chessboard_rows"] = 6
+        self.__defaults["chessboard_columns"] = 9
+        self.__defaults["chessboard_square_size"] = 39
 
     def __getitem__(self,key):
         self.refresh()
@@ -26,14 +33,18 @@ class ProjectFilePassthrough():
         assert(key in self.__valid_keys)
 
         with open(self.__fname, "r") as f:
-                params = json.load(f)
+                project_file = json.load(f)
 
+        # Feels disgusting but return the item if it's been set,
+        # otherwise try the defaults dictionary. If no default is set
+        # then return the empty string.
         try:
-            item = params[key]
+            item = project_file[key]
         except KeyError:
-            # If the item has not yet been set, then we return the 
-            # empty string.
-            item = ""
+            try:
+                item = self.__defaults[key]
+            except KeyError:
+                item = ""
 
         return item
     
@@ -44,12 +55,12 @@ class ProjectFilePassthrough():
         assert(key in self.__valid_keys)
 
         with open(self.__fname, "r") as f:
-            params = json.load(f)
+            project_file = json.load(f)
 
-        params[key] = value
+        project_file[key] = value
         
         with open(self.__fname, "w") as f:
-            json.dump(params, f)
+            json.dump(project_file, f)
 
     def refresh(self):
         """

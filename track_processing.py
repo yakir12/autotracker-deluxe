@@ -298,7 +298,7 @@ def calibrate_and_smooth_tracks():
     #                  calibrated_filepath,
     #                  homography=H)
     
-    zero_tracks(calibrated_filepath, zeroed_filepath)
+    zero_tracks(raw_data_filepath, zeroed_filepath)
     
     smooth_tracks(zeroed_filepath, smoothed_filepath)
     plot_tracks(smoothed_filepath)

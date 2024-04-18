@@ -12,7 +12,7 @@ import cv2
 import matplotlib.pyplot as plt
 import os
 
-def define_object_chessboard(n_rows, n_columns, square_size,):
+def define_object_chessboard(n_rows, n_columns, square_size):
     """
     Create 'object' chessboard image such that one pixel == one millimetre. 
     This can be used to find the homography between a calibrated image and
@@ -141,10 +141,11 @@ def cache_calibration_video_frames(video_path,
 
 def generate_calibration_from_cache(object_chessboard,
                                     chessboard_size,
+                                    square_size,
                                     cache_path='calibration_image_cache'):
     # Work out object points
     # Flip chessboard
-    object_chessboard = ((np.ones(object_chessboard.shape) * 255) - object_chessboard).astype(np.uint8)
+    # object_chessboard = ((np.ones(object_chessboard.shape) * 255) - object_chessboard).astype(np.uint8)
     object_points = []
     object_success, obj_points = cv2.findChessboardCorners(object_chessboard, 
                                                            chessboard_size)
@@ -156,8 +157,9 @@ def generate_calibration_from_cache(object_chessboard,
     obj_points =\
           np.array([ (np.append(op[0], 0.0)) for op in obj_points]).astype(np.float32)
 
-   
+    #
     # Intrinsic calibration
+    #
 
     # Read in pattern corners from cache
     corner_file_list = os.listdir(os.path.join(cache_path, 'intrinsic', 'corners'))
@@ -200,14 +202,16 @@ def generate_calibration_from_cache(object_chessboard,
                               flags=flags)
     optmtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, frame_size, 1, frame_size)
 
-    # Compute perspective transform (extrinsic)
+    #
+    # Extrinsic calibration (camera perspective transformation)
+    # 
     extrinsic_path = os.path.join(cache_path, 'extrinsic', '000.png')
     extrinsic_img = cv2.imread(extrinsic_path)
     undistorted_extrinsic =\
           cv2.undistort(extrinsic_img, mtx, dist, newCameraMatrix=optmtx)
     
     success, ext_points = cv2.findChessboardCorners(undistorted_extrinsic,
-                                                 chessboard_size)
+                                                    chessboard_size)
     
     if not success:
         print("Extrinsic calibration failed: chessboard could not be found" +
@@ -219,54 +223,95 @@ def generate_calibration_from_cache(object_chessboard,
     # Compute the perspective transformation between an undistorted image plane and the 
     # ground plane.
     
-
-    
-
-
     homography, _ = cv2.findHomography(ext_points, obj_points)  
-    print(homography)
+   
     dsize = (undistorted_extrinsic.shape[1], undistorted_extrinsic.shape[0])
 
-    # EXTRA PERSPECTIVE TRANSFORM
-    # Place target image corners (homogenous coordinates) into a matrix
-    dst_bounds = np.transpose(np.array([[0, 0, 1],
-                                        [undistorted_extrinsic.shape[1], 0, 1],
-                                        [undistorted_extrinsic.shape[1], undistorted_extrinsic.shape[0], 1],
-                                        [0, undistorted_extrinsic.shape[0], 1]]))
+    # Adjust transformation to keep the full frame in the destination image dimensions. 
+    # This is Vishaal's code with different variable names.
+
+    # Place target image corners (as homogenous coordinates) into a matrix
+    image_dimensions =\
+          np.transpose(np.array([[0, 0, 1],
+                       [undistorted_extrinsic.shape[1], 0, 1],
+                       [undistorted_extrinsic.shape[1], undistorted_extrinsic.shape[0], 1],
+                       [0, undistorted_extrinsic.shape[0], 1]]))
     
     # Remap them using the homography 
-    map_dst_bounds = np.matmul(homography,dst_bounds)
+    transformed_image_dimensions = np.matmul(homography,image_dimensions)
 
     # Reformat point representation for OpenCV
-    dst_bounds = np.transpose(dst_bounds[0:2])
-    dst_bounds = np.float32(dst_bounds)       
-    map_dst_bounds = np.transpose(map_dst_bounds[0:2])
-    map_dst_bounds = np.float32(map_dst_bounds)
+    image_dimensions = np.transpose(image_dimensions[0:2])
+    image_dimensions = np.float32(image_dimensions)       
+    transformed_image_dimensions = np.transpose(transformed_image_dimensions[0:2])
+    transformed_image_dimensions = np.float32(transformed_image_dimensions)
 
     # Work out the transformation between the remapped bounds and the original bounds.
-    M = cv2.getPerspectiveTransform(map_dst_bounds, dst_bounds)
-    homography = np.matmul(M,homography)
-    # EXTRA PERSPECTIVE TRANSFORM
+    corrective_transform =\
+          cv2.getPerspectiveTransform(transformed_image_dimensions, image_dimensions)
 
-    perspective = cv2.warpPerspective(undistorted_extrinsic,
-                                      homography,
-                                      dsize)
+    # Apply the corrective transform to the original homography
+    homography = np.matmul(corrective_transform,homography)
+
+    #
+    # Scale - scale transformation between undistorted perspective shifted (calibrated)
+    # image and the object checkerboard.
+    #
+    calibrated_extrinsic_frame = cv2.warpPerspective(undistorted_extrinsic,
+                                                     homography,
+                                                     dsize)
     
+    success, img_scale_points = cv2.findChessboardCorners(calibrated_extrinsic_frame, 
+                                                          chessboard_size)
+    
+    #
+    # Estimate the average square size detected in the image
+    #
+    # Compute raw differences between pair of corner coordinates detected in the first row
+    # of the chessboard. 
+    img_scale_points = np.squeeze(img_scale_points)
+    raw_differences =\
+        img_scale_points[1:chessboard_size[0]-1] - img_scale_points[0:chessboard_size[0] - 2]
+
+    # Compute distances between corners from raw differences (square, sum, square root)
+    distances = np.linalg.norm(raw_differences, axis=1)
+
+    # Mean calibration square edge length in pixels in the calibrated image
+    mean_distance = np.mean(distances)
+
+    # Determine scaling parameter
+    scale = mean_distance / square_size
+
+    estimated_edge_length = np.linalg.norm(img_scale_points[chessboard_size[0]-1] - img_scale_points[0])/scale
+    true_edge_length = square_size * (chessboard_size[0] - 1)
+
+    # scale = px/mm -> x px / scale = y mm approximate true distance.
+    print("= Calibration check! =")
+    print("Your calibration board is {} columns by {} rows".format(chessboard_size[0], chessboard_size[1]))
+    print("Your square size is {}mm".format(square_size))
+    print("Top edge is {} squares".format(chessboard_size[0] - 1))
+    print("Length of top edge in mm (true : estimated) -> ({} : {})".format(true_edge_length, estimated_edge_length))
+    
+
+    #input()
+
+    #
+    ## TROUBLESHOOTING IMAGE DISPLAY ##
+    #
     sample_image = cv2.imread('calibration_image_cache/extrinsic/000.png')
     imheight = sample_image.shape[0]
     
     border = (255 * np.ones((imheight, 100, 3))).astype(np.uint8) # generate white border
     
-    print(sample_image.shape)
-    print(undistorted_extrinsic.shape)
-    print(perspective.shape)
-    print(border.shape)
-
+    calibrated_extrinsic_frame = cv2.drawChessboardCorners(calibrated_extrinsic_frame,
+                                                           chessboard_size,
+                                                           img_scale_points,
+                                                           success)
     complete_frame = np.concatenate((sample_image, 
                                      border, 
                                      undistorted_extrinsic, 
                                      border, 
-                                     perspective),  axis=1)
+                                     calibrated_extrinsic_frame),  axis=1)
 
     cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
     
@@ -285,7 +330,7 @@ def generate_calibration_from_cache(object_chessboard,
     results["tvecs"] = tvecs
     results["rproj_err"] = rproj_err
     results["homography"] = homography
-    results["scale"] = 1
+    results["scale"] = scale
 
     return results
 
@@ -314,7 +359,8 @@ if __name__ == "__main__":
                                        N=30)
     
     calibration = generate_calibration_from_cache(object_chessboard,
-                                                  chessboard_size)
+                                                  chessboard_size,
+                                                  square_size)
     
 
     # sample_image = cv2.imread('calibration_image_cache/intrinsic/000.png')

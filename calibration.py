@@ -225,11 +225,11 @@ def calib():
     corners_dst = np.array([list(corners_dst)])
     # print(corners_dst.shape)
 
-    # I think this is determining the scaling parameter to use to get back into
-    # world coordiantes by comparing the object checkerboard size and the 
-    # detected checkerboard size. That said I'm not sure how this computation is
-    # being expressed. I also think this should be done after perspective 
-    # transformation but not sure.
+    # Computes the average distance between the detected checkerboard corners
+    # in the first row of the chessboard. This should be the average square edge
+    # length. 
+
+    # I still don't know what the factor of 0.04 is doing.
     scale = np.array(
         [0.04/np.mean(
             np.linalg.norm(

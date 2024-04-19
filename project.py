@@ -31,7 +31,7 @@ class ProjectFilePassthrough():
         self.__defaults["calibration_cache"] =\
               os.path.join(dtrack_params['project_directory'], 'calibration_cache')
         self.__defaults["calibration_file"] =\
-              os.path.join(self.__defaults["calibration_cache"], "calibration.dat")
+              os.path.join(self.__defaults["calibration_cache"], "calibration.dt2c")
 
     def __getitem__(self,key):
         self.refresh()

@@ -334,6 +334,80 @@ def generate_calibration_from_cache(object_chessboard,
 
     return results
 
+def check_calibration(example_image_path, calibration):
+    """
+    Load an example image, and show the outcome of a given calibration on 
+    that image.
+
+    :param example_image_path: A filepath to an extrinsic calibration image which
+                               can be used to examine distortion.
+    :param calibration: A Calibration object which can be used to provide arguments
+                        for cv2.undistort and cv2.warpPerspective. 
+    """
+    chessboard_size = calibration.chessboard_size
+    square_size = calibration.square_size
+    sample_image = cv2.imread(example_image_path)
+    dsize = sample_image.shape
+    imheight = dsize[0]
+    
+    undistorted_extrinsic =\
+          cv2.undistort(sample_image, 
+                        calibration.camera_matrix, 
+                        calibration.distortion, 
+                        newCameraMatrix=calibration.opt_matrix) 
+
+    calibrated_extrinsic_frame =\
+          cv2.warpPerspective(undistorted_extrinsic,
+                              calibration.perspective_transform,
+                              dsize)
+    
+    success, img_scale_points = cv2.findChessboardCorners(calibrated_extrinsic_frame,
+                                                          chessboard_size)
+    
+    calibrated_extrinsic_frame = cv2.drawChessboardCorners(calibrated_extrinsic_frame,
+                                                           chessboard_size,
+                                                           img_scale_points,
+                                                           success)
+    
+    border = (255 * np.ones((imheight, 100, 3))).astype(np.uint8) # generate white border    
+    complete_frame = np.concatenate((sample_image, 
+                                     border, 
+                                     undistorted_extrinsic, 
+                                     border, 
+                                     calibrated_extrinsic_frame),  axis=1)
+    
+    cv2.putText(complete_frame, 
+                'See result in terminal.',
+                (50,50), 
+                cv2.FONT_HERSHEY_SIMPLEX, 
+                1, 
+                (255,255,255), 
+                2, 
+                cv2.LINE_AA)
+
+    estimated_edge_length = np.linalg.norm(img_scale_points[chessboard_size[0]-1] - img_scale_points[0])/scale
+    true_edge_length = square_size * (chessboard_size[0] - 1)
+
+    # scale = px/mm -> x px / scale = y mm approximate true distance.
+    print("")
+    print("= Calibration check! =")
+    print("Your calibration board is {} columns by {} rows".format(chessboard_size[0], chessboard_size[1]))
+    print("Your square size is {}mm".format(square_size))
+    print("Top edge is {} squares".format(chessboard_size[0] - 1))
+    print("Length of top edge in mm (true : estimated) -> ({} : {})".format(true_edge_length, estimated_edge_length))    
+    print("")
+    
+    cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
+
+    
+    
+    while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
+        cv2.imshow('frame', complete_frame)
+        if cv2.waitKey(1) == 'q':
+            break
+        
+    pass
+
 if __name__ == "__main__":
     # Use calibration info to work out homography
     # Detect checkerboard in image then report distance between corners.

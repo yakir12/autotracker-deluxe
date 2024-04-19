@@ -19,7 +19,9 @@ class Calibration():
                  tvecs=None,
                  reprojection_error=None,
                  perspective_transform=None,
-                 scale=None):
+                 scale=None,
+                 chessboard_size=None,
+                 chessboard_square_size=None):
         self.camera_matrix = matrix
         self.distortion = distortion
         self.opt_matrix = opt_matrix
@@ -28,6 +30,8 @@ class Calibration():
         self.reprojection_error = reprojection_error
         self.perspective_transform = perspective_transform
         self.scale = scale
+        self.chessboard_size = chessboard_size
+        self.chessboard_square_size = chessboard_square_size
 
         # Information about the calibration which should be set by the user
         # on generation.
@@ -47,3 +51,10 @@ def save(calib_object, filepath):
     """
     with open(filepath, 'wb') as f:
         pickle.dump(calib_object, f)
+
+def verify_calibration(filepath):
+    """
+    Check that the file at a given path was actually a calibration file.
+    """
+    calib = from_file(filepath)
+    return isinstance(calib, Calibration)

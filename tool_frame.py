@@ -108,7 +108,10 @@ class ToolFrame(tk.Frame):
             self.__wlf_information.set_text(
                 "Select the video files you wish to use for tracking and" +
                 " calibration.\n\nYou only need to do this once and doing this" +
-                " multiple times will overwrite your old video selection.") 
+                " multiple times will overwrite your old video selection.\n\n" +
+                "If you are going to import an existing calibration file, you do not need " +
+                "to select a calibration video.") 
+            
         elif var == 2:
             self.__wlf_information.set_text(
                 "Specify the calibration board dimensions and square size."

@@ -29,14 +29,21 @@ class Calibration():
         self.perspective_transform = perspective_transform
         self.scale = scale
 
+        # Information about the calibration which should be set by the user
+        # on generation.
+        self.__metadata = ""
+
 def from_file(filepath):
     """
     Read a calibration object from a file.
     """
-    return pickle.load(filepath) 
+    with open(filepath, 'rb') as f:
+        calib = pickle.load(f) 
+    return calib
 
 def save(calib_object, filepath):
     """
     Pickle and store a calibration object.
     """
-    pickle.dump(calib_object, filepath)
+    with open(filepath, 'wb') as f:
+        pickle.dump(calib_object, f)

@@ -18,7 +18,9 @@ class ProjectFilePassthrough():
                              "original_calibration_video",
                              "chessboard_rows",
                              "chessboard_columns",
-                             "chessboard_square_size"]
+                             "chessboard_square_size",
+                             "calibration_cache",
+                             "calibration_file"]
         
         # Set some sensible defaults for things which may have
         # default values.
@@ -28,6 +30,8 @@ class ProjectFilePassthrough():
         self.__defaults["chessboard_square_size"] = 39
         self.__defaults["calibration_cache"] =\
               os.path.join(dtrack_params['project_directory'], 'calibration_cache')
+        self.__defaults["calibration_file"] =\
+              os.path.join(self.__defaults["calibration_cache"], "calibration.dat")
 
     def __getitem__(self,key):
         self.refresh()

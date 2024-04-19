@@ -102,8 +102,8 @@ class ProjectFrame(tk.Frame):
         if not (".dt2p" in full_path):
             return
 
-        # Check that path doesn't already exist
-        parent = full_path.split(".")[0]
+        # Check that the user really wants to create the project
+        parent = os.path.basename(full_path).split(".")[0]
         confirm_message =\
               "A project directory will be created\n{}\n\n".format(parent)+\
               "Do you wish to proceed?"
@@ -115,8 +115,8 @@ class ProjectFrame(tk.Frame):
         if confirm:
             # Create parent directory
             os.mkdir(parent)
-            filename = full_path.split("/")[-1]
-            full_path = parent + "/" + filename
+            filename = os.path.basename(full_path)
+            full_path = os.path.join(parent, filename)
 
             # Create project (JSON) file
             with open(full_path, "w") as f:

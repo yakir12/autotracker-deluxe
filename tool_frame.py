@@ -4,7 +4,8 @@ from wrapped_label import WrappedLabelFrame
 from video_selector import VideoSelector
 from chessboard_selector import ChessboardSelector
 from autotrack import autotracker
-from calibration import calib
+from old_calibration import calib
+from calibration_manager import CalibrationManager
 from track_processing import calibrate_and_smooth_tracks
 
 
@@ -154,7 +155,9 @@ class ToolFrame(tk.Frame):
             chessboard_selector = ChessboardSelector(self)
             chessboard_selector.mainloop()
         elif var == 3:
-            calib()
+            #calib()
+            calib_manager = CalibrationManager(self)
+            calib_manager.mainloop()
         elif var == 4:
             autotracker()
         elif var == 5:

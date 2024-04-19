@@ -5,7 +5,7 @@ from PIL import Image, ImageTk
 import cv2
 import numpy as np
 
-from calibration import make_checkerboard
+from old_calibration import make_checkerboard
 from project import project_file
 
 class ChessboardSelector(tk.Toplevel):

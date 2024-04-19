@@ -26,6 +26,8 @@ class ProjectFilePassthrough():
         self.__defaults["chessboard_rows"] = 6
         self.__defaults["chessboard_columns"] = 9
         self.__defaults["chessboard_square_size"] = 39
+        self.__defaults["calibration_cache"] =\
+              os.path.join(dtrack_params['project_directory'], 'calibration_cache')
 
     def __getitem__(self,key):
         self.refresh()
@@ -43,6 +45,7 @@ class ProjectFilePassthrough():
         except KeyError:
             try:
                 item = self.__defaults[key]
+                self.__setitem__(key, item) # Add to toplevel representation
             except KeyError:
                 item = ""
 

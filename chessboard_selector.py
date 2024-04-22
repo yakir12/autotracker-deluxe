@@ -176,6 +176,10 @@ class ChessboardSelector(tk.Toplevel):
         project_file["chessboard_rows"] = int(self.__spb_row_selector.get())
         project_file["chessboard_columns"] = int(self.__spb_col_selector.get())
         project_file["chessboard_square_size"] = self.__spb_sq_size_selector.get()
+
+        # Store the chessboard dimensions - 1 for OpenCV corner detection.
+        project_file["chessboard_size"] = (project_file["chessboard_columns"] - 1,
+                                           project_file["chessboard_rows"] - 1)
         self.destroy()
 
     def __cancel_callback(self):

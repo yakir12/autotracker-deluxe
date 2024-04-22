@@ -72,9 +72,16 @@ class CalibrationManager(tk.Toplevel):
         self.__btn_check_calibration.grid(column=2, row=1, sticky='nesw')
         self.__btn_close.grid(column=3, row=1, sticky='nesw')
 
+        self.bind("<<AcClosed>>", self.__calibration_tool_closed)
 
         self.__check_for_calibration()
         self.__update_calib_message() 
+
+
+    def __calibration_tool_closed(self, event):
+        """
+        """
+        print("Event received.")
 
     def __update_calib_message(self):
         """
@@ -107,9 +114,8 @@ class CalibrationManager(tk.Toplevel):
             return
 
         # Create new window which manages the autocalibration
-        auto_calibration = AutocalibrationTool(self)
-        auto_calibration.mainloop()
-
+        autocalibration_tool = AutocalibrationTool(self)
+        autocalibration_tool.mainloop()
 
         #self.__check_for_calibration()
         

@@ -21,7 +21,8 @@ class Calibration():
                  perspective_transform=None,
                  scale=None,
                  chessboard_size=None,
-                 chessboard_square_size=None):
+                 chessboard_square_size=None,
+                 metadata=""):
         self.camera_matrix = matrix
         self.distortion = distortion
         self.opt_matrix = opt_matrix
@@ -35,7 +36,7 @@ class Calibration():
 
         # Information about the calibration which should be set by the user
         # on generation.
-        self.__metadata = ""
+        self.__metadata = metadata
 
 def from_file(filepath):
     """

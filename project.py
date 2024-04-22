@@ -19,6 +19,7 @@ class ProjectFilePassthrough():
                              "chessboard_rows",
                              "chessboard_columns",
                              "chessboard_square_size",
+                             "chessboard_size",
                              "calibration_cache",
                              "calibration_file"]
         
@@ -27,6 +28,8 @@ class ProjectFilePassthrough():
         self.__defaults = dict()
         self.__defaults["chessboard_rows"] = 6
         self.__defaults["chessboard_columns"] = 9
+        self.__defaults["chessboard_size"] = (self.__defaults["chessboard_columns"] - 1,
+                                              self.__defaults["chessboard_rows"] - 1)
         self.__defaults["chessboard_square_size"] = 39
         self.__defaults["calibration_cache"] =\
               os.path.join(dtrack_params['project_directory'], 'calibration_cache')

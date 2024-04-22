@@ -1,7 +1,11 @@
+import shutil
+import os
 import tkinter as tk
 from tkinter import messagebox, filedialog, dialog
 
 from project import project_file
+
+import autocalibration as ac
 
 class AutocalibrationTool(tk.Toplevel):
     def __init__(self, parent, **kwargs):
@@ -15,6 +19,7 @@ class AutocalibrationTool(tk.Toplevel):
         # calibration video or give an image file. Defualt to using the frame.
         self.__extrinsic_frame = 0
         self.__extrinsic_filepath = ""
+        self.__extrinsic_frame_set = False
 
         self.__stv_extrinsic_calibration_image = tk.StringVar()
         
@@ -43,11 +48,16 @@ class AutocalibrationTool(tk.Toplevel):
         
         self.__lbl_or = tk.Label(self.__lbf_extrinsic_selection, text=' OR ')
         self.__btn_select_image = tk.Button(self.__lbf_extrinsic_selection,
-                                            text="Select image file")
+                                            text="Select image file",
+                                            command=self.__select_extrinsic_frame_from_file)
         self.__btn_select_frame = tk.Button(self.__lbf_extrinsic_selection,
-                                            text="Select video frame")
+                                            text="Select video frame",
+                                            command=self.__select_extrinsic_frame_from_video)
         self.__btn_generate = tk.Button(self,
-                                        text="Generate!")
+                                        text="Generate!",
+                                        command=self.__generate_calibration)
+
+        self.protocol('WM_DELETE_WINDOW', self.__destruction_handler)
 
 
         # Window geometry
@@ -83,20 +93,156 @@ class AutocalibrationTool(tk.Toplevel):
         
         self.__update_ext_calibration_label()
 
+    def __destruction_handler(self):
+        """
+        Handler for window destruction. Generate a custom event and destroy
+        the window.
+        """
+        self.event_generate("<<AcClosed>>")
+        self.destroy()
+
     def __update_ext_calibration_label(self):
-        # If an image filepath has been given, display
-        if not self.__extrinsic_filepath == "":
-            text = self.__extrinsic_filepath
+        if self.__extrinsic_frame_set:
+            # If frame is set, make text green
+            self.__lbl_ext_calib_frame.configure(fg='#007d02')
+
+            # If a filepath has been set, use that.
+            if not self.__extrinsic_filepath == "":
+                text = self.__extrinsic_filepath
+            else:
+                # Otherwise show which frame the user selected
+                text = "Frame {}".format(str(self.__extrinsic_frame))
         else:
-            text = "Frame {}".format(str(self.__extrinsic_frame))
-            
+            # If no frame has been selected, show text in red.
+            text = 'No extrinsic frame set!'
+            self.__lbl_ext_calib_frame.configure(fg='#eb3a34')
+
         self.__stv_extrinsic_calibration_image.set(text)
         
 
-    def __select_extrinsic_frame(self):
+    def __select_extrinsic_frame_from_video(self):
         """
-        Spawn a simple dialog box to get the integer frame for extrinsic 
-        calibration from the user.
+        Spawn an OpenCV window with the calibration video.
+
+        Allows user to select an extrinsic calibration frame from the calibration video
+        """
+        
+        frame_was_set, frame_idx = ac.select_extrinsic_frame(
+            project_file['calibration_video'],
+            project_file['calibration_cache'],
+            project_file['chessboard_size'])   
+        
+        if frame_was_set:
+            self.__extrinsic_frame = frame_idx
+            self.__extrinsic_frame_set = True
+            self.__update_ext_calibration_label()
+
+    def __select_extrinsic_frame_from_file(self):
+        """
+        Open a file dialog to allow the user to select an extrinsic calibration
+        frame from a file.
         """
 
+        ext_image_path = filedialog.askopenfilename(
+                title="Select calibration file",
+                filetypes=[("PNG image files", ".png")]
+            )
+        
+        if ext_image_path == '':
+            # User cancelled
+            return
+        
+        # Check that the corners of the chessboard can actually be found in
+        # the provided image. Display the image with the corners or a message
+        # if no corners could be found.
+        success = ac.store_corners_from_image_file(ext_image_path,
+                                                   project_file['chessboard_size'],
+                                                   os.path.join(project_file['calibration_cache'],
+                                                   'extrinsic'))
+        
+        # If no corners found or the user quit the verification stage, return
+        # without doing anything.
+        if not success:
+            return
+        
+        # Try to copy file locally
+        local_ext_path = os.path.join(project_file['calibration_cache'], 
+                                      'extrinsic',
+                                      '000.png')
+    
+        if not local_ext_path == ext_image_path:
+            # If files are not the same, perform a copy
+            shutil.copy(ext_image_path, local_ext_path)
+        
+        # Update the extrinsic filepath variable for display
+        self.__extrinsic_filepath = ext_image_path
+        self.__extrinsic_frame_set = True
+        self.__update_ext_calibration_label()
+        
+
+    def __generate_calibration(self):
+        """
+        Generate calibration file from the calibration video and selected
+        extrinsic calibration frame.
+        """
+
+        if not self.__extrinsic_frame_set:
+            msg = "You need to set an extrinsic frame in order to generate" +\
+                  " a calibration file."
+            
+            messagebox.showerror(title="No extrinsic calibration image selected",
+                                 message=msg)
+
+            # Do nothing and return    
+            return
+        
+        cache_success =\
+              ac.cache_calibration_video_frames(project_file['calibration_video'],
+                                                project_file['chessboard_size'],
+                                                N=30,
+                                                frame_cache=project_file['calibration_cache'])
+        
+        if not cache_success:
+            msg = "Construction of the calibration cache failed. Check the" +\
+                  " terminal for specific error information."
+            
+            messagebox.showerror(title="Cache construction failure",
+                                 message=msg)
+            return
+        
+        
+        print("")
+
+        calibration_success =\
+            ac.generate_calibration_from_cache(
+                int(project_file['chessboard_columns']),
+                int(project_file['chessboard_rows']),
+                int(project_file['chessboard_square_size']),
+                cache_path=project_file['calibration_cache'],
+                metadata="")
+        
+        if not calibration_success:
+            msg = "Camera calibration failed. Check the terminal for specific" +\
+                  " error information."
+            
+            messagebox.showerror(title="Calibration failed",
+                                 message=msg)
+            return            
+        
+        print("")
+        print("Calibration completed successfully!")
+        print("Closing autocalibration tool.")
+        print("")
+
+        self.destroy()
+
+        
+
+        
+
+
+
+        
+        
+        
         

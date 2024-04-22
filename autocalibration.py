@@ -1,16 +1,19 @@
 """
-Test script for honing calibration procedure.
+autocalibration.py
 
-Randomly extract n frames from a test calibration video which have the chessboard
-present. An extrinsic frame is hard coded for the test video
+Back-end for all functions relating to camera calibration.
 
+Related:
+- autocalibration_tool.py -> Tkinter front-end to access this functionality.
+- calibration.py -> Class to hold Calibration data.
+- old_calibration.py -> Old calibration procedure (selecting frames live from OpenCV).
 """
-
 
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
 import os
+import shutil
+import calibration
 
 def define_object_chessboard(n_rows, n_columns, square_size):
     """
@@ -37,38 +40,227 @@ def define_object_chessboard(n_rows, n_columns, square_size):
 
     return chessboard, chessboard_size
 
+def select_extrinsic_frame(video_path, calibration_cache, chessboard_size):    
+    """
+    Spawn an OpenCV window to allow the user to select an extrinsic calibration
+    image from their calibration video.
+
+    :param video_path: The file path of the calibration video.
+    :param calibration_cache: The cache location where the frame should be stored.
+    """
+    window = "Select extrinsic calibration frame"
+    trackbar = 'trackbar'
+    cap = cv2.VideoCapture(video_path)
+    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    cv2.namedWindow(window, cv2.WINDOW_NORMAL)
+    
+    def trackbar_callback(trackbar_value):
+        """
+        Trackbar callback function (because python doesn't allow
+        multiline lambdas).
+
+        :param trackbar_value: The position of the trackbar
+        """
+        cap.set(cv2.CAP_PROP_POS_FRAMES, trackbar_value)
+        frame = cap.read()[1]
+        cv2.putText(frame, 
+                    'Select a frame where the calibration board is on the ground',
+                    (50,50), # Origin
+                    cv2.FONT_HERSHEY_SIMPLEX, # Font 
+                    1, # Font scale
+                    (255,255,255), # colour
+                    2, # Line thickness
+                    cv2.LINE_AA # Line type
+                    )
+        cv2.putText(frame, 
+                    'Press s to save the current frame and quit, q to quit without saving',
+                    (50,100), # Origin
+                    cv2.FONT_HERSHEY_SIMPLEX, # Font 
+                    1, # Font scale
+                    (255,255,255), # colour
+                    2, # Line thickness
+                    cv2.LINE_AA # Line type
+                    )
+                
+        chessboard_found, corners = cv2.findChessboardCorners(frame,
+                                                              chessboard_size)               
+        cv2.drawChessboardCorners(frame, 
+                                  chessboard_size, 
+                                  corners, 
+                                  patternWasFound=chessboard_found)
+        
+        
+        cv2.imshow(window, frame)
+
+    cv2.createTrackbar(trackbar, 
+                       window, 
+                       1, 
+                       length,
+                       trackbar_callback)
+
+    frame_was_set = False
+    while cv2.getWindowProperty(window, cv2.WND_PROP_VISIBLE):
+        kp = cv2.waitKey(1)
+        if kp == ord('s'):
+            # Re-read frame to store without text
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 
+                    int(cap.get(cv2.CAP_PROP_POS_FRAMES)) - 1)
+            frame = cap.read()[1]
+
+            # Check for existance of extrinsic calibration directory
+            path = os.path.join(calibration_cache, 'extrinsic')
+            if not os.path.exists(path):
+                # Create extrinsic calibration cache and corner directory
+                os.mkdir(path)
+                os.mkdir(os.path.join(path, 'corners'))
+
+            # Write image
+            cv2.imwrite(os.path.join(path, '000.png'), frame)                
+
+            # Detect chessboard corners and save to file.
+            _, corners = cv2.findChessboardCorners(frame,
+                                                   chessboard_size)
+            corners.dump(os.path.join(path, 'corners', '000.dat'))
+
+            frame_was_set = True
+            break
+        elif kp == ord('q'):
+            # Just break the control loop (close the window without doing anything)
+            break
+        
+    cv2.destroyAllWindows()
+
+    # Return flag and frame idx (each read increments the capture position, so
+    # sub 1)
+    return frame_was_set, int(cap.get(cv2.CAP_PROP_POS_FRAMES) - 1)
+
+def store_corners_from_image_file(image_path,
+                                  chessboard_size,
+                                  output_directory):
+    """
+    Given an image filepath, use OpenCV to detect the corners of a chessboard,
+    display this for user verification and then store the corners in the 
+    output directory if the user is happy with the selection
+
+    :param image_path: The path to the image
+    :param chessboard_size: The dimensions of the chessboard we're looking for.
+    :param output_directory: The output directory for the corner file (excluding the final filename).
+    :return: True if corners were found and user opted to save, False otherwise.
+    """
+
+    # Load frame and attempt to find chessboard corners
+    frame = cv2.imread(image_path)
+    success, corners = cv2.findChessboardCorners(frame, chessboard_size)
+    cv2.drawChessboardCorners(frame, chessboard_size, corners, patternWasFound=success)
+
+    if not success:
+        # If corners were not found inform the user
+        cv2.putText(frame, 
+                'No chessboard with dimensions {} by {} found in this frame.',
+                (50,50), # Origin
+                cv2.FONT_HERSHEY_SIMPLEX, # Font 
+                1, # Font scale
+                (255,255,255), # colour
+                2, # Line thickness
+                cv2.LINE_AA # Line type
+                )
+    else:
+        # Otherwise tell the user how to save their selection
+        cv2.putText(frame, 
+                    'Press s to confirm this is the frame you want to use.',
+                    (50,50), # Origin
+                    cv2.FONT_HERSHEY_SIMPLEX, # Font 
+                    1, # Font scale
+                    (255,255,255), # colour
+                    2, # Line thickness
+                    cv2.LINE_AA # Line type
+                    )
+    cv2.putText(frame, 
+                'Press q to quit without saving',
+                (50,100), # Origin
+                cv2.FONT_HERSHEY_SIMPLEX, # Font 
+                1, # Font scale
+                (255,255,255), # colour
+                2, # Line thickness
+                cv2.LINE_AA # Line type
+                )
+    
+    # Display the frame with a simple control loop
+    cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
+    cv2.imshow('frame', frame)
+
+    store = True
+    while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
+        kp = cv2.waitKey(1)
+
+        # If the corners were found and the user selects save then check the
+        # required directory exists and save the corners.
+        if success and kp == ord('s'):
+            if not os.path.exists(output_directory):
+                os.makedirs(output_directory)
+
+            path = os.path.join(output_directory, '000.dat')
+            corners.dump(path)
+            break
+        elif kp == ord('q'):
+            # If they quit, set a flag
+            store = False
+            break
+
+    cv2.destroyAllWindows()
+
+
+    # Method should return True only if the user selected save and the corners
+    # were found. In all other cases, should return False.
+    return success and store
+
+               
+
 def cache_calibration_video_frames(video_path, 
-                                   object_chessboard,
                                    chessboard_size,
                                    N=15, 
-                                   extrinsic_frames=0,
                                    frame_cache='calibration_image_cache'):
     """
     Select N frames from a calibration video where the chessboard is successfully
     found.
 
     :param video_path: The filepath to the calibration video
-    :param object_chessboard: An OpenCV image of the object-space chessboard.
     :param chessboard_size: The dimensions of the chessboard (inner corners).
     :param N: the number of frames you want to find.
-    :param extrinsic_frame: The index of a frame which can be used for extrinsic
-                            calibration (the chessboard is on the ground). This
-                            is guessed to be the first frame but SHOULD BE 
-                            PROVIDED BY THE CALLER!
     :param frame_cache: The caching directory to use for calibration frames.
-    :returns: The filepath to the frames.
-    """
 
-    # Ensures randomness is repeatable.
+    :return: The filepath to the frames.
+    """
+    
+    print("Attempting to build calibration cache")
+    print("")
+
+    # Init random generator, can be used to make repeatable randomness for testing
+    # by providing a seed.
     random_state = np.random.RandomState()
 
-
+    # Open OpenCV video capture
     cap = cv2.VideoCapture(video_path)
     frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+
+    if N > frame_count:
+        print("Cache construction failed!")
+        print("You selected N to be greater than the number of frames in the calibration video ({})."
+              .format(frame_count))
+        print("Try again with reduced N (< {}).".forma(frame_count))
+
+    if not os.path.exists(os.path.join(frame_cache, 'intrinsic')):
+        # Create the intrinsic/corners subdirectory.
+        os.makedirs(os.path.join(frame_cache, 'intrinsic', 'corners'))
+    else:
+        # Clear old calibration cache
+        shutil.rmtree(os.path.join(frame_cache, 'intrinsic'))
+        os.makedirs(os.path.join(frame_cache, 'intrinsic', 'corners'))
+
+    # Compute random frame selection
     sample_indices = random_state.choice(range(int(frame_count)),
                                          size=int(N),
                                          replace=False)
-
 
     # Cache appropriate images for intrinsic calibration
     failed_indices = []
@@ -76,7 +268,7 @@ def cache_calibration_video_frames(video_path,
     while idx < len(sample_indices):
         frame_idx = sample_indices[idx]
 
-        print("Checking frame {}".format(frame_idx))
+        print("Chessboard check, frame {}".format(frame_idx))
 
         # Set capture position and get frame
         cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
@@ -87,8 +279,20 @@ def cache_calibration_video_frames(video_path,
 
         if not chessboard_found:
             print("Failed to find chessboard in frame, trying a new frame...")
+
+
+            # Note, this may be prone to failure if the chessboard cannot be found
+            # in enough frames (software will freeze)
             failed_indices.append(frame_idx) # Keep track of failed frames
             new_choice = frame_idx
+
+            if (len(failed_indices) + len(sample_indices)) > frame_count:
+                print("Cache construction failed!")
+                print("You asked for {} calibration frames but I could only find {}"
+                      .format(N, idx))
+                print("Reduce your chosen N to be less than {}".format(idx))
+                print("")
+                return False
             
             # Look for a new (random) frame index which hasn't been tried already
             # and isn't in the current sample_indices list.
@@ -100,8 +304,7 @@ def cache_calibration_video_frames(video_path,
             
             continue # continue without index increment to try again.
 
-        # If the chessboard was found, then save a copy of the image with
-        # the corners drawn and a clean copy.
+        # If the chessboard was found, then save the image and the corners to the cache
         filepath = os.path.join(frame_cache, "intrinsic", "{:03d}.png".format(idx))
         corner_file = os.path.join(frame_cache, "intrinsic", "corners", "{:03d}.dat".format(idx))
         print("Chessboard found, caching image at {}".format(filepath))
@@ -109,46 +312,38 @@ def cache_calibration_video_frames(video_path,
         corners.dump(corner_file)
         idx += 1
 
-    # Cache extrinsic image, these are pre-selected so if the chessboard can't
-    # be found, inform the user and move on. Only issue is if there was no
-    # successful extrinsic frame.
-    extrinsic_frames = np.atleast_1d(extrinsic_frames) # Make sure this is in array format
-    ext_success = False # Overall extrinsic calibration success
-    count = 0
-    for frame_idx in extrinsic_frames:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
-        print("Extrinsic, checking frame {}".format(frame_idx))
-        _, frame = cap.read()
-        
-        chessboard_found, corners = cv2.findChessboardCorners(frame,
-                                                              chessboard_size)
-        ext_success |= chessboard_found
+        print("")
+        print("Calibration cache constructed succcessfully at:")
+        print("{}".format(frame_cache))
+        print("")
 
-        if not chessboard_found:
-            print("Chessboard not found in frame {} for extrinsic calibration.")
-            continue
+    return True
 
-        filepath = os.path.join(frame_cache, "extrinsic", "{:03d}.png".format(count))
-        corner_file = os.path.join(frame_cache, "extrinsic", "corners", "{:03d}.dat".format(count))
-        print("Chessboard found, caching image at {}".format(filepath))
-        cv2.imwrite(filepath, frame)
-        corners.dump(corner_file)
-
-        count += 1
-        
-    if not ext_success:
-        print("Warning: Chessboard not found in any frames chosen for extrinsic calibration!")
-
-def generate_calibration_from_cache(object_chessboard,
-                                    chessboard_size,
+def generate_calibration_from_cache(chessboard_columns,
+                                    chessboard_rows,
                                     square_size,
-                                    cache_path='calibration_image_cache'):
+                                    cache_path='calibration_image_cache',
+                                    metadata=""):
+    """
+    Generate a calibration file from an image cache (constructed using
+    cache_calibration_video_frames()).
+
+    :param chessboard_columns: The number of columns in the chessboard
+    :param chessboard_rows: The number of rows in the chessboard
+    :param square_size: The square size of the chessboard
+    :param cache_path: The location where the calibration cache is stored
+    :param metadata: A short description of this calibration
+    """
+
+    object_chessboard, chessboard_size =\
+        define_object_chessboard(chessboard_rows, chessboard_columns, square_size)
+    
+    object_chessboard = object_chessboard.astype(np.uint8)
+
     # Work out object points
-    # Flip chessboard
-    # object_chessboard = ((np.ones(object_chessboard.shape) * 255) - object_chessboard).astype(np.uint8)
     object_points = []
-    object_success, obj_points = cv2.findChessboardCorners(object_chessboard, 
-                                                           chessboard_size)
+    _, obj_points = cv2.findChessboardCorners(object_chessboard, 
+                                              chessboard_size)
 
     # OpenCV wants the object points as an array of the form 
     # [[x1, y1, 0], ... , [xN, yN, 0]] (which isn't what the above function returns)
@@ -182,7 +377,9 @@ def generate_calibration_from_cache(object_chessboard,
     sample_frame = cv2.imread(imagepath)
     frame_size = sample_frame.shape[:2]
 
+    #
     # Compute camera calibration.
+    #
 
     # The camera model assumes more variability than should actually be
     # possible with a standard consumer video camera which is correctly 
@@ -218,7 +415,7 @@ def generate_calibration_from_cache(object_chessboard,
               " in undistorted image. Either the intrinsic calibration is bad" +
               " and has distorted the chessboard, or there is no chessboard " +
               "present.")
-        return None
+        return False
     
     # Compute the perspective transformation between an undistorted image plane and the 
     # ground plane.
@@ -282,57 +479,70 @@ def generate_calibration_from_cache(object_chessboard,
     # Determine scaling parameter
     scale = mean_distance / square_size
 
-    estimated_edge_length = np.linalg.norm(img_scale_points[chessboard_size[0]-1] - img_scale_points[0])/scale
-    true_edge_length = square_size * (chessboard_size[0] - 1)
+    # estimated_edge_length = np.linalg.norm(img_scale_points[chessboard_size[0]-1] - img_scale_points[0])/scale
+    # true_edge_length = square_size * (chessboard_size[0] - 1)
 
-    # scale = px/mm -> x px / scale = y mm approximate true distance.
-    print("= Calibration check! =")
-    print("Your calibration board is {} columns by {} rows".format(chessboard_size[0], chessboard_size[1]))
-    print("Your square size is {}mm".format(square_size))
-    print("Top edge is {} squares".format(chessboard_size[0] - 1))
-    print("Length of top edge in mm (true : estimated) -> ({} : {})".format(true_edge_length, estimated_edge_length))
-    
-
+    # # scale = px/mm -> x px / scale = y mm approximate true distance.
+    # print("= Calibration check! =")
+    # print("Your calibration board is {} columns by {} rows".format(chessboard_size[0], chessboard_size[1]))
+    # print("Your square size is {}mm".format(square_size))
+    # print("Top edge is {} squares".format(chessboard_size[0] - 1))
+    # print("Length of top edge in mm (true : estimated) -> ({} : {})".format(true_edge_length, estimated_edge_length))
     #input()
 
-    #
-    ## TROUBLESHOOTING IMAGE DISPLAY ##
-    #
-    sample_image = cv2.imread('calibration_image_cache/extrinsic/000.png')
-    imheight = sample_image.shape[0]
+    # #
+    # ## TROUBLESHOOTING IMAGE DISPLAY ##
+    # #
+    # sample_image = cv2.imread('calibration_image_cache/extrinsic/000.png')
+    # imheight = sample_image.shape[0]
     
-    border = (255 * np.ones((imheight, 100, 3))).astype(np.uint8) # generate white border
+    # border = (255 * np.ones((imheight, 100, 3))).astype(np.uint8) # generate white border
     
-    calibrated_extrinsic_frame = cv2.drawChessboardCorners(calibrated_extrinsic_frame,
-                                                           chessboard_size,
-                                                           img_scale_points,
-                                                           success)
-    complete_frame = np.concatenate((sample_image, 
-                                     border, 
-                                     undistorted_extrinsic, 
-                                     border, 
-                                     calibrated_extrinsic_frame),  axis=1)
+    # calibrated_extrinsic_frame = cv2.drawChessboardCorners(calibrated_extrinsic_frame,
+    #                                                        chessboard_size,
+    #                                                        img_scale_points,
+    #                                                        success)
+    # complete_frame = np.concatenate((sample_image, 
+    #                                  border, 
+    #                                  undistorted_extrinsic, 
+    #                                  border, 
+    #                                  calibrated_extrinsic_frame),  axis=1)
 
-    cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
+    # cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
     
-    while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
-        cv2.imshow('frame', complete_frame)
-        if cv2.waitKey(1) == 'q':
-            break
+    # while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
+    #     cv2.imshow('frame', complete_frame)
+    #     if cv2.waitKey(1) == 'q':
+    #         break
     
 
-    # Compile results
-    results = dict()
-    results["mtx"] = mtx
-    results["dist"] = dist
-    results["optmtx"] = optmtx
-    results["rvecs"] = rvecs
-    results["tvecs"] = tvecs
-    results["rproj_err"] = rproj_err
-    results["homography"] = homography
-    results["scale"] = scale
+    # # Compile results
+    # results = dict()
+    # results["mtx"] = mtx
+    # results["dist"] = dist
+    # results["optmtx"] = optmtx
+    # results["rvecs"] = rvecs
+    # results["tvecs"] = tvecs
+    # results["rproj_err"] = rproj_err
+    # results["homography"] = homography
+    # results["scale"] = scale
 
-    return results
+    calib = calibration.Calibration(
+        matrix=mtx,
+        distortion=dist,
+        opt_matrix=optmtx,
+        rvecs=rvecs,
+        tvecs=tvecs,
+        reprojection_error=rproj_err,
+        perspective_transform=homography,
+        scale=scale,
+        metadata=metadata
+    )
+
+    calib_filepath = os.path.join(cache_path, 'calibration.dt2c')
+    calibration.save(calib, calib_filepath)
+
+    return True
 
 def check_calibration(example_image_path, calibration):
     """
@@ -408,66 +618,56 @@ def check_calibration(example_image_path, calibration):
         
     pass
 
-if __name__ == "__main__":
-    # Use calibration info to work out homography
-    # Detect checkerboard in image then report distance between corners.
+# if __name__ == "__main__":
+#     # Use calibration info to work out homography
+#     # Detect checkerboard in image then report distance between corners.
 
-    # Selected test video
-    video = "/home/robert/postdoc/source/output.mov"
+#     # Selected test video
+#     video = "/home/robert/postdoc/source/output.mov"
     
-    # Chessboard parameters
-    n_rows = 6
-    n_cols = 9
-    square_size = 39
+#     # Chessboard parameters
+#     n_rows = 6
+#     n_cols = 9
+#     square_size = 39
 
-    # Define an object chessboard image and convert to OpenCV-compatible type.
-    object_chessboard, chessboard_size =\
-          define_object_chessboard(n_rows, n_cols, square_size)
-    object_chessboard = object_chessboard.astype(np.uint8) * 255
+#     # Define an object chessboard image and convert to OpenCV-compatible type.
+#     object_chessboard, chessboard_size =\
+#           define_object_chessboard(n_rows, n_cols, square_size)
+#     object_chessboard = object_chessboard.astype(np.uint8) * 255
 
-    refresh_cache=False
-    if refresh_cache:
-        cache_calibration_video_frames(video, 
-                                       object_chessboard, 
-                                       chessboard_size, 
-                                       N=30)
+#     refresh_cache=False
+#     if refresh_cache:
+#         cache_calibration_video_frames(video, 
+#                                        object_chessboard, 
+#                                        chessboard_size, 
+#                                        N=30)
     
-    calibration = generate_calibration_from_cache(object_chessboard,
-                                                  chessboard_size,
-                                                  square_size)
-    
-
-    # sample_image = cv2.imread('calibration_image_cache/intrinsic/000.png')
-    # imheight = sample_image.shape[0]
-    
-    # border = (255 * np.ones((imheight, 100, 3))).astype(np.uint8) # generate white border
-    
-    # print(sample_image.shape)
-
-    # dst = cv2.undistort(sample_image, 
-    #                     calibration['mtx'],
-    #                     calibration['dist'],
-    #                     None, 
-    #                     calibration['optmtx'])
-    
-    # print(dst.shape)
-
-    # complete_frame = np.concatenate((sample_image, border, dst),  axis=1)
-
-    # print(calibration["rvecs"])
-
-    # cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
-    # while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
-    #     cv2.imshow('frame',complete_frame)
-    #     if cv2.waitKey(1) == 'q':
-    #         break
+#     calibration = generate_calibration_from_cache(object_chessboard,
+#                                                   chessboard_size,
+#                                                   square_size)
     
 
+#     # sample_image = cv2.imread('calibration_image_cache/intrinsic/000.png')
+#     # imheight = sample_image.shape[0]
     
+#     # border = (255 * np.ones((imheight, 100, 3))).astype(np.uint8) # generate white border
+    
+#     # print(sample_image.shape)
 
-                                                
+#     # dst = cv2.undistort(sample_image, 
+#     #                     calibration['mtx'],
+#     #                     calibration['dist'],
+#     #                     None, 
+#     #                     calibration['optmtx'])
     
-    
+#     # print(dst.shape)
 
+#     # complete_frame = np.concatenate((sample_image, border, dst),  axis=1)
 
-    
+#     # print(calibration["rvecs"])
+
+#     # cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
+#     # while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
+#     #     cv2.imshow('frame',complete_frame)
+#     #     if cv2.waitKey(1) == 'q':
+#     #         break

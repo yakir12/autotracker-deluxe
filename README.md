@@ -136,11 +136,45 @@ Changing the square size will change the visible size of the board pattern but p
 
 Once you have selected your rows, columns and square size, click 'Confirm'. Clicking 'Cancel' will discard any changes.
 
-#### 3. Extract calibration parameters
-1. Follow the on-screen instructions.
-2. When the process is finished, a calibrated frame will be shown. Press q to close the window.
+#### 3. Calibration manager
+The calibration manager allows you to generate a calibration file from your calibration video, import a calibration file from a separate project, or visually inspect the results of your calibration on a candidate image.
 
-**Note:** You should select only a single 'ground' frame. 
+![The calibration manager window](images/calibration_manager.png)
+![Calibration manager with file](images/calibration_manager_2.png)
+
+**Generate new calibration**
+
+This option will allow you to generate a calibration file from your calibration video using the Autocalibration tool. 
+
+![Autocalibration tool](autocalibration_tool.png)
+
+This tool will open your calibration video, select N random frames in which chessboards can be found, then store the images and the detected chessboard corners (in `project_directory/calibration_cache`). 
+
+You need to provide:
+
+1. The number of frames you wish to use
+2. Some information describing the calibration
+3. A video frame where the chessboard is on the ground (for extrinsic calibration)
+
+The extrinsic claibration frame can be selected either from your calibration video (recommended) or from a file. 
+
+Once you've provided the necessary information, you can click 'Generate!'. This will create a directory called `calibration_cache` in your project directory which will contain the calibration file (`calibration.dt2c`), all of the images used for calibration (intrinsic and extrinsic) and all of the detected chessboard corners in image coordinates.
+
+*Generating a new calibration will overwrite any previous calibration for the current project. This includes the image cache.*
+
+**Import existing calibration**
+If you already have a calibration which is working well, you can import this. This button will open a file dialog which will allow you to select the calibration file you want to import. 
+
+Calibration files are stored in `your_project_directory/calibration_cache/calibration.dt2c`. Find the calibration file you want and click 'Open' in the file dialog. 
+
+*You can copy these by hand but you need to make sure they're in the right place with the right name. Just use the import tool.*
+
+**Check calibration**
+This option will allow you to visually inspect your calibration to determine how good it is. 
+
+
+
+
 
 #### 4. Autotracker
 1. A new window will open playing the video to be tracked (at high speed)

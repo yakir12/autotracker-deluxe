@@ -146,7 +146,7 @@ The calibration manager allows you to generate a calibration file from your cali
 
 This option will allow you to generate a calibration file from your calibration video using the Autocalibration tool. 
 
-![Autocalibration tool](autocalibration_tool.png)
+![Autocalibration tool](images/autocalibration_tool.png)
 
 This tool will open your calibration video, select N random frames in which chessboards can be found, then store the images and the detected chessboard corners (in `project_directory/calibration_cache`). 
 
@@ -156,7 +156,7 @@ You need to provide:
 2. Some information describing the calibration
 3. A video frame where the chessboard is on the ground (for extrinsic calibration)
 
-The extrinsic claibration frame can be selected either from your calibration video (recommended) or from a file. 
+The extrinsic claibration frame can be selected either from your calibration video (recommended) or from a file. To select a frame from your calibration video, use 'Select video frame', then use the trackbar to seek your frame in the video. Press 's' to save the frame; you should see the Extrinsic frame field update in the tool.
 
 Once you've provided the necessary information, you can click 'Generate!'. This will create a directory called `calibration_cache` in your project directory which will contain the calibration file (`calibration.dt2c`), all of the images used for calibration (intrinsic and extrinsic) and all of the detected chessboard corners in image coordinates.
 
@@ -170,9 +170,26 @@ Calibration files are stored in `your_project_directory/calibration_cache/calibr
 *You can copy these by hand but you need to make sure they're in the right place with the right name. Just use the import tool.*
 
 **Check calibration**
+
 This option will allow you to visually inspect your calibration to determine how good it is. 
 
+![Check calibration window](images/check_calibration.png)
 
+The left hand image is the original frame, the centre image has been corrected for lens distortion, and the final image has had a perspective transform applied to align the ground plane and the image plane (i.e. to correct for the position of the camera).
+
+Some additional information is given in the terminal:
+
+```
+= Calibration check! =
+Your calibration board is 8 columns by 5 rows
+Your square size is 39mm
+Top edge is 7 squares
+Length of top edge in mm (true : estimated) -> (273 : 273.06548097147925)
+```
+
+This check will use the chessboard dimensions you supplied to compute the length of the top edge of the chessboard. The software will then compute the distance between the top left and top right corners of the chessboard and supply the estimated distance. 
+
+*This is **not** foolproof. Some distortion can still be seen in the right-hand image in this example (the circular arena looks oblong). In addition, you can check the average displacement of your tracks (see 5 below). I want to improve calibration verification going forward.*
 
 
 
@@ -198,19 +215,23 @@ to the track file (`<project_directory>/raw_tracks.csv`).
 
 #### 5. Process tracks
 This option runs in full when you click 'Run'. At present this will:
-1. Zero the tracks (translate them so they all start at the same origin, (0,0)).
-2. Smooth the tracks using a basic univariate spline
-3. Produce and display a plot showing the smoothed tracks.
+1. Calibrate the tracks (undistort, transform perspective, and scale to mm)
+2. Zero the tracks (translate them so they all start at the same origin, (0,0)).
+3. Smooth the tracks using a basic univariate spline
+4. Produce and display a plot showing the smoothed tracks.
 
-The zeroing and smoothing stages both produce CSV files with the results. You 
+The calibration, zeroing, and smoothing stages all produce CSV files with the results. You 
 can take these and open them in Excel or LibreOffice (or your preferred analysis
 environment) and do whatever analysis/plotting you want. These files are
-in the project directory, named `zeroed_tracks.csv` and `smoothed_tracks.csv` 
-respectively
+in the project directory, named `calibrated_tracks.csv`, `zeroed_tracks.csv`, and `smoothed_tracks.csv` 
+respectively (there is also a file for raw tracks `raw_tracks.csv`)
 
 The plot is only used to see what the software has produced (i.e. to check that
 the software is working as expected), you are expected to produce your own 'nice' 
 plots as required.
+
+**Note**
+The terminal will display the average displacement of your beetles in metres. This should approximately match the radius of your arena but it won't be exact because it depends on when you start and stop tracks. Note that if you have any partial tracks, this will also skew the result. I would guess (hope) that the displacement should be within 5cm of the true radius of the arena.
 
 ## Miscellany
 ### Interlaced video

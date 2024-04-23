@@ -536,7 +536,9 @@ def generate_calibration_from_cache(chessboard_columns,
         reprojection_error=rproj_err,
         perspective_transform=homography,
         scale=scale,
-        metadata=metadata
+        metadata=metadata,
+        chessboard_size=chessboard_size,
+        chessboard_square_size=square_size
     )
 
     calib_filepath = os.path.join(cache_path, 'calibration.dt2c')
@@ -554,11 +556,15 @@ def check_calibration(example_image_path, calibration):
     :param calibration: A Calibration object which can be used to provide arguments
                         for cv2.undistort and cv2.warpPerspective. 
     """
+    
     chessboard_size = calibration.chessboard_size
-    square_size = calibration.square_size
+    square_size = calibration.chessboard_square_size
+    scale = calibration.scale
     sample_image = cv2.imread(example_image_path)
-    dsize = sample_image.shape
-    imheight = dsize[0]
+    dsize = (sample_image.shape[1], sample_image.shape[0])
+    imheight = dsize[1]
+
+    print(chessboard_size)
     
     undistorted_extrinsic =\
           cv2.undistort(sample_image, 
@@ -578,8 +584,15 @@ def check_calibration(example_image_path, calibration):
                                                            chessboard_size,
                                                            img_scale_points,
                                                            success)
+
     
     border = (255 * np.ones((imheight, 100, 3))).astype(np.uint8) # generate white border    
+    print("")
+    print(border.shape)
+    print(calibrated_extrinsic_frame.shape)
+    print(undistorted_extrinsic.shape)
+    print(sample_image.shape)
+    print("")
     complete_frame = np.concatenate((sample_image, 
                                      border, 
                                      undistorted_extrinsic, 

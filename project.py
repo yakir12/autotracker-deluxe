@@ -82,6 +82,12 @@ class ProjectFilePassthrough():
         after dtrack_params had been updated.
         """
         self.__fname = dtrack_params["project_file"]
+
+        # Refresh all default values which depend on the information from dtrack_params
+        self.__defaults["calibration_cache"] =\
+              os.path.join(dtrack_params['project_directory'], 'calibration_cache')
+        self.__defaults["calibration_file"] =\
+              os.path.join(self.__defaults["calibration_cache"], "calibration.dt2c")
     
     def name(self):
         return self.__fname

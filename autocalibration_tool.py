@@ -57,9 +57,6 @@ class AutocalibrationTool(tk.Toplevel):
                                         text="Generate!",
                                         command=self.__generate_calibration)
 
-        self.protocol('WM_DELETE_WINDOW', self.__destruction_handler)
-
-
         # Window geometry
         n_columns = 3
         n_rows=3
@@ -92,14 +89,6 @@ class AutocalibrationTool(tk.Toplevel):
         self.__btn_select_image.grid(row=0, column=2, sticky='nesw')
         
         self.__update_ext_calibration_label()
-
-    def __destruction_handler(self):
-        """
-        Handler for window destruction. Generate a custom event and destroy
-        the window.
-        """
-        self.event_generate("<<AcClosed>>")
-        self.destroy()
 
     def __update_ext_calibration_label(self):
         if self.__extrinsic_frame_set:

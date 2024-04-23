@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from enum import Enum
 
-import autocalibration
+import autocalibration as ac
 import calibration as calib
 
 from autocalibration_tool import AutocalibrationTool
@@ -72,16 +72,16 @@ class CalibrationManager(tk.Toplevel):
         self.__btn_check_calibration.grid(column=2, row=1, sticky='nesw')
         self.__btn_close.grid(column=3, row=1, sticky='nesw')
 
-        self.bind("<<AcClosed>>", self.__calibration_tool_closed)
-
         self.__check_for_calibration()
         self.__update_calib_message() 
 
 
     def __calibration_tool_closed(self, event):
         """
+        Callback for destruction of autocalibration tool.
         """
-        print("Event received.")
+        self.__check_for_calibration()
+        self.__update_calib_message()
 
     def __update_calib_message(self):
         """
@@ -115,7 +115,9 @@ class CalibrationManager(tk.Toplevel):
 
         # Create new window which manages the autocalibration
         autocalibration_tool = AutocalibrationTool(self)
+        autocalibration_tool.bind('<Destroy>', self.__calibration_tool_closed)
         autocalibration_tool.mainloop()
+        
 
         #self.__check_for_calibration()
         
@@ -131,7 +133,7 @@ class CalibrationManager(tk.Toplevel):
             title="Select calibration file",
             filetypes=[("DTrack2 Calibration Files", ".dt2c")])
         
-        if filepath_for_import == '':
+        if filepath_for_import == ():
             # User cancelled.
             return
 
@@ -154,10 +156,25 @@ class CalibrationManager(tk.Toplevel):
         the user.
         """
 
+        ext_image_path = os.path.join(
+            project_file["calibration_cache"],
+            "extrinsic",
+            "000.png")
+        
+        calib_status = self.__check_for_calibration()
+        if calib_status == CalibStatus.NOT_FOUND:
+            msg = "This project does not yet have a calibration file. Generate or" +\
+                  " import one."
+            messagebox.showerror(title="Missing calibration file!",
+                                 message=msg)
+        elif calib_status == CalibStatus.CORRUPT:
+            msg = "The calibration file associated with this project cannot be" +\
+                  " properly decoded. Generate or import a new file."
+            messagebox.showerror(title="Corrupted calibration file!",
+                                 message=msg)
+
         # Check to see if we have an example extrinsic frame to use
-        if not os.path.exists(os.path.join(project_file["calibration_cache"], 
-                                           'extrinsic', 
-                                           '000.png')):
+        if not os.path.exists(ext_image_path):
             msg = "Checking the calibration requires an example image where the " +\
                   "chessboard is placed on the ground. If you imported a previous " +\
                   "calibration, then you need to provide this image (a file "+\
@@ -171,15 +188,11 @@ class CalibrationManager(tk.Toplevel):
                 filetypes=[("PNG image files", ".png")]
             )
         
-            if ext_image_path == '':
+            if ext_image_path == ():
                 # User cancelled.
                 return
-            
-
-        #
-        # STUB, need to be able to generate calibrations before we can test them.
-        #
-    
+        
+        ac.check_calibration(ext_image_path, calib.from_file(project_file["calibration_file"]))
 
     
     def __check_for_calibration(self):
@@ -196,6 +209,9 @@ class CalibrationManager(tk.Toplevel):
 
         directory = project_file["calibration_cache"]
         filepath = project_file["calibration_file"]
+
+        print("Checking for calibration file at:")
+        print(filepath)
 
         if os.path.exists(directory):
             if os.path.exists(filepath):

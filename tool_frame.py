@@ -38,7 +38,7 @@ class ToolFrame(tk.Frame):
                              command=self.__update_info)
         self.__rbn_compute_calibration =\
               tk.Radiobutton(self.__labelframe,
-                             text='3. Compute camera calibration',
+                             text='3. Calibration manager',
                              variable=self.__int_option,
                              value=3,
                              command=self.__update_info)
@@ -118,13 +118,9 @@ class ToolFrame(tk.Frame):
             )
         elif var == 3:
             self.__wlf_information.set_text(
-                "Run the calibration tool. Your calibration video will play and" +
-                " can pause/seek in the video to find good calibration frames." +
-                " You may select any number of calibration frames.\n\nFor extrinsic" +
-                " calibration you must select one frame as the ground frame" +
-                " (where the checkerboard is on the ground) to extract the camera's" +
-                " position. If you select multiple ground frames, only the last" +
-                " one will be used."
+                "(NEW) Run the calibration manager. This will allow you to generate a" +\
+                " calibration file from your calibration video or import an existing"+\
+                " calibration file from another project."
             )
         elif var == 4:
             self.__wlf_information.set_text(

@@ -22,6 +22,8 @@ class AutocalibrationTool(tk.Toplevel):
         self.__extrinsic_frame_set = False
 
         self.__stv_extrinsic_calibration_image = tk.StringVar()
+        self.__stv_N_frames = tk.StringVar()
+        self.__stv_N_frames.set("30")
         
         self.__lbl_calib_video = tk.Label(
             self,
@@ -31,6 +33,13 @@ class AutocalibrationTool(tk.Toplevel):
             self,
             text="Extrinsic (Ground) image:",
             anchor='e')
+        
+        self.__lbl_N_frames = tk.Label(
+            self,
+            text="N calibration frames: ",
+            anchor='e'
+        )
+
         self.__lbl_calib_video_path = tk.Label(
             self,                                               
             text=project_file["calibration_video"],
@@ -41,6 +50,31 @@ class AutocalibrationTool(tk.Toplevel):
             textvariable=self.__stv_extrinsic_calibration_image,
             relief='sunken',
             anchor='w')
+        
+        # Entry to allow the user to configure the number of frames to use for
+        # calibration. Validation function called on each keypress.
+        self.__ent_N_frames = tk.Entry(
+            self,
+            textvariable=self.__stv_N_frames,
+            validatecommand=(
+                self.register(self.__N_frame_entry_validation), '%P'))
+        
+        self.__lbf_metadata = tk.LabelFrame(
+            self,
+            text="Metadata")
+        
+        self.__txt_metadata = tk.Text(
+            self.__lbf_metadata,
+            width=60,
+            height=10, 
+            wrap='word')
+        
+        metadata_instructions =\
+            "Imagine you are using this calibration file without access to the" +\
+            " original video. You may want to know date, time, location, experiment, etc. \n\n" +\
+            "Include that information here! It will be encoded in the calibration file."
+
+        self.__txt_metadata.insert(tk.END, metadata_instructions)
         
         self.__lbf_extrinsic_selection = tk.LabelFrame(
             self,
@@ -59,7 +93,7 @@ class AutocalibrationTool(tk.Toplevel):
 
         # Window geometry
         n_columns = 3
-        n_rows=3
+        n_rows = 5
         for i in range(n_rows):
             for j in range(n_columns):
                 self.rowconfigure(i, weight=1)
@@ -77,18 +111,43 @@ class AutocalibrationTool(tk.Toplevel):
         self.__lbl_calib_video.grid(row=0, column=0, sticky='nesw')
         self.__lbl_calib_video_path.grid(row=0, column=1, columnspan=2, sticky='nesw')
 
-        self.__lbl_ext_frame.grid(row=2, column=0, sticky='nesw')
-        self.__lbl_ext_calib_frame.grid(row=2, column=1, columnspan=2, sticky='nesw')
+        self.__lbl_N_frames.grid(row=1, column=0, sticky='nesw')
+        self.__ent_N_frames.grid(row=1, column=1, columnspan=2, sticky='nesw')
 
-        self.__lbf_extrinsic_selection.grid(row=3, column=0, columnspan=2, sticky='nesw')
-        self.__btn_generate.grid(row=3, column=2, sticky='nesw', padx=10, pady=10)
+        self.__lbf_metadata.grid(row=2, column=0, columnspan=3, sticky='nesw')
+        
+        self.__lbl_ext_frame.grid(row=3, column=0, sticky='nesw')
+        self.__lbl_ext_calib_frame.grid(row=3, column=1, columnspan=2, sticky='nesw')
+
+        self.__lbf_extrinsic_selection.grid(row=4, column=0, columnspan=2, sticky='nesw')
+        self.__btn_generate.grid(row=4, column=2, sticky='nesw', padx=10, pady=10)
 
         # Extrinsic frame selector layout
         self.__btn_select_frame.grid(row=0, column=0, sticky='nesw')
         self.__lbl_or.grid(row=0, column=1, sticky='ew')
         self.__btn_select_image.grid(row=0, column=2, sticky='nesw')
+
+        # Metadata frame layout
+        self.__lbf_metadata.columnconfigure(0, weight=1)
+        self.__lbf_metadata.rowconfigure(0, weight=1)
+        self.__txt_metadata.grid(row=0, column=0, sticky='nesw')
         
         self.__update_ext_calibration_label()
+
+    def __N_frame_entry_validation(self, input):
+        """
+        Validate input to the N frame entry (number of frames to use for 
+        intrinsic calibration).
+
+        Should only accept integers
+
+        :param input: The content of the entry at the time the function was called.
+        """
+        if input.isdigit() or input == '':
+            return True
+        
+        return False
+
 
     def __update_ext_calibration_label(self):
         if self.__extrinsic_frame_set:
@@ -185,10 +244,12 @@ class AutocalibrationTool(tk.Toplevel):
             # Do nothing and return    
             return
         
+        N_frames = int(self.__stv_N_frames.get())
+        
         cache_success =\
               ac.cache_calibration_video_frames(project_file['calibration_video'],
                                                 project_file['chessboard_size'],
-                                                N=30,
+                                                N=N_frames,
                                                 frame_cache=project_file['calibration_cache'])
         
         if not cache_success:
@@ -202,13 +263,15 @@ class AutocalibrationTool(tk.Toplevel):
         
         print("")
 
+        metadata = self.__txt_metadata.get(0, tk.END)
+
         calibration_success =\
             ac.generate_calibration_from_cache(
                 int(project_file['chessboard_columns']),
                 int(project_file['chessboard_rows']),
                 int(project_file['chessboard_square_size']),
                 cache_path=project_file['calibration_cache'],
-                metadata="")
+                metadata=metadata)
         
         if not calibration_success:
             msg = "Camera calibration failed. Check the terminal for specific" +\

@@ -178,7 +178,8 @@ class CalibrationManager(tk.Toplevel):
             msg = "Checking the calibration requires an example image where the " +\
                   "chessboard is placed on the ground. If you imported a previous " +\
                   "calibration, then you need to provide this image (a file "+\
-                  "selection dialog will open when you close this window)."
+                  "selection dialog will open when you close this window).\n\n" +\
+                  "This file will not be copied locally!"
             
             messagebox.showwarning(title="No example frame found!",
                                    message=msg)

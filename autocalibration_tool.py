@@ -263,7 +263,7 @@ class AutocalibrationTool(tk.Toplevel):
         
         print("")
 
-        metadata = self.__txt_metadata.get(0, tk.END)
+        metadata = self.__txt_metadata.get('0.0', tk.END)
 
         calibration_success =\
             ac.generate_calibration_from_cache(

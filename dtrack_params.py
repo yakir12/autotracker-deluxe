@@ -17,7 +17,6 @@ class ParamFilePassthrough():
             with open(self.__fname, "w") as f:
                 params = dict.fromkeys(self.__valid_keys)
                 params = self.__set_defaults(params)
-                print(params)
                 json.dump(params, f)
         else:
             # If the file does exist, check that no elements are null.
@@ -49,6 +48,8 @@ class ParamFilePassthrough():
     def __set_defaults(self, params):
         for k in self.__valid_keys:
             params[k] = ""
+
+        return params
    
 # Insantiation of parameter file interaction object.
 dtrack_params = ParamFilePassthrough()

@@ -16,9 +16,18 @@ class ParamFilePassthrough():
         if not os.path.exists(self.__fname):
             with open(self.__fname, "w") as f:
                 params = dict.fromkeys(self.__valid_keys)
-                #params = self.__set_defaults(params)
+                params = self.__set_defaults(params)
                 print(params)
                 json.dump(params, f)
+        else:
+            # If the file does exist, check that no elements are null.
+            with open(self.__fname, "r") as f:
+                params = json.load(f)
+                
+                for k in params.keys():
+                    if params[k] == None:
+                        params[k] = ""
+
 
     def __getitem__(self,key):
         with open(self.__fname, "r") as f:

@@ -135,7 +135,7 @@ class ToolFrame(tk.Frame):
                 " stage of post-processing produces a CSV file which you can use" +
                 " to produce your own plots. This option will produce a rudimentary" +
                 " plot so you can check that it's working correctly. \n\n"
-                "WARNING: Calibration is currently disabled."
+                "(NEW) Calibration is now enabled!"
                 )            
             self.__txtvar_information.set("")
         

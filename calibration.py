@@ -22,7 +22,27 @@ class Calibration():
                  scale=None,
                  chessboard_size=None,
                  chessboard_square_size=None,
-                 metadata=""):
+                 metadata="",
+                 corrective_transform=None,
+                 uncorrected_homography=None,
+                 adjustment=None):
+        """
+        :param matrix: The camera matrix
+        :param distortion: The distortion coefficients
+        :param opt_matrix: The 'new optimal' camera matrix
+        :param rvecs: Rotation vectors
+        :param tvecs: Translation vectors
+        :param reprojection_error: Reprojection error returned by calibrateCamera
+        :param perspective_transform: The extrinsic camera perspective transformation (3x3 matrix)
+        :param scale: The scale parameter, px / scale = mm
+        :param chessboard_size: The chessboard size (inner corners)
+        :param chessboard_square_size: The chessboard square size in mm
+        :param metadata="": Textual information describing this calibration
+        :param corrective_transform=None: Additional perspective transformation to recentre the calibration board.
+        :param uncorrected_homography: The original, unmodified perspective transform
+        :param adjustment: Additive adjustment to be applied once the perspective transformation has occurred.
+        """
+
         self.camera_matrix = matrix
         self.distortion = distortion
         self.opt_matrix = opt_matrix
@@ -33,6 +53,9 @@ class Calibration():
         self.scale = scale
         self.chessboard_size = chessboard_size
         self.chessboard_square_size = chessboard_square_size
+        self.corrective_transform=corrective_transform,
+        self.uncorrected_homography=uncorrected_homography
+        self.adjustment=adjustment
 
         # Information about the calibration which should be set by the user
         # on generation.

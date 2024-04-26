@@ -171,25 +171,29 @@ Calibration files are stored in `your_project_directory/calibration_cache/calibr
 
 **Check calibration**
 
-This option will allow you to visually inspect your calibration to determine how good it is. 
+This option will allow you to visually inspect your calibration to determine how good it is. Additional quality information and some instructions are shown in the terminal. 
 
 ![Check calibration window](images/check_calibration.png)
 
-The left hand image is the original frame, the centre image has been corrected for lens distortion, and the final image has had a perspective transform applied to align the ground plane and the image plane (i.e. to correct for the position of the camera).
+This is your undistorted and perspective transformed video frame. Click on four points in the image which lie on the arena radius. The points will be marked when you click on them. When you finish providing the points some lines and a circle will appear over your image.
 
-Some additional information is given in the terminal:
+![Calibration verification](images/check_calibration_w_lines.png)
 
-```
-= Calibration check! =
-Your calibration board is 8 columns by 5 rows
-Your square size is 39mm
-Top edge is 7 squares
-Length of top edge in mm (true : estimated) -> (273 : 273.06548097147925)
-```
+*What's happening here?*
 
-This check will use the chessboard dimensions you supplied to compute the length of the top edge of the chessboard. The software will then compute the distance between the top left and top right corners of the chessboard and supply the estimated distance. 
+The four points will define two lines (thicker red lines above) which are interpreted as chords of the arena circle. Perpendicular bisectors are then drawn which should intersect at the centre of your arena. A perfect circle is then drawn assuming that the point of intersection is the arena centre (the radius is given by the distance from the point of intersection to the first point you clicked).
 
-*This is **not** foolproof. Some distortion can still be seen in the right-hand image in this example (the circular arena looks oblong). In addition, you can check the average displacement of your tracks (see 5 below). I want to improve calibration verification going forward.*
+The red circle should overlap almost perfectly with your arena. There will be some error because calibration is imperfect and your clicks may be imperfect.
+
+More information is given in the terminal. In particular, the software will estimate the (known) length of the top edge of the chessboard in millimetres. In addition, the software will estimate your arena radius by computing the average distance from the estimated centre of the arena to the radial points you clicked.
+
+*Why is the frame cropped?*
+
+The extrinsic calibration automatically translates the frame so that the chessboard is in the top left-hand corner of the image. This is undone by assuming that the chessboard is roughly centred in the arena and working out the adjustment to centre the chessboard in the image. 
+
+*Does this matter?*
+
+So long as enough of the arena is visible to get four points on the radius then no. The image translation is only required for display purposes and shouldn't affect your tracks. *That said, I am working on a bettter way to do this which will show the whole frame.*
 
 
 

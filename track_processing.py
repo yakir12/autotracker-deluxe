@@ -210,7 +210,7 @@ def zero_tracks(raw_track_file, dest_filepath, origin=(0,0)):
 
 def plot_tracks(input_file, 
                 draw_arena=True, 
-                arena_radius=35, 
+                arena_radius=50, 
                 draw_mean_displacement=False):
     """
     Helper method to test calibration, this is only intended to check distance

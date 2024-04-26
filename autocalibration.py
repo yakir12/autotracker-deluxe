@@ -14,6 +14,7 @@ import cv2
 import os
 import shutil
 import calibration
+import textwrap
 
 def define_object_chessboard(n_rows, n_columns, square_size):
     """
@@ -419,37 +420,79 @@ def generate_calibration_from_cache(chessboard_columns,
     
     # Compute the perspective transformation between an undistorted image plane and the 
     # ground plane.
-    
     homography, _ = cv2.findHomography(ext_points, obj_points)  
    
     dsize = (undistorted_extrinsic.shape[1], undistorted_extrinsic.shape[0])
 
-    # Adjust transformation to keep the full frame in the destination image dimensions. 
-    # This is Vishaal's code with different variable names.
+    # Work out translation correction, so that full arena can be displayed in 
+    # a calibrated frame.
 
-    # Place target image corners (as homogenous coordinates) into a matrix
-    image_dimensions =\
-          np.transpose(np.array([[0, 0, 1],
-                       [undistorted_extrinsic.shape[1], 0, 1],
-                       [undistorted_extrinsic.shape[1], undistorted_extrinsic.shape[0], 1],
-                       [0, undistorted_extrinsic.shape[0], 1]]))
+    # # Image corners
+    # image_bounds = np.array(
+    #     [[0, 0, 1],
+    #      [0, undistorted_extrinsic.shape[0], 1],
+    #      [undistorted_extrinsic.shape[1], 0, 1],
+    #      [undistorted_extrinsic.shape[1], undistorted_extrinsic.shape[0], 1]])
+
+    # # Transform image corners to compute where they end up.
+    # transformed_image_corners = np.matmul(homography, image_bounds.T)
+
+    # print("")
+    # print(image_bounds.T)
+    # print(transformed_image_corners)
+
+    # xs = transformed_image_corners[0, :]
+    # ys = transformed_image_corners[1, :]
+
+    # print(ys)
+
+    # # Figure out new max and min x and y coordinates.
+    # y_bounds = (min(ys), max(ys))
+    # x_bounds = (min(xs), max(xs))
+    # new_ydim = y_bounds[1] - y_bounds[0]
+    # new_xdim = x_bounds[1] - x_bounds[0]
+
+    # # Define new frame size so that full undistorted image can be displayed
+    # dsize = (int(new_xdim), int(new_ydim))
+
+    # # Translate so top corner is back in top corner   
+    # y_shift = -y_bounds[0]
+    # x_shift = -x_bounds[0]
+
+    # print(y_shift)
+
+ 
+    image_centre = np.array([undistorted_extrinsic.shape[0]/2, undistorted_extrinsic.shape[1]/2])
+
+    chessboard_corners = np.squeeze(obj_points)
+    print(chessboard_corners)
+  
+
+    chessboard_centre_x =\
+        (chessboard_corners[-1][0] - chessboard_corners[0][0])/2
+    chessboard_centre_y =\
+        (chessboard_corners[-1][1] - chessboard_corners[0][1])/2
     
-    # Remap them using the homography 
-    transformed_image_dimensions = np.matmul(homography,image_dimensions)
+    chessboard_centre = np.array([chessboard_centre_y, chessboard_centre_x])
 
-    # Reformat point representation for OpenCV
-    image_dimensions = np.transpose(image_dimensions[0:2])
-    image_dimensions = np.float32(image_dimensions)       
-    transformed_image_dimensions = np.transpose(transformed_image_dimensions[0:2])
-    transformed_image_dimensions = np.float32(transformed_image_dimensions)
+    y_shift, x_shift = image_centre - chessboard_centre
 
-    # Work out the transformation between the remapped bounds and the original bounds.
-    corrective_transform =\
-          cv2.getPerspectiveTransform(transformed_image_dimensions, image_dimensions)
+    A = [[1, 0, x_shift],
+         [0, 1, y_shift],
+         [0, 0, 1]]
+    
+    corrected_homography = np.matmul(A, homography)
 
-    # Apply the corrective transform to the original homography
-    homography = np.matmul(corrective_transform,homography)
+    # warped = cv2.warpPerspective(undistorted_extrinsic, corrected_homography, dsize)
 
+    # while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
+    #     cv2.imshow('frame', warped)
+    #     if cv2.waitKey(1) == ord('q'):
+    #         break
+
+    # cv2.destroyAllWindows()
+    # return True
+  
     #
     # Scale - scale transformation between undistorted perspective shifted (calibrated)
     # image and the object checkerboard.
@@ -479,54 +522,6 @@ def generate_calibration_from_cache(chessboard_columns,
     # Determine scaling parameter
     scale = mean_distance / square_size
 
-    # estimated_edge_length = np.linalg.norm(img_scale_points[chessboard_size[0]-1] - img_scale_points[0])/scale
-    # true_edge_length = square_size * (chessboard_size[0] - 1)
-
-    # # scale = px/mm -> x px / scale = y mm approximate true distance.
-    # print("= Calibration check! =")
-    # print("Your calibration board is {} columns by {} rows".format(chessboard_size[0], chessboard_size[1]))
-    # print("Your square size is {}mm".format(square_size))
-    # print("Top edge is {} squares".format(chessboard_size[0] - 1))
-    # print("Length of top edge in mm (true : estimated) -> ({} : {})".format(true_edge_length, estimated_edge_length))
-    #input()
-
-    # #
-    # ## TROUBLESHOOTING IMAGE DISPLAY ##
-    # #
-    # sample_image = cv2.imread('calibration_image_cache/extrinsic/000.png')
-    # imheight = sample_image.shape[0]
-    
-    # border = (255 * np.ones((imheight, 100, 3))).astype(np.uint8) # generate white border
-    
-    # calibrated_extrinsic_frame = cv2.drawChessboardCorners(calibrated_extrinsic_frame,
-    #                                                        chessboard_size,
-    #                                                        img_scale_points,
-    #                                                        success)
-    # complete_frame = np.concatenate((sample_image, 
-    #                                  border, 
-    #                                  undistorted_extrinsic, 
-    #                                  border, 
-    #                                  calibrated_extrinsic_frame),  axis=1)
-
-    # cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
-    
-    # while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
-    #     cv2.imshow('frame', complete_frame)
-    #     if cv2.waitKey(1) == 'q':
-    #         break
-    
-
-    # # Compile results
-    # results = dict()
-    # results["mtx"] = mtx
-    # results["dist"] = dist
-    # results["optmtx"] = optmtx
-    # results["rvecs"] = rvecs
-    # results["tvecs"] = tvecs
-    # results["rproj_err"] = rproj_err
-    # results["homography"] = homography
-    # results["scale"] = scale
-
     calib = calibration.Calibration(
         matrix=mtx,
         distortion=dist,
@@ -534,17 +529,59 @@ def generate_calibration_from_cache(chessboard_columns,
         rvecs=rvecs,
         tvecs=tvecs,
         reprojection_error=rproj_err,
-        perspective_transform=homography,
+        perspective_transform=corrected_homography,
         scale=scale,
         metadata=metadata,
         chessboard_size=chessboard_size,
-        chessboard_square_size=square_size
+        chessboard_square_size=square_size,
+        uncorrected_homography=homography,
+        corrective_transform=A
     )
 
     calib_filepath = os.path.join(cache_path, 'calibration.dt2c')
     calibration.save(calib, calib_filepath)
 
     return True
+
+
+# These globals are only used to allow the calibration check window to update
+# on mouse clicks. They should not be used for anything else.
+calib_point_ctr = 0
+check_calibration_frame = None
+calibration_points = []
+def on_mouseclick(event, x, y, flags, param):
+    global calib_point_ctr
+    global check_calibration_frame
+
+    if len(calibration_points) >= 4:
+        return
+
+    if event == cv2.EVENT_LBUTTONDOWN:
+        calib_point_ctr += 1
+        print("Pt #{} at ({},{})".format(calib_point_ctr, x, y))
+        calibration_points.append((x,y))
+
+        cv2.circle(check_calibration_frame, (x,y), 5, (0,0,255), -1)
+
+    if len(calibration_points) == 2:
+        cv2.line(check_calibration_frame, 
+                 calibration_points[0], 
+                 calibration_points[1],
+                 (0, 0, 255),
+                 5)
+        
+    if len(calibration_points) == 4:
+        cv2.line(check_calibration_frame, 
+                 calibration_points[2], 
+                 calibration_points[3],
+                 (0, 0, 255),
+                 5)
+ 
+
+
+    # Would be good to have a right-click to clear option.
+
+
 
 def check_calibration(example_image_path, calibration):
     """
@@ -556,54 +593,48 @@ def check_calibration(example_image_path, calibration):
     :param calibration: A Calibration object which can be used to provide arguments
                         for cv2.undistort and cv2.warpPerspective. 
     """
-    
+    global check_calibration_frame
+    global calibration_points
+
+    calibration_points = []
+
+    # Obtain required parameters for the calibration    
     chessboard_size = calibration.chessboard_size
     square_size = calibration.chessboard_square_size
     scale = calibration.scale
+
+    # Read in sample image
     sample_image = cv2.imread(example_image_path)
     dsize = (sample_image.shape[1], sample_image.shape[0])
     imheight = dsize[1]
 
-    print(chessboard_size)
-    
+    # Undistort the sample image
     undistorted_extrinsic =\
           cv2.undistort(sample_image, 
                         calibration.camera_matrix, 
                         calibration.distortion, 
                         newCameraMatrix=calibration.opt_matrix) 
 
-    calibrated_extrinsic_frame =\
+    # Warp the image to give a top-down view.
+    check_calibration_frame =\
           cv2.warpPerspective(undistorted_extrinsic,
                               calibration.perspective_transform,
                               dsize)
     
-    success, img_scale_points = cv2.findChessboardCorners(calibrated_extrinsic_frame,
+    # Work out the chessboard corners and draw these on the frame.
+    success, img_scale_points = cv2.findChessboardCorners(check_calibration_frame,
                                                           chessboard_size)
     
-    calibrated_extrinsic_frame = cv2.drawChessboardCorners(calibrated_extrinsic_frame,
+    check_calibration_frame = cv2.drawChessboardCorners(check_calibration_frame,
                                                            chessboard_size,
                                                            img_scale_points,
                                                            success)
 
-    
-    border = (255 * np.ones((imheight, 100, 3))).astype(np.uint8) # generate white border    
-    print("")
-    print(border.shape)
-    print(calibrated_extrinsic_frame.shape)
-    print(undistorted_extrinsic.shape)
-    print(sample_image.shape)
-    print("")
-    complete_frame = np.concatenate((sample_image, 
-                                     border, 
-                                     undistorted_extrinsic, 
-                                     border, 
-                                     calibrated_extrinsic_frame),  axis=1)
-    
-    cv2.putText(complete_frame, 
-                'See result in terminal.',
+    cv2.putText(check_calibration_frame, 
+                'LOOK AT THE TERMINAL!',
                 (50,50), 
                 cv2.FONT_HERSHEY_SIMPLEX, 
-                1, 
+                1.2, 
                 (255,255,255), 
                 2, 
                 cv2.LINE_AA)
@@ -613,23 +644,120 @@ def check_calibration(example_image_path, calibration):
 
     # scale = px/mm -> x px / scale = y mm approximate true distance.
     print("")
-    print("= Calibration check! =")
-    print("Your calibration board is {} columns by {} rows".format(chessboard_size[0], chessboard_size[1]))
+    print("######################")
+    print("# Calibration check! #")
+    print("######################")
+    print("")
+    print("Your calibration board is {} columns by {} rows".format(chessboard_size[0]-1, chessboard_size[1]-1))
     print("Your square size is {}mm".format(square_size))
     print("Top edge is {} squares".format(chessboard_size[0] - 1))
     print("Length of top edge in mm (true : estimated) -> ({} : {})".format(true_edge_length, estimated_edge_length))    
     print("")
+    str = "To check distortion over the whole arena, click on four points on the arena radius." +\
+          " These points will be used to define two lines, select points such that" +\
+          " these lines are not parallel."
+    print(textwrap.fill(str, 60))
+    print("")
+    print("# IMPORTANT #")
+    str = "Some of the arena may be cut off in this frame. This does not affect the" +\
+          " calibration process (your tracks will be fine). An alternative image correction" +\
+          " is in progress to mitigate this problem."
+    print(textwrap.fill(str, 60))
+    print("")
     
     cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
 
+    cv2.setMouseCallback('frame', on_mouseclick)
     
-    
+    points_drawn = False
     while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
-        cv2.imshow('frame', complete_frame)
+        cv2.imshow('frame', check_calibration_frame)
         if cv2.waitKey(1) == 'q':
             break
-        
-    pass
+
+        if len(calibration_points) == 4 and points_drawn == False:    
+            cast_tuple_to_int = lambda t: tuple(map(lambda x: int(x), t))
+            def compute_perp_bisector_in_frame(a,b):
+                """
+                Given points a and b, define the perpendicular bisector of
+                the line from a to b.
+
+                :param a: Point 1
+                :param b: Point 2
+                :return: A tuple containing the boundary points within
+                         the check calibration frame for drawing with OpenCV.
+                         Also returns the slope and intercept of the bisecting line.
+                """
+                m0 = (b[0] - a[0]) / (b[1] - a[1]) # Slope of line ab
+                p = ((a[0] + b[0])/2, (a[1] + b[1])/2) # Midpoint of line ab
+                m0_perp = -m0 # Slope of line perpendicular to ab
+                c0_perp = p[1] - (m0_perp*p[0]) # Intercept
+
+                y_bound = check_calibration_frame.shape[0]
+                x_bound = check_calibration_frame.shape[1]
+                
+                line_xs = list(range(x_bound))
+                line_points = []
+                for x in line_xs:
+                    y = m0_perp*x + c0_perp
+                    if (y < 0) or (y > y_bound):
+                        continue
+                    line_points.append((x,y))
+
+                pt1 = cast_tuple_to_int(line_points[0])
+                pt2 = cast_tuple_to_int(line_points[-1])
+                return (pt1, pt2, m0_perp, c0_perp)
+
+            bs1 = compute_perp_bisector_in_frame(calibration_points[0], 
+                                                 calibration_points[1])
+            bs2 = compute_perp_bisector_in_frame(calibration_points[2], 
+                                                 calibration_points[3])
+
+            cv2.line(check_calibration_frame, bs1[0], bs1[1], (0, 0, 255), 2)                    
+            cv2.line(check_calibration_frame, bs2[0], bs2[1], (0, 0, 255), 2)
+
+            # Compute point of intersection of bisector lines, should be the arena
+            # centre.
+            x = (bs2[3] - bs1[3]) / (bs1[2] - bs2[2])
+            y = bs1[2] * x + bs1[3]
+
+            euc_dist = lambda p, q: np.sqrt((p[0] - q[0])**2 + (p[1] - q[1])**2)
+
+            radii = [euc_dist((x,y), cp) for cp in calibration_points]
+
+            idx = 1
+            for r in radii:
+                print("Radius from estimated centre to Pt #{} = {}".format(idx, r))
+                idx += 1
+
+            avg_radius = np.mean(np.array(radii))
+            avg_radius_metres = (avg_radius / scale) / 1000
+
+            print("")
+            str = "These radii are measured in pixels. In theory they should be" +\
+                  " identical but in practice there will be some error. If the error" +\
+                  " is more than around 5-10 pixels you probably want to recalibrate."
+            print(textwrap.fill(str, 60))
+            print("")
+            print("The average radius in metres is {:.2f}m".format(avg_radius_metres))
+            print("")
+            
+            str = "The points you provided were used to define a circle. If the " +\
+                  "frame has been correctly calibrated, this circle should overlap " +\
+                  "with your arena. There will be some degree of error but it is "+\
+                  "down to you to decide how accurate this needs to be."
+
+            print(textwrap.fill(str, 60))
+
+            cv2.circle(check_calibration_frame, cast_tuple_to_int((x,y)), int(radii[0]), (0,0,255), 2)
+
+            points_drawn = True
+            
+    cv2.destroyAllWindows()
+
+                
+
+
 
 # if __name__ == "__main__":
 #     # Use calibration info to work out homography

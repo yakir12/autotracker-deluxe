@@ -672,7 +672,7 @@ def check_calibration(example_image_path, calibration):
     points_drawn = False
     while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
         cv2.imshow('frame', check_calibration_frame)
-        if cv2.waitKey(1) == 'q':
+        if cv2.waitKey(1) == ord('q'):
             break
 
         if len(calibration_points) == 4 and points_drawn == False:    

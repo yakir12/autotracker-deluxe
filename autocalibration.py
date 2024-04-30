@@ -624,13 +624,6 @@ def check_calibration(example_image_path, calibration):
           " these lines are not parallel."
     print(textwrap.fill(str, 60))
     print("")
-    print("# IMPORTANT #")
-    str = "Some of the arena may be cut off in this frame. This does not affect the" +\
-          " calibration process (your tracks will be fine). An alternative image correction" +\
-          " is in progress to mitigate this problem."
-    print(textwrap.fill(str, 60))
-    print("")
-    
     cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
 
     cv2.setMouseCallback('frame', on_mouseclick)

@@ -1,3 +1,6 @@
+from tkinter import messagebox
+
+import os
 import numpy as np
 import numpy.ma as ma
 import pandas as pd
@@ -7,31 +10,31 @@ from scipy.interpolate import UnivariateSpline
 import matplotlib.pyplot as plt
 
 
-def calibrate_tracks(camera_matrix, 
-                     distortion_coefficients, 
-                     raw_track_file, 
-                     dest_filepath,
-                     homography=None):
+from dtrack_params import dtrack_params
+from project import project_file
+
+import calibration as calib
+
+def calibrate_tracks(calibration: calib.Calibration, 
+                     raw_track_filepath: str, 
+                     dest_filepath: str):
     """
     Calibrate raw tracks from autotracking to store them in world coordinates.
     The raw track file is assumed to be a csv.
 
-    :param camera_matrix: The camera calibration matrix
-    :param distance_coefficients: The distance coefficients computed during 
-                                  calibration.
+    :param calibration: A calibration object (see calibration.py)
     :param raw_track_file: The raw track in pixelcoordinates (csv)
     :param dest_filepath: The output file for the calibrated tracks
-    :param homography: The transformation matrix required to project into 
-                       world coordinates. If not supplied, the conversion will
-                       not be performed.
     """
-    raw_data = pd.read_csv(raw_track_file, index_col=[0])
+    camera_matrix = calibration.camera_matrix
+    homography = calibration.perspective_transform
+    distortion_coefficients = calibration.distortion
+    scale = calibration.scale
+
+    raw_data = pd.read_csv(raw_track_filepath, index_col=[0])
     calibrated_data = pd.DataFrame(columns=raw_data.columns, 
                                    index=raw_data.index)
     columns = list(raw_data.columns)
-
-    # Transform back to world coordinates?
-    H_inv = np.linalg.inv(homography)
 
     # Iterate over raw data and calibrate each set of x,y points
     col_idx = 0
@@ -45,10 +48,15 @@ def calibrate_tracks(camera_matrix,
         # Check lengths match (fail otherwise)
         assert len(x_data) == len(y_data)
 
+        #
+        # Intrinsic calibration (camera distortion)
+        #  
+
         # Pack into 2xN array for calibration
         points = np.stack((x_data, y_data))
 
         # Calibrate points, returns Nx1x2
+        
         calibrated_points =\
               cv2.undistortImagePoints(points, 
                                        cameraMatrix=camera_matrix,
@@ -58,24 +66,32 @@ def calibrate_tracks(camera_matrix,
         calibrated_points = np.squeeze(calibrated_points)
         calibrated_points = calibrated_points.T
 
-        # If we have the homography to translate into world coordinates.
-        if not (H_inv is None):
-            # Generate sequence of 1s to be added to each point
-            ones = np.ones((1,calibrated_points.shape[1]))
+        #
+        # Extrinsic calibration (camera perspective)
+        # 
 
-            # Each coordinate now [x,y,1], full structure is Nx3
-            calibrated_points = np.concatenate((calibrated_points, ones)).T
-            
-            # Map the homography transformation onto every point
-            # Should return a 3xN matrix of the transformed points
-            calibrated_points =\
-                np.array(list(map(lambda x: np.dot(x, H_inv), calibrated_points)))
-            
-            calibrated_points = calibrated_points.T
+        # Generate sequence of 1s to be added to each point
+        ones = np.ones((1,calibrated_points.shape[1]))
+
+        # Each coordinate now [x,y,1], full structure is Nx3
+        calibrated_points = np.concatenate((calibrated_points, ones)).T
+        
+        # Map the homography transformation onto every point
+        # Should return a 3xN matrix of the transformed points
+        
+        calibrated_points =\
+            np.array(list(map(lambda x: np.dot(homography, x), 
+                              calibrated_points)))
+
+        calibrated_points = calibrated_points.T
+
+        # scale = px/mm -> (x px / scale) = y mm
+        # These coordinates should be in mm.
+        scaled_calibrated_points = calibrated_points / scale
 
         # Insert calibrated x and y values into new dataframe.
-        calibrated_data.loc[:, columns[col_idx]] = calibrated_points[0]
-        calibrated_data.loc[:, columns[col_idx+1]] = calibrated_points[1]
+        calibrated_data.loc[:, columns[col_idx]] = scaled_calibrated_points[0]
+        calibrated_data.loc[:, columns[col_idx+1]] = scaled_calibrated_points[1]
 
         col_idx += 2 # Iterate over pairs of columns
 
@@ -194,7 +210,7 @@ def zero_tracks(raw_track_file, dest_filepath, origin=(0,0)):
 
 def plot_tracks(input_file, 
                 draw_arena=True, 
-                arena_radius=35, 
+                arena_radius=50, 
                 draw_mean_displacement=False):
     """
     Helper method to test calibration, this is only intended to check distance
@@ -260,9 +276,43 @@ def plot_tracks(input_file,
 
         col_idx += 2 # Iterate over pairs of columns
 
-    print("MEAN DISPLACEMENT: {}".format(np.mean(displacements)))
+    print("MEAN DISPLACEMENT: {:.2f}m".format(np.mean(displacements)/1000))
     print("This should roughly equal your arena radius, if it doesn't, then" + 
           " you will need to adjust your calibration.")
     print("Plotted: {}".format(input_file))
 
     plt.show()
+
+
+
+def calibrate_and_smooth_tracks():
+    calibration_filepath = project_file["calibration_file"]
+    
+    # Check for calibration file
+    if not os.path.exists(calibration_filepath):
+        msg = "This project has no calibration file, use the calibration manager" +\
+              " to generate or import one."
+        messagebox.showerror(title="No calibration file!",
+                             message=msg)
+        return
+
+    # Load calibration file
+    calibration = calib.from_file(calibration_filepath)
+    
+    raw_data_filepath = os.path.join(dtrack_params["project_directory"],
+                                     'raw_tracks.csv')
+    calibrated_filepath = os.path.join(dtrack_params["project_directory"],
+                                       'calibrated_tracks.csv')
+    zeroed_filepath = os.path.join(dtrack_params["project_directory"],
+                                   'zeroed_tracks.csv')    
+    smoothed_filepath = os.path.join(dtrack_params["project_directory"],
+                                     'smoothed_tracks.csv')
+
+    calibrate_tracks(calibration,
+                     raw_data_filepath,
+                     calibrated_filepath)
+    
+    zero_tracks(calibrated_filepath, zeroed_filepath)
+    
+    smooth_tracks(zeroed_filepath, smoothed_filepath)
+    plot_tracks(smoothed_filepath)

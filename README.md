@@ -90,54 +90,124 @@ You can use [Anaconda](https://www.anaconda.com/download) to achieve the same ef
 
 Open the code folder in the terminal as you did during the installation process (either using the command line or the graphical file explorer).
 
-### Setup
-1. In the terminal, run: 
+### Startup and project selection
+In the terminal, run: 
    
    `$: python main.py` 
    
-   A window should open requesting user information. (This may take a moment. Look for a small window.)
-2. Enter a Username and Session ID. For example 'Elin' and '2023-02-09_beetle01'.
-3. Click Submit, then close the window.
-4. A new window should open asking you to select a calibraiton video. Click 'Browse'.
-5. Find the calibration video you want to use. Click 'Open', then click 'Upload file', then close the window.
-6. A new window should open asking you to select a raw video for tracking.
-Click 'Browse'.
-7. Find the video you want to track. Click 'Open', then click 'Upload file', then close the window.
-8. A new window should open for offline tracking.
+   The main window should open:
 
-**Note:** The software currently provides beetle tracking, and track smoothing.
-The software does not provide calibration for these tracks (it's implemented
-but doesn't work properly at the moment). All distances are in pixels and 
-if your video is significantly distorted then your tracks will be too.
-Tracks are output to structured CSVs to allow you to perform your own analysis.
+![Main window](images/main_window.png)   
 
-### Offline tracking
+Use the 'Select project' button to select an existing project, 'New project' if you wish to create a new project. In either case, a graphical selector will open to allow you to select the project *directory* (the folder in which all project related stuff will be stored).
+
+**Note**: The directory selector is a little clunky, you need to be in the directory you want to select before confirming.
+
+If you are creating a new project, or the project has never been opened with this version of the software, you will be asked if you want to create a project file. Click yes/ok.
+
+Any tools you run will apply only to the currently active project.
+
+Once a project directory is selected, it should be displayed in the project directory entry in the main window.
+
+### Tools
 Each stage can be engaged independently by selecting the appropriate radio button and clicking 'Run'. The instructions below assume you have done this.
 
-#### 0. Checkerboard type
-1. Select the checkerboard option
-2. Enter the checkerboard square size in mm
-3. Click 'Make selection'
+#### 1. Choose video files
+This tool will open a small video selector window.
 
-**Note:** For the example video provided by Elin, the checkerboard is 6 by 9 and the square size is 39mm.
+![Video selection window](images/video_selector.png)
 
-#### 1. Extract calibration parameters
-1. Follow the on-screen instructions.
-2. When the process is finished, a calibrated frame will be shown. Press q to close the window.
+Clicking 'Select' for calibration or tracking will open a file dialog to allow you to select the video. You can also copy the path into the entry but this is not recommended. 
 
-**Note:** You should select only a single 'ground' frame. 
+The complete path to the video files is stored, so if the file location is not going to change, you can simply reference the files elsewhere on your hard drive. However, if the file location may change or you are working off of an external hard drive, you may want to make local copies. To do this, check the 'Copy video files locally?' option. This will make copies of the videos in the project directory.
 
-#### 2. Autotracker
+Once you have selected your video files and determined whether you wish to make local copies, click 'Confirm'. Clicking 'Cancel' will discard all changes. 
+
+**Note**: If you copied the files locally then the video filepaths stored by the software will point to the local copies. Thus, if you run the video selection tool again, the entries should show the local copy path rather than the one you originally selected.
+
+#### 2. Configure calibration board
+This tool will open a calibration board selector window.
+
+![Calibration selector](images/calibration_window.png)
+
+You can use the spinboxes at the top to select the dimensions of your calibration board. The window will update to show you a visualisation of the pattern. The OpenCV chessboard detection will be overlayed on the image so you can see what pattern the software is actually looking for during calibration.
+
+Changing the square size will change the visible size of the board pattern but pixel size on screen does not matter, this is just for visual feedback. The square size will be used internally to estimate the homography between object coordinates and image coordinates. 
+
+Once you have selected your rows, columns and square size, click 'Confirm'. Clicking 'Cancel' will discard any changes.
+
+#### 3. Calibration manager
+The calibration manager allows you to generate a calibration file from your calibration video, import a calibration file from a separate project, or visually inspect the results of your calibration on a candidate image.
+
+![The calibration manager window](images/calibration_manager.png)
+![Calibration manager with file](images/calibration_manager_2.png)
+
+**Generate new calibration**
+
+This option will allow you to generate a calibration file from your calibration video using the Autocalibration tool. 
+
+![Autocalibration tool](images/autocalibration_tool.png)
+
+This tool will open your calibration video, select N random frames in which chessboards can be found, then store the images and the detected chessboard corners (in `project_directory/calibration_cache`). 
+
+You need to provide:
+
+1. The number of frames you wish to use
+2. Some information describing the calibration
+3. A video frame where the chessboard is on the ground (for extrinsic calibration)
+
+The extrinsic claibration frame can be selected either from your calibration video (recommended) or from a file. To select a frame from your calibration video, use 'Select video frame', then use the trackbar to seek your frame in the video. Press 's' to save the frame; you should see the Extrinsic frame field update in the tool.
+
+Once you've provided the necessary information, you can click 'Generate!'. This will create a directory called `calibration_cache` in your project directory which will contain the calibration file (`calibration.dt2c`), all of the images used for calibration (intrinsic and extrinsic) and all of the detected chessboard corners in image coordinates.
+
+*Generating a new calibration will overwrite any previous calibration for the current project. This includes the image cache.*
+
+**Import existing calibration**
+If you already have a calibration which is working well, you can import this. This button will open a file dialog which will allow you to select the calibration file you want to import. 
+
+Calibration files are stored in `your_project_directory/calibration_cache/calibration.dt2c`. Find the calibration file you want and click 'Open' in the file dialog. 
+
+*You can copy these by hand but you need to make sure they're in the right place with the right name. Just use the import tool.*
+
+**Check calibration**
+
+This option will allow you to visually inspect your calibration to determine how good it is. Additional quality information and some instructions are shown in the terminal. 
+
+![Check calibration window](images/check_calibration.png)
+
+This is your undistorted and perspective transformed video frame. Click on four points in the image which lie on the arena radius. The points will be marked when you click on them. When you finish providing the points some lines and a circle will appear over your image.
+
+![Calibration verification](images/check_calibration_w_lines.png)
+
+*What's happening here?*
+
+The four points will define two lines (thicker red lines above) which are interpreted as chords of the arena circle. Perpendicular bisectors are then drawn which should intersect at the centre of your arena. A perfect circle is then drawn assuming that the point of intersection is the arena centre (the radius is given by the distance from the point of intersection to the first point you clicked).
+
+The red circle should overlap almost perfectly with your arena. There will be some error because calibration is imperfect and your clicks may be imperfect.
+
+More information is given in the terminal. In particular, the software will estimate the (known) length of the top edge of the chessboard in millimetres. In addition, the software will estimate your arena radius by computing the average distance from the estimated centre of the arena to the radial points you clicked.
+
+*Why is the frame cropped?*
+
+The extrinsic calibration automatically translates the frame so that the chessboard is in the top left-hand corner of the image. This is undone by assuming that the chessboard is roughly centred in the arena and working out the adjustment to centre the chessboard in the image. 
+
+*Does this matter?*
+
+So long as enough of the arena is visible to get four points on the radius then no. The image translation is only required for display purposes and shouldn't affect your tracks. *That said, I am working on a bettter way to do this which will show the whole frame.*
+
+
+
+#### 4. Autotracker
 1. A new window will open playing the video to be tracked (at high speed)
 2. Let the video play or skip to a point you wish to start tracking
 3. Press P to pause the video, then T to start a track.
-4. Select a rectangle (region of interest, ROI) which contains the beetle (be generous). Press Enter and close the window.
-5. Press P to play and the tracked point will be indicated by a red dot.
+4. Select a rectangle (region of interest, ROI) which contains the beetle (be generous). The selection starts from the centre of the region so click and drag from the beetle. Press Enter and close the window. 
+5. Press P to play. The bounding box will be overlayed on the video and should track the beetle. The point which is tracked is the centre of the bounding box which is also drawn.
 6. Press T to finish the current track.
 7. Goto (2)
 
 You can produce any number of tracks from the video. The tracks will be appended
-to the track file (`data/<user>/<session>/raw_tracks.csv`). 
+to the track file (`<project_directory>/raw_tracks.csv`). 
 
 **Notes**
 1. If you want to cancel your ROI selection, press C then close the window.
@@ -147,25 +217,46 @@ to the track file (`data/<user>/<session>/raw_tracks.csv`).
 5. The coordinates produced are the centre of mass of the 'blob' which contains
    the beetle and its ball on a given frame. 
 
-#### 3. Calibrate and smooth tracks
+#### 5. Process tracks
 This option runs in full when you click 'Run'. At present this will:
-1. Zero the tracks (translate them so they all start at the same origin, (0,0)).
-2. Smooth the tracks using a basic univariate spline
-3. Produce and display a plot showing the smoothed tracks.
+1. Calibrate the tracks (undistort, transform perspective, and scale to mm)
+2. Zero the tracks (translate them so they all start at the same origin, (0,0)).
+3. Smooth the tracks using a basic univariate spline
+4. Produce and display a plot showing the smoothed tracks.
 
-The zeroing and smoothing stages both produce CSV files with the results. You 
+The calibration, zeroing, and smoothing stages all produce CSV files with the results. You 
 can take these and open them in Excel or LibreOffice (or your preferred analysis
 environment) and do whatever analysis/plotting you want. These files are
-in `data/<user>/<session>`, `zeroed_tracks.csv`, and `smoothed_tracks.csv` 
-respectively
+in the project directory, named `calibrated_tracks.csv`, `zeroed_tracks.csv`, and `smoothed_tracks.csv` 
+respectively (there is also a file for raw tracks `raw_tracks.csv`)
 
 The plot is only used to see what the software has produced (i.e. to check that
 the software is working as expected), you are expected to produce your own 'nice' 
 plots as required.
 
-#### 4. Analysis
-This option ties into the older analysis code. Given that the underlying 
-track storage has changed, this option is no longer compatible with tracks
-produced by the new tracking stage. It is currently included for legacy
-reasons but will be removed soon.
+**Note**
+The terminal will display the average displacement of your beetles in metres. This should approximately match the radius of your arena but it won't be exact because it depends on when you start and stop tracks. Note that if you have any partial tracks, this will also skew the result. I would guess (hope) that the displacement should be within 5cm of the true radius of the arena.
 
+## Miscellany
+### Interlaced video
+Some videos are stored in an interlaced format. In the software, this appears as a 'combing' or 'tearing' effect:
+
+![Example of combing artifact from interlaced video](images/interlacing.png)
+
+This is particularly problematic for calibration. If you have the option, turn this off in your camera. If you are working with pre-existing videos, you can deinterlace them by using ffmpeg.
+
+`$ ffmpeg -i input.file -vf yadif output.file`
+
+Replace `input.file` and `output.file` with the name of your input and output files and 'file' with the file extension.
+
+You will probably need to install ffmpeg separately. You can use any other tool you know of which can produce a deinterlaced video file.
+
+Running the command above on a non-interlaced file doesn't seem to cause any problems.
+
+### Params file
+When you run the software it should create a file called 'params.json' in the software directory. Do not modify this file by hand. It stores the path of the current project and path to the project file which are relied on internally.
+
+This allows the software to remember what the last project was when you start the software.
+
+### Project files
+Inside your project directories, a project file will be created (*.dt2p). This will store all of the information about the project (which video files to use, calibration board configuration, etc.). Again, do not modify this by hand.

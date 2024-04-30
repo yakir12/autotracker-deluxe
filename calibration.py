@@ -1,250 +1,94 @@
-import cv2
-import numpy as np
+"""
+calibration.py
 
-from time import time as timer
+Provides a class structure for camera calibration information and
+utilities to save and load calibration objects.
+"""
 
+import pickle
 
-# create checkerboard pattern
-def make_checkerboard(n_rows, n_columns, square_size):
+class Calibration():
     """
-    Create checkerboard image with one pixel per millimetre of world space.
-
-    :param n_rows: The number of rows in the pattern.
-    :param n_columns: The number of columns in the pattern.
-    :param square_size: The size of each checkerboard square in mm.
-    :return: The checkerboard image and a tuple storing the checkerboard size (-1 in each dim)    
+    Basic class to hold calibration information
     """
-    # Create binarised checkerboard
-    rows_grid, columns_grid = np.meshgrid(range(n_rows), range(n_columns), indexing='ij')
-    high_res_checkerboard = np.mod(rows_grid, 2) + np.mod(columns_grid, 2) == 1
+    def __init__(self,
+                 matrix=None,
+                 distortion=None,
+                 opt_matrix=None,
+                 rvecs=None,
+                 tvecs=None,
+                 reprojection_error=None,
+                 perspective_transform=None,
+                 scale=None,
+                 bbox_width=None,
+                 bbox_height=None,
+                 chessboard_size=None,
+                 chessboard_square_size=None,
+                 metadata="",
+                 corrective_transform=None,
+                 uncorrected_homography=None,
+                 adjustment=None):
+        """
+        :param matrix: The camera matrix
+        :param distortion: The distortion coefficients
+        :param opt_matrix: The 'new optimal' camera matrix
+        :param rvecs: Rotation vectors
+        :param tvecs: Translation vectors
+        :param reprojection_error: Reprojection error returned by calibrateCamera
+        :param perspective_transform: The extrinsic camera perspective transformation (3x3 matrix)
+        :param scale: The scale parameter, px / scale = mm
+        :param width: The width of the bounding box which contains all points in the
+                      transformed frame. Required if you ever want to show a calibrated
+                      frame.
+        :param height: The height of the bounding box which contains all points in
+                       the transformed frame. Required if you ever want to show a
+                       calibrated frame.
+        :param chessboard_size: The chessboard size (inner corners)
+        :param chessboard_square_size: The chessboard square size in mm
+        :param metadata="": Textual information describing this calibration
+        :param corrective_transform=None: Additional perspective transformation to recentre the calibration board.
+        :param uncorrected_homography: The original, unmodified perspective transform
+        :param adjustment: Additive adjustment to be applied once the perspective transformation has occurred.
+        """
 
-    # Create block matrix at full resolution (1px/mm).
-    square = np.ones((square_size,square_size))
-    checkerboard = np.kron(high_res_checkerboard, square)
+        self.camera_matrix = matrix
+        self.distortion = distortion
+        self.opt_matrix = opt_matrix
+        self.rvecs = rvecs
+        self.tvecs = tvecs
+        self.reprojection_error = reprojection_error
+        self.perspective_transform = perspective_transform
+        self.scale = scale
+        self.bbox_width = bbox_width
+        self.bbox_height = bbox_height
+        self.chessboard_size = chessboard_size
+        self.chessboard_square_size = chessboard_square_size
+        self.corrective_transform=corrective_transform,
+        self.uncorrected_homography=uncorrected_homography
+        self.adjustment=adjustment
 
-    # CV docs suggest this should be the number of inner corners
-    # per dimension
-    checkerboard_size = (n_columns-1, n_rows-1)
+        # Information about the calibration which should be set by the user
+        # on generation.
+        self.__metadata = metadata
 
+def from_file(filepath):
+    """
+    Read a calibration object from a file.
+    """
+    with open(filepath, 'rb') as f:
+        calib = pickle.load(f) 
+    return calib
 
-    return checkerboard, checkerboard_size
+def save(calib_object, filepath):
+    """
+    Pickle and store a calibration object.
+    """
+    with open(filepath, 'wb') as f:
+        pickle.dump(calib_object, f)
 
-# calibration
-def calib(dir, format_calibration, checkerboard, checkerboard_size):
-
-    path = dir + 'calibration' + '.' + format_calibration
-
-    def frame_capture(calib_frame, checkerboard, checkerboard_size):
-        
-        # Generate object coordinates (pixel to mm transformation)
-        calib_obj_bw = 255 - np.uint8(checkerboard)
-        ret_obj, corners_obj = cv2.findChessboardCorners(calib_obj_bw, checkerboard_size, None)
-
-        calib_frame_gray = cv2.cvtColor(calib_frame, cv2.COLOR_BGR2GRAY)
-
-        # Find the chess board corners
-        for i in range(1):
-            # ret_img should be true on success
-            ret_img, corners_img = cv2.findChessboardCorners(calib_frame_gray, checkerboard_size,  cv2.CALIB_CB_ADAPTIVE_THRESH)
-            if ret_img == True:
-                break
-            else:
-                calib_frame_gray = 255 - np.uint8(calib_frame_gray)
-
-
-        return ret_img, corners_obj, corners_img
-
-
-    # 'global' trackbar update context
-    trackbar_external_callback = False    
-    def onChange(trackbarValue):
-      # If trackbar was updated externally (i.e. by the user),
-      # update the capture position and
-      if trackbar_external_callback:
-        cap.set(cv2.CAP_PROP_POS_FRAMES,trackbarValue)          
-        cv2.imshow('frame',cap.read()[1])
-
-    cap = cv2.VideoCapture(path)
-    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    fps = cap.get(cv2.CAP_PROP_FPS)
-
-    cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
-    cv2.createTrackbar( 'capture', 'frame', 1, length, onChange )
-
-    imgpoints = []
-    objpoints = []
-    extrinsic_calib_frame_id = 0
-
-
-    while cap.isOpened() and cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
-        success, frame = cap.read()
-        
-        if success:
-            start = timer()
-            cv2.putText(frame, 'Press p to freeze frame and view options, q to quit', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
-            cv2.imshow('frame',frame)
-            trackbar_external_callback = False
-            cv2.setTrackbarPos('capture', 'frame', int(cap.get(cv2.CAP_PROP_POS_FRAMES)))
-            trackbar_external_callback = True
-           
-            kp = cv2.waitKey(1)
-            if kp == ord('p'):
-                cap.set(cv2.CAP_PROP_POS_FRAMES,cv2.getTrackbarPos('capture','frame'))
-                frame = cap.read()[1]
-                cv2.putText(frame, 'Press p to detect checkerboard corners', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
-                cv2.imshow('frame', frame)
-
-                while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
-                    # Cannot use quit key while paused.
-                    if cv2.waitKey(1) == ord('p'):  
-                        # frame = cv2.detailEnhance(frame, sigma_s=10, sigma_r=0.2)
-                        ret_img, corners_obj, corners_img = frame_capture(frame, checkerboard, checkerboard_size)
-
-                        if ret_img == True:
-                            corners_obj = np.array(corners_obj)
-                            corners_obj = corners_obj.reshape(corners_obj.shape[0],corners_obj.shape[2])
-                            temp = np.zeros( (corners_obj.shape[0], corners_obj.shape[1]+1) )
-                            temp[:,:-1] = corners_obj
-                            corners_obj = temp
-
-                            corners_img = np.array(corners_img)
-                            corners_img = corners_img.reshape(corners_img.shape[0],corners_img.shape[2])
-
-                            objpoints.append([corners_obj])
-                            imgpoints.append([corners_img])
-
-                            # Draw and display the corners
-                            # Re-extract the same frame to update the text.
-                            cap.set(cv2.CAP_PROP_POS_FRAMES,cv2.getTrackbarPos('capture','frame'))
-                            frame = cap.read()[1]                            
-                            cv2.drawChessboardCorners(frame, checkerboard_size, corners_img, ret_img)
-                            # cv2.putText(frame, 'Press p to detect checkerboard corners', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
-                            cv2.putText(frame, 'Press o to set current frame as ground frame and proceed, press p to proceed.', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
-                            cv2.imshow('frame', frame)
-                            frame_test = frame
-
-                            while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
-                                kp = cv2.waitKey(1)
-                                if kp == ord('p'):
-                                    #cv2.putText(frame, 'Press p to proceed', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
-                                    #cv2.putText(frame, 'Press o to set current frame as ground frame, spacebar to skip and proceed', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
-                                    #cv2.imshow('frame', frame)
-                                    break
-                                elif kp == ord('o'):
-                                    extrinsic_calib_frame_id = cap.get(cv2.CAP_PROP_POS_FRAMES)
-                                    frame_extrinsic = cap.read()[1]
-                                    # frame_extrinsic = cv2.detailEnhance(frame_extrinsic, sigma_s=10, sigma_r=0.2)
-                                    break
-
-                            break # If we reach here then break out of the chessboard detection loop
-                        else:
-                            break
-
-            elif kp == ord('q'):
-                cap.release()
-                cv2.destroyAllWindows()
-                break
-
-            diff = timer() - start
-            while  diff < 1/fps:
-                diff = timer() - start
-
-        else:
-            cap.release()
-            cv2.destroyAllWindows()
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
-
-    objpoints = np.array(objpoints, dtype=np.float32)
-    imgpoints = np.array(imgpoints, dtype=np.float32)
-
-    h,  w = frame_test.shape[:2]
-
-    # regular
-    ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, cv2.cvtColor(frame_test, cv2.COLOR_BGR2GRAY).shape[::-1], None, None)
-    newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
-    mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w,h), cv2.CV_16SC2)
-    mtx = newcameramtx
-    # print(ret)
-
-    frame_test_dst = cv2.remap(frame_test, mapx, mapy, interpolation=cv2.INTER_LINEAR)
-    frame_size = (frame_test_dst.shape[1],frame_test_dst.shape[0])
-    frame_size = np.array(frame_size)
-
-
-
-    # extrinsic calibration
-    id = np.array([extrinsic_calib_frame_id])
-    frame_dst = cv2.remap(frame_extrinsic, mapx, mapy, interpolation=cv2.INTER_LINEAR)
-
-    cv2.imshow('frame', frame_dst)
-    while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
-        if cv2.waitKey(1) == ord('q'):
-            break
-
-    cv2.destroyAllWindows()
-
-    #
-    # Find 'object' corner locations
-    #    
-    calib_obj_bw = 255 - np.uint8(checkerboard)
-    ret_obj, corners_obj = cv2.findChessboardCorners(calib_obj_bw, checkerboard_size, None)
-    corners_obj = np.array(corners_obj)
-    corners_obj = corners_obj.reshape(corners_obj.shape[0],corners_obj.shape[2])
-    ftemp = np.zeros((corners_obj.shape[0],corners_obj.shape[1]+1))
-    temp[:,:-1] = corners_obj
-    corners_obj = temp
-    corners_obj = np.float32(corners_obj)
-    corners_obj = np.array([list(corners_obj)])
-
-    #
-    # Find checkerboard corners in a calibrated image.
-    #
-    ret_dst, corners_dst = cv2.findChessboardCorners(cv2.cvtColor(frame_dst, cv2.COLOR_BGR2GRAY), checkerboard_size, cv2.CALIB_CB_ADAPTIVE_THRESH)
-    corners_dst = np.squeeze(np.array(corners_dst))
-    # corners_dst = corners_dst.reshape(corners_dst.shape[0],corners_dst.shape[2])
-    corners_dst = np.float32(corners_dst)
-    corners_dst = np.array([list(corners_dst)])
-    # print(corners_dst.shape)
-
-    # No clue...
-    scale = np.array(
-        [0.04/np.mean(
-            np.linalg.norm(
-                np.squeeze(corners_dst)[1:checkerboard_size[0]] - np.squeeze(corners_dst)[0:checkerboard_size[0]-1], 
-                axis=1))]
-        )
-    # print(scale)
-
-    # Homography
-    H, status = cv2.findHomography(corners_dst, corners_obj)
-
-    dst_bounds = np.transpose(np.array([[0,0,1],[frame_dst.shape[1],0,1],[frame_dst.shape[1],frame_dst.shape[0],1],[0,frame_dst.shape[0],1]]))
-    map_dst_bounds = np.matmul(H,dst_bounds)
-
-    dst_bounds = np.transpose(dst_bounds[0:2])
-    dst_bounds = dst_bounds[:, np.newaxis, :]
-    dst_bounds = np.float32(dst_bounds)
-
-    map_dst_bounds = np.transpose(map_dst_bounds[0:2])
-    map_dst_bounds = map_dst_bounds[:, np.newaxis, :]
-    map_dst_bounds = np.float32(map_dst_bounds)
-
-
-    # Adjusting for camera perspective?
-    M = cv2.getPerspectiveTransform(map_dst_bounds, dst_bounds)
-    H = np.matmul(M,H)
-
-
-
-    # save calib_data
-    mapx.dump(dir + 'calib_data/' + 'mapx.dat')
-    mapy.dump(dir + 'calib_data/' + 'mapy.dat')
-    mtx.dump(dir + 'calib_data/' + 'mtx.dat')
-    dist.dump(dir + 'calib_data/' + 'dist.dat')
-    id.dump(dir + 'calib_data/' + 'id.dat')
-    frame_size.dump(dir + 'calib_data/' + 'frame_size.dat')
-    H.dump(dir + 'calib_data/' + 'H.dat')
-    np.savetxt(dir + 'calib_data/' + 'scale' + '.csv', scale, delimiter=',')
+def verify_calibration(filepath):
+    """
+    Check that the file at a given path was actually a calibration file.
+    """
+    calib = from_file(filepath)
+    return isinstance(calib, Calibration)

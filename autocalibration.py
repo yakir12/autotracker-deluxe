@@ -421,85 +421,39 @@ def generate_calibration_from_cache(chessboard_columns,
     # Compute the perspective transformation between an undistorted image plane and the 
     # ground plane.
     homography, _ = cv2.findHomography(ext_points, obj_points)  
-   
-    dsize = (undistorted_extrinsic.shape[1], undistorted_extrinsic.shape[0])
 
     # Work out translation correction, so that full arena can be displayed in 
     # a calibrated frame.
+    image_bounds = np.array(
+        [[0, 0],
+         [0, undistorted_extrinsic.shape[0]-1],
+         [undistorted_extrinsic.shape[1]-1, 0],
+         [undistorted_extrinsic.shape[1]-1, undistorted_extrinsic.shape[0]-1]])
 
-    # # Image corners
-    # image_bounds = np.array(
-    #     [[0, 0, 1],
-    #      [0, undistorted_extrinsic.shape[0], 1],
-    #      [undistorted_extrinsic.shape[1], 0, 1],
-    #      [undistorted_extrinsic.shape[1], undistorted_extrinsic.shape[0], 1]])
+    # Transform image corners to compute where they end up.
+    transformed_image_corners = cv2.perspectiveTransform(np.float32([image_bounds]), 
+                                                         homography)
 
-    # # Transform image corners to compute where they end up.
-    # transformed_image_corners = np.matmul(homography, image_bounds.T)
+    # Compute the bounding box which encloses the transformed image
+    bx, by, bwidth, bheight = cv2.boundingRect(transformed_image_corners)
 
-    # print("")
-    # print(image_bounds.T)
-    # print(transformed_image_corners)
-
-    # xs = transformed_image_corners[0, :]
-    # ys = transformed_image_corners[1, :]
-
-    # print(ys)
-
-    # # Figure out new max and min x and y coordinates.
-    # y_bounds = (min(ys), max(ys))
-    # x_bounds = (min(xs), max(xs))
-    # new_ydim = y_bounds[1] - y_bounds[0]
-    # new_xdim = x_bounds[1] - x_bounds[0]
-
-    # # Define new frame size so that full undistorted image can be displayed
-    # dsize = (int(new_xdim), int(new_ydim))
-
-    # # Translate so top corner is back in top corner   
-    # y_shift = -y_bounds[0]
-    # x_shift = -x_bounds[0]
-
-    # print(y_shift)
-
- 
-    image_centre = np.array([undistorted_extrinsic.shape[0]/2, undistorted_extrinsic.shape[1]/2])
-
-    chessboard_corners = np.squeeze(obj_points)
-    print(chessboard_corners)
-  
-
-    chessboard_centre_x =\
-        (chessboard_corners[-1][0] - chessboard_corners[0][0])/2
-    chessboard_centre_y =\
-        (chessboard_corners[-1][1] - chessboard_corners[0][1])/2
-    
-    chessboard_centre = np.array([chessboard_centre_y, chessboard_centre_x])
-
-    y_shift, x_shift = image_centre - chessboard_centre
-
-    A = [[1, 0, x_shift],
-         [0, 1, y_shift],
+    # Construct translation matrix to shift the top left of the bounding box
+    # to (0,0)
+    A = [[1, 0, -bx],
+         [0, 1, -by],
          [0, 0, 1]]
-    
-    corrected_homography = np.matmul(A, homography)
 
-    # warped = cv2.warpPerspective(undistorted_extrinsic, corrected_homography, dsize)
-
-    # while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
-    #     cv2.imshow('frame', warped)
-    #     if cv2.waitKey(1) == ord('q'):
-    #         break
-
-    # cv2.destroyAllWindows()
-    # return True
+    # Augment the homography to include the translation correction
+    corrected_homography = A @ homography
   
     #
     # Scale - scale transformation between undistorted perspective shifted (calibrated)
     # image and the object checkerboard.
     #
     calibrated_extrinsic_frame = cv2.warpPerspective(undistorted_extrinsic,
-                                                     homography,
-                                                     dsize)
+                                                     corrected_homography,
+                                                     (bwidth, bheight),
+                                                     borderValue=255)
     
     success, img_scale_points = cv2.findChessboardCorners(calibrated_extrinsic_frame, 
                                                           chessboard_size)
@@ -531,6 +485,8 @@ def generate_calibration_from_cache(chessboard_columns,
         reprojection_error=rproj_err,
         perspective_transform=corrected_homography,
         scale=scale,
+        bbox_width=bwidth,
+        bbox_height=bheight,
         metadata=metadata,
         chessboard_size=chessboard_size,
         chessboard_square_size=square_size,
@@ -606,20 +562,30 @@ def check_calibration(example_image_path, calibration):
     # Read in sample image
     sample_image = cv2.imread(example_image_path)
     dsize = (sample_image.shape[1], sample_image.shape[0])
-    imheight = dsize[1]
 
     # Undistort the sample image
     undistorted_extrinsic =\
           cv2.undistort(sample_image, 
                         calibration.camera_matrix, 
                         calibration.distortion, 
-                        newCameraMatrix=calibration.opt_matrix) 
+                        newCameraMatrix=calibration.opt_matrix)     
 
+      
     # Warp the image to give a top-down view.
     check_calibration_frame =\
           cv2.warpPerspective(undistorted_extrinsic,
                               calibration.perspective_transform,
-                              dsize)
+                              (calibration.bbox_width, calibration.bbox_height),
+                              borderValue=255)
+ 
+    # cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
+    # while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
+    #     cv2.imshow('frame', check_calibration_frame)
+    #     if cv2.waitKey(1) == 'q':
+    #         break
+
+    # cv2.destroyAllWindows()
+    # return
     
     # Work out the chessboard corners and draw these on the frame.
     success, img_scale_points = cv2.findChessboardCorners(check_calibration_frame,

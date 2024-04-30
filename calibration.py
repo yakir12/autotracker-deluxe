@@ -20,6 +20,8 @@ class Calibration():
                  reprojection_error=None,
                  perspective_transform=None,
                  scale=None,
+                 bbox_width=None,
+                 bbox_height=None,
                  chessboard_size=None,
                  chessboard_square_size=None,
                  metadata="",
@@ -35,6 +37,12 @@ class Calibration():
         :param reprojection_error: Reprojection error returned by calibrateCamera
         :param perspective_transform: The extrinsic camera perspective transformation (3x3 matrix)
         :param scale: The scale parameter, px / scale = mm
+        :param width: The width of the bounding box which contains all points in the
+                      transformed frame. Required if you ever want to show a calibrated
+                      frame.
+        :param height: The height of the bounding box which contains all points in
+                       the transformed frame. Required if you ever want to show a
+                       calibrated frame.
         :param chessboard_size: The chessboard size (inner corners)
         :param chessboard_square_size: The chessboard square size in mm
         :param metadata="": Textual information describing this calibration
@@ -51,6 +59,8 @@ class Calibration():
         self.reprojection_error = reprojection_error
         self.perspective_transform = perspective_transform
         self.scale = scale
+        self.bbox_width = bbox_width
+        self.bbox_height = bbox_height
         self.chessboard_size = chessboard_size
         self.chessboard_square_size = chessboard_square_size
         self.corrective_transform=corrective_transform,

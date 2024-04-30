@@ -187,14 +187,12 @@ The red circle should overlap almost perfectly with your arena. There will be so
 
 More information is given in the terminal. In particular, the software will estimate the (known) length of the top edge of the chessboard in millimetres. In addition, the software will estimate your arena radius by computing the average distance from the estimated centre of the arena to the radial points you clicked.
 
-*Why is the frame cropped?*
+*Why is there a blue border?*
 
-The extrinsic calibration automatically translates the frame so that the chessboard is in the top left-hand corner of the image. This is undone by assuming that the chessboard is roughly centred in the arena and working out the adjustment to centre the chessboard in the image. 
+When the perspective transformation is applied, the image will be warped such that it is no longer rectangular. There are therefore pixels in the rectangular frame which do not belong to the image. These are filled in solid blue so that it's easy to see where the image pixels are.
 
-*Does this matter?*
-
-So long as enough of the arena is visible to get four points on the radius then no. The image translation is only required for display purposes and shouldn't affect your tracks. *That said, I am working on a bettter way to do this which will show the whole frame.*
-
+*What if I misclick?*
+For now, simply close the window and select 'Check calibration' again. 
 
 
 #### 4. Autotracker

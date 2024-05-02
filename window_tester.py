@@ -3,14 +3,8 @@ from dtrack_params import dtrack_params
 import calibration as calib
 import os
 
+from configuration_tool import ConfigurationTool
+import tkinter as tk
 
-ext_image_path = os.path.join(
-            dtrack_params["project_directory"],
-            "calibration_cache",
-            "extrinsic",
-            "000.png")
-calib_filepath = os.path.join(
-            dtrack_params["project_directory"],
-            "calibration_cache",
-            "calibration.dt2c")
-check_calibration(ext_image_path, calib.from_file(calib_filepath))
+window = ConfigurationTool(tk.Tk())
+window.mainloop()

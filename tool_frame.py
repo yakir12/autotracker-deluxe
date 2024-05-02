@@ -7,6 +7,7 @@ from autotrack import autotracker
 from old_calibration import calib
 from calibration_manager import CalibrationManager
 from track_processing import calibrate_and_smooth_tracks
+from configuration_tool import ConfigurationTool
 
 
 class ToolFrame(tk.Frame):
@@ -14,13 +15,18 @@ class ToolFrame(tk.Frame):
         super().__init__(parent, **kwargs)
 
         self.__labelframe = tk.LabelFrame(self, text='Tools')
-        self.__frm_button_frame = tk.Frame(self.__labelframe)
-        self.__btn_run = tk.Button(self.__frm_button_frame, 
+        self.__frm_left_button_frame = tk.Frame(self.__labelframe)
+        self.__frm_right_button_frame = tk.Frame(self.__labelframe)
+    
+        self.__btn_run = tk.Button(self.__frm_left_button_frame, 
                                    text='Run',
                                    command=self.__run_callback)
-        self.__btn_quit = tk.Button(self.__frm_button_frame,
+        self.__btn_quit = tk.Button(self.__frm_left_button_frame,
                                     text='Quit',
-                                    command=self.winfo_toplevel().destroy)        
+                                    command=self.winfo_toplevel().destroy)  
+        self.__btn_configure = tk.Button(self.__frm_right_button_frame,
+                                         text='Options',
+                                         command=self.__run_configuration)      
 
         # Tool radio buttons
         self.__int_option = tk.IntVar(self, 1)
@@ -86,13 +92,17 @@ class ToolFrame(tk.Frame):
         self.__rbn_compute_calibration.grid(column=0, row=2, sticky='nw') 
         self.__rbn_autotracker.grid(column=0, row=3, sticky='nw') 
         self.__rbn_process_tracks.grid(column=0, row=4, sticky='nw') 
-        self.__frm_button_frame.grid(column=0, row=5, sticky='nw')
+        self.__frm_left_button_frame.grid(column=0, row=5, sticky='nw')
+        self.__frm_right_button_frame.grid(column=1, row=5, sticky='ne')
         self.__lfm_information.grid(column=1, row=0, rowspan=5, sticky='nesw', padx=(0,10))
         self.__wlf_information.grid(column=0, row=0, sticky='nesw')
 
-        # Contained in self.__frm_button_
-        self.__btn_run.grid(column=0, row=0, sticky='nw')
-        self.__btn_quit.grid(column=1, row=0, sticky='nw')
+        # Contained in self.__frm_right_button_frame
+        self.__btn_run.grid(column=0, row=0, sticky='nw', pady=(5,5), padx=(10,0))
+        self.__btn_quit.grid(column=1, row=0, sticky='nw', pady=(5,5))
+
+        # Contained in self.__frm_left_button_frame
+        self.__btn_configure.grid(column=2, row=0, sticky='ne', pady=(5,5), padx=(0,10))
 
     def __update_info(self):
         """
@@ -161,4 +171,11 @@ class ToolFrame(tk.Frame):
             autotracker()
         elif var == 5:
             calibrate_and_smooth_tracks()
+
+    def __run_configuration(self):
+        """
+        Button callback to launch the configuration tool
+        """
+        config_tool = ConfigurationTool(self)    
+        config_tool.mainloop()
 

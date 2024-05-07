@@ -1,3 +1,14 @@
+"""
+autocalibration_tool.py
+
+Contains the class which defines the Tkinter Toplevel window which
+acts as the autocalibration tool.
+
+Related:
+- autocalibration.py
+- calibration_manager.py
+"""
+
 import shutil
 import os
 import tkinter as tk
@@ -12,20 +23,26 @@ class AutocalibrationTool(tk.Toplevel):
     def __init__(self, parent, **kwargs):
         super().__init__(parent, **kwargs)
 
+        # Window configuration
         self.title('Autocalibration tool')
         self.minsize(500, 100)
 
 
-        # Want to allow user to select either the index of a frame in their
-        # calibration video or give an image file. Defualt to using the frame.
+        # User can either select a video frame or a file to act as the extrinsic
+        # calibration image. 
         self.__extrinsic_frame = 0
         self.__extrinsic_filepath = ""
         self.__extrinsic_frame_set = False
 
+        # String to be displayed showing which image is being used for the 
+        # extrinsic calibration
         self.__stv_extrinsic_calibration_image = tk.StringVar()
+
+        # Number of frames to use for calibration
         self.__stv_N_frames = tk.StringVar()
         self.__stv_N_frames.set("30")
-        
+
+        # Tkinter widget instantiation
         self.__lbl_calib_video = tk.Label(
             self,
             text="Calibration video:",
@@ -75,8 +92,9 @@ class AutocalibrationTool(tk.Toplevel):
             " original video. You may want to know date, time, location, experiment, etc. \n\n" +\
             "Include that information here! It will be encoded in the calibration file."
         
+        # The instructions can be turned off by the user. This is managed by the 
+        # configuration tool and stored in the dtrack_params file. 
         if not dtrack_params["options.autocalibration.show_meta_text"]:
-            # User can opt to turn this off.
             metadata_instructions = ""
 
         self.__txt_metadata.insert(tk.END, metadata_instructions)
@@ -96,7 +114,7 @@ class AutocalibrationTool(tk.Toplevel):
                                         text="Generate!",
                                         command=self.__generate_calibration)
 
-        # Window geometry
+        # Set window geometry (grid layout and resizability)
         n_columns = 3
         n_rows = 5
         for i in range(n_rows):
@@ -104,7 +122,7 @@ class AutocalibrationTool(tk.Toplevel):
                 self.rowconfigure(i, weight=1)
                 self.columnconfigure(j, weight=1)
 
-        # Extrinsic frame selector labelframe geometry
+        # Set extrinsic frame selector labelframe geometry
         n_columns = 3
         n_rows = 1
         for i in range(n_rows):
@@ -112,7 +130,7 @@ class AutocalibrationTool(tk.Toplevel):
                 self.__lbf_extrinsic_selection.rowconfigure(i, weight=1)
                 self.__lbf_extrinsic_selection.columnconfigure(j, weight=1)
 
-        # Window layout
+        # Place widgets in window
         self.__lbl_calib_video.grid(row=0, column=0, sticky='nesw')
         self.__lbl_calib_video_path.grid(row=0, column=1, columnspan=2, sticky='nesw')
 
@@ -127,16 +145,17 @@ class AutocalibrationTool(tk.Toplevel):
         self.__lbf_extrinsic_selection.grid(row=4, column=0, columnspan=2, sticky='nesw')
         self.__btn_generate.grid(row=4, column=2, sticky='nesw', padx=10, pady=10)
 
-        # Extrinsic frame selector layout
+        # Place widgets in extrinsic frame selector
         self.__btn_select_frame.grid(row=0, column=0, sticky='nesw')
         self.__lbl_or.grid(row=0, column=1, sticky='ew')
         self.__btn_select_image.grid(row=0, column=2, sticky='nesw')
 
-        # Metadata frame layout
+        # Place widgets in metadata frame
         self.__lbf_metadata.columnconfigure(0, weight=1)
         self.__lbf_metadata.rowconfigure(0, weight=1)
         self.__txt_metadata.grid(row=0, column=0, sticky='nesw')
         
+        # Refresh extrinsic calibration label.
         self.__update_ext_calibration_label()
 
     def __N_frame_entry_validation(self, input):
@@ -155,6 +174,10 @@ class AutocalibrationTool(tk.Toplevel):
 
 
     def __update_ext_calibration_label(self):
+        """
+        Update the extrinsic calibration label so that the correct image 
+        file/frame/message is displayed.
+        """
         if self.__extrinsic_frame_set:
             # If frame is set, make text green
             self.__lbl_ext_calib_frame.configure(fg='#007d02')
@@ -175,7 +198,7 @@ class AutocalibrationTool(tk.Toplevel):
 
     def __select_extrinsic_frame_from_video(self):
         """
-        Spawn an OpenCV window with the calibration video.
+        Spawn an OpenCV window with the calibration video and a trackbar.
 
         Allows user to select an extrinsic calibration frame from the calibration video
         """

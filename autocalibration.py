@@ -50,6 +50,10 @@ def select_extrinsic_frame(video_path, calibration_cache, chessboard_size):
 
     :param video_path: The file path of the calibration video.
     :param calibration_cache: The cache location where the frame should be stored.
+    :param chessboard_size: The size of the chessboard which should be in the extrinsic
+                            frame.
+    :return: Multiple return with a boolean indicating whether or not a frame 
+             was chosen and the index of the frame of the frame in the video.
     """
     window = "Select extrinsic calibration frame"
     trackbar = 'trackbar'
@@ -59,8 +63,7 @@ def select_extrinsic_frame(video_path, calibration_cache, chessboard_size):
     
     def trackbar_callback(trackbar_value):
         """
-        Trackbar callback function (because python doesn't allow
-        multiline lambdas).
+        Trackbar callback function.
 
         :param trackbar_value: The position of the trackbar
         """
@@ -95,12 +98,15 @@ def select_extrinsic_frame(video_path, calibration_cache, chessboard_size):
         
         cv2.imshow(window, frame)
 
+
     cv2.createTrackbar(trackbar, 
                        window, 
                        1, 
                        length,
                        trackbar_callback)
 
+    # Display OpenCV window and allow the user to select a frame from the
+    # calibration video.
     frame_was_set = False
     while cv2.getWindowProperty(window, cv2.WND_PROP_VISIBLE):
         kp = cv2.waitKey(1)
@@ -232,7 +238,7 @@ def cache_calibration_video_frames(video_path,
     :param N: the number of frames you want to find.
     :param frame_cache: The caching directory to use for calibration frames.
 
-    :return: The filepath to the frames.
+    :return: True on success
     """
     
     print("Attempting to build calibration cache")
@@ -336,6 +342,8 @@ def generate_calibration_from_cache(chessboard_columns,
     :param square_size: The square size of the chessboard
     :param cache_path: The location where the calibration cache is stored
     :param metadata: A short description of this calibration
+
+    :return: True on success
     """
 
     object_chessboard, chessboard_size =\
@@ -515,6 +523,19 @@ calib_point_ctr = 0
 check_calibration_frame = None
 calibration_points = []
 def on_mouseclick(event, x, y, flags, param):
+    """
+    Mouse click callback for calibration verification. Keeps track of a series
+    of four points which are used for the calibration verification system (see README.md).
+
+    Each clicked point will be marked on the frame. On every second point, a line
+    will be drawn between that and the previous one.
+
+    :param event: The type of event.
+    :param x: The x coordinate of the mouse during the event.
+    :param y: The y coordinate of the mouse during the event.
+    :param flags: Unused but required for signature.
+    :param param: unused but required for signature
+    """
     global calib_point_ctr
     global check_calibration_frame
 
@@ -542,11 +563,6 @@ def on_mouseclick(event, x, y, flags, param):
                  (0, 0, 255),
                  5)
  
-
-
-    # Would be good to have a right-click to clear option.
-
-
 
 def check_calibration(example_image_path, calibration):
     """
@@ -587,15 +603,7 @@ def check_calibration(example_image_path, calibration):
                               (calibration.bbox_width, calibration.bbox_height),
                               borderValue=255)
  
-    # cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
-    # while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
-    #     cv2.imshow('frame', check_calibration_frame)
-    #     if cv2.waitKey(1) == 'q':
-    #         break
-
-    # cv2.destroyAllWindows()
-    # return
-    
+   
     # Work out the chessboard corners and draw these on the frame.
     success, img_scale_points = cv2.findChessboardCorners(check_calibration_frame,
                                                           chessboard_size)
@@ -724,59 +732,3 @@ def check_calibration(example_image_path, calibration):
     cv2.destroyAllWindows()
 
                 
-
-
-
-# if __name__ == "__main__":
-#     # Use calibration info to work out homography
-#     # Detect checkerboard in image then report distance between corners.
-
-#     # Selected test video
-#     video = "/home/robert/postdoc/source/output.mov"
-    
-#     # Chessboard parameters
-#     n_rows = 6
-#     n_cols = 9
-#     square_size = 39
-
-#     # Define an object chessboard image and convert to OpenCV-compatible type.
-#     object_chessboard, chessboard_size =\
-#           define_object_chessboard(n_rows, n_cols, square_size)
-#     object_chessboard = object_chessboard.astype(np.uint8) * 255
-
-#     refresh_cache=False
-#     if refresh_cache:
-#         cache_calibration_video_frames(video, 
-#                                        object_chessboard, 
-#                                        chessboard_size, 
-#                                        N=30)
-    
-#     calibration = generate_calibration_from_cache(object_chessboard,
-#                                                   chessboard_size,
-#                                                   square_size)
-    
-
-#     # sample_image = cv2.imread('calibration_image_cache/intrinsic/000.png')
-#     # imheight = sample_image.shape[0]
-    
-#     # border = (255 * np.ones((imheight, 100, 3))).astype(np.uint8) # generate white border
-    
-#     # print(sample_image.shape)
-
-#     # dst = cv2.undistort(sample_image, 
-#     #                     calibration['mtx'],
-#     #                     calibration['dist'],
-#     #                     None, 
-#     #                     calibration['optmtx'])
-    
-#     # print(dst.shape)
-
-#     # complete_frame = np.concatenate((sample_image, border, dst),  axis=1)
-
-#     # print(calibration["rvecs"])
-
-#     # cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
-#     # while cv2.getWindowProperty('frame', cv2.WND_PROP_VISIBLE):
-#     #     cv2.imshow('frame',complete_frame)
-#     #     if cv2.waitKey(1) == 'q':
-#     #         break

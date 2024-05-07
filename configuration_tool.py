@@ -14,7 +14,6 @@ class ConfigurationTool(tk.Toplevel):
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
 
-        self.__ntb_notebook = ttk.Notebook(self)
         self.__frm_controls = tk.Frame(self)
         self.__frm_controls.rowconfigure(0, weight=1)
         self.__btn_confirm = tk.Button(self.__frm_controls,
@@ -24,25 +23,15 @@ class ConfigurationTool(tk.Toplevel):
                                       text='Cancel',
                                       command=self.destroy)
         
-        self.__frm_project_options = tk.Frame(self.__ntb_notebook)
-        self.__frm_dtrack_options = tk.Frame(self.__ntb_notebook)
+        self.__frm_dtrack_options = tk.Frame(self)
 
-        self.__ntb_notebook.grid(column=0, row=0, sticky='nesw')
-        self.__frm_project_options.grid(row=0, column=0, sticky='nesw')
         self.__frm_dtrack_options.grid(row=0, column=0, sticky='nesw')
         self.__frm_controls.grid(row=1,column=0, sticky='nesw')
 
         self.__btn_confirm.grid(column=0, row=0, sticky='nws')
         self.__btn_cancel.grid(column=1, row=0, sticky='nws')
         
-        self.__ntb_notebook.add(self.__frm_dtrack_options, text='DTrack2') 
-        self.__ntb_notebook.add(self.__frm_project_options, text='Project')
-        
-
-        # Definition and arrangement of each tab is contained in these functions
-        # to try to organise the source code a little.
-        self.__arrange_project_options_pane()
-        self.__arrange_dtrack_options_pane()
+        self.__arrange_dtrack_options()
 
         # Set minsize to whatever the final window size is with all elements in place
         self.update()
@@ -70,44 +59,7 @@ class ConfigurationTool(tk.Toplevel):
                 widget.rowconfigure(r, weight=weight)
                 widget.columnconfigure(c, weight=weight)
 
-    def __arrange_project_options_pane(self):
-        """
-        Define all widgets for the project options panel and 'grid' them for display.
-        """
-
-        self.__frm_project_options.columnconfigure(0, weight=1)
-
-        # Project options info-string
-        str = "This pane allows you to configure options for the current project."
-        lbl_project_option_info = tk.Label(self.__frm_project_options,
-                                           text=str, 
-                                           anchor='w',
-                                           relief='sunken')
-        lbl_project_option_info.grid(column=0, row=0, sticky='nesw', pady=10, padx=10)      
-
-
-        # Tracker options
-        self.__stv_project_track_point = tk.StringVar()
-        self.__stv_project_track_point.set(project_file["options.autotracker.track_point"])
-
-        lbf_tracker_options = tk.LabelFrame(self.__frm_project_options,
-                                            text="Autotracker", padx=10)
-        
-        lbl_track_point_selection = tk.Label(lbf_tracker_options,
-                                             text="Autotracker target: ",
-                                             anchor='w')
-        cmb_track_point_selection = ttk.Combobox(lbf_tracker_options,
-                                                 values=["centre-of-mass",
-                                                         "centre-of-bounding-box"],
-                                                 state="readonly")     
-        cmb_track_point_selection.set(
-            project_file["options.autotracker.track_point"])
-        
-        lbf_tracker_options.grid(column=0, row=1, sticky='new')
-        lbl_track_point_selection.grid(column=0, row=0, sticky='nesw')
-        cmb_track_point_selection.grid(column=1, row=0, sticky='nesw')
-
-    def __arrange_dtrack_options_pane(self):
+    def __arrange_dtrack_options(self):
         """
         Define all widgets for the DTrack2 options panel and 'grid' them for display.
         """
@@ -245,7 +197,7 @@ class ConfigurationTool(tk.Toplevel):
         dtrack_params["options.autotracker.track_point"] = self.__stv_dtrack_track_point
 
         # Project settings
-        project_file["options.autotracker.track_point"] = self.__stv_project_track_point
+        project_file["options.autotracker.track_point"] = self.__stv_dtrack_track_point
 
 
     def __select_video_directory_callback(self):

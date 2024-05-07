@@ -9,6 +9,8 @@ class SelectorFrame(tk.Frame):
     def __init__(self, parent, title='', default='', **kwargs):
         super().__init__(parent, **kwargs)
 
+        self.__parent = parent
+
         # Allows all children to be resized
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
@@ -36,7 +38,13 @@ class SelectorFrame(tk.Frame):
 
     def __getfile(self):
         filename = filedialog.askopenfilename(title='Select file', 
-                                              filetypes=[('All files (Video)', '*.*')])
+                                              filetypes=[('All files (Video)', '*.*')],
+                                              initialdir=dtrack_params["options.video.directory"],
+                                              parent=self.__parent)
+        
+        if filename == ():
+            # User cancelled
+            return
         
         self.__filepath = filename
         self.__update_file_entry()

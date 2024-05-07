@@ -188,17 +188,18 @@ class ConfigurationTool(tk.Toplevel):
         Store all settings in the params and project file.
         """
         # Global settings
-        dtrack_params["options.video.directory"] = self.__stv_video_directory
-        dtrack_params["options.autocalibration.fix_k1"] = self.__blv_fix_k1
-        dtrack_params["options.autocalibration.fix_k2"] = self.__blv_fix_k2
-        dtrack_params["options.autocalibration.fix_k3"] = self.__blv_fix_k3
-        dtrack_params["options.autocalibration.fix_tangential"] = self.__blv_fix_tangential
-        dtrack_params["options.autocalibration.show_meta_text"] = self.__blv_show_meta_text
-        dtrack_params["options.autotracker.track_point"] = self.__stv_dtrack_track_point
+        dtrack_params["options.video.directory"] = self.__stv_video_directory.get()
+        dtrack_params["options.autocalibration.fix_k1"] = self.__blv_fix_k1.get()
+        dtrack_params["options.autocalibration.fix_k2"] = self.__blv_fix_k2.get()
+        dtrack_params["options.autocalibration.fix_k3"] = self.__blv_fix_k3.get()
+        dtrack_params["options.autocalibration.fix_tangential"] = self.__blv_fix_tangential.get()
+        dtrack_params["options.autocalibration.show_meta_text"] = self.__blv_show_meta_text.get()
+        dtrack_params["options.autotracker.track_point"] = self.__stv_dtrack_track_point.get()
 
         # Project settings
-        project_file["options.autotracker.track_point"] = self.__stv_dtrack_track_point
+        project_file["options.autotracker.track_point"] = self.__stv_dtrack_track_point.get()
 
+        self.destroy()
 
     def __select_video_directory_callback(self):
         """

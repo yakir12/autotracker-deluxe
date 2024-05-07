@@ -21,7 +21,8 @@ class ProjectFilePassthrough():
                              "chessboard_square_size",
                              "chessboard_size",
                              "calibration_cache",
-                             "calibration_file"]
+                             "calibration_file",
+                             "options.autotracker.track_point"]
         
         # Set some sensible defaults for things which may have
         # default values.
@@ -35,6 +36,8 @@ class ProjectFilePassthrough():
               os.path.join(dtrack_params['project_directory'], 'calibration_cache')
         self.__defaults["calibration_file"] =\
               os.path.join(self.__defaults["calibration_cache"], "calibration.dt2c")
+        self.__defaults["options.autotracker.track_point"] =\
+              dtrack_params["options.autotracker.track_point"]
 
     def __getitem__(self,key):
         self.refresh()
@@ -70,7 +73,7 @@ class ProjectFilePassthrough():
         project_file[key] = value
         
         with open(self.__fname, "w") as f:
-            json.dump(project_file, f)
+            json.dump(project_file, f, indent=2)
 
     def refresh(self):
         """

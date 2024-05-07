@@ -10,23 +10,58 @@ class ParamFilePassthrough():
         # This feels overcomplicated just to store the previous project but
         # there's scope to add stuff.
         self.__valid_keys = ["project_directory",
-                             "project_file"]
+                             "project_file",
+                             "options.autotracker.track_point",
+                             "options.video.directory",
+                             "options.autocalibration.fix_k1",
+                             "options.autocalibration.fix_k2",
+                             "options.autocalibration.fix_k3",
+                             "options.autocalibration.fix_tangential",
+                             "options.autocalibration.show_meta_text"
+                             ]
+        
+        # Set some sane defaults
+        self.__defaults = dict.fromkeys(self.__valid_keys)
+        for k in self.__defaults.keys():
+            self.__defaults[k] = ""
+
+        self.__defaults["options.video.directory"] = "."
+        self.__defaults["options.autotracker.track_point"] = "centre-of-mass"
+        self.__defaults["options.autocalibration.fix_k1"] = False
+        self.__defaults["options.autocalibration.fix_k2"] = True
+        self.__defaults["options.autocalibration.fix_k3"] = True
+        self.__defaults["options.autocalibration.fix_tangential"] = True
+        self.__defaults["options.autocalibration.show_meta_text"] = True
+        
 
         # If parameter file does not exist, create it as an emtpy json file.
         if not os.path.exists(self.__fname):
             with open(self.__fname, "w") as f:
                 params = dict.fromkeys(self.__valid_keys)
                 params = self.__set_defaults(params)
-                json.dump(params, f)
+
+                # Set correct defaults
+                for k in self.__valid_keys:
+                    params[k] = self.__defaults[k]
+
+                json.dump(params, f, indent=2)
         else:
             # If the file does exist, check that no elements are null.
             with open(self.__fname, "r") as f:
                 params = json.load(f)
                 
-                for k in params.keys():
-                    if params[k] == None:
-                        params[k] = ""
-
+                for k in self.__valid_keys:
+                    # Check all valid keys for sensible values
+                    try:
+                        if params[k] == None:
+                            params[k] = self.__defaults[k]
+                    except KeyError:
+                        # If there is a valid entry which currently isn't in the
+                        # file, then add it.
+                        params[k] = self.__defaults[k]
+                
+            with open(self.__fname, "w") as f:
+                json.dump(params, f, indent=2)
 
     def __getitem__(self,key):
         with open(self.__fname, "r") as f:
@@ -43,7 +78,7 @@ class ParamFilePassthrough():
         params[key] = value
 
         with open(self.__fname, "w") as f:
-            json.dump(params, f)
+            json.dump(params, f, indent=2)
 
     def __set_defaults(self, params):
         for k in self.__valid_keys:

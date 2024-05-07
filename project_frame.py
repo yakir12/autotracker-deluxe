@@ -18,7 +18,7 @@ class ProjectFrame(tk.Frame):
         self.__btn_new = tk.Button(self.__labelframe,
                                    text='New project',
                                    command=self.__new_callback)
-        self.__ent_project = tk.Entry(self.__labelframe)
+        self.__ent_project = tk.Entry(self.__labelframe, width=80)
         
         # If the user has previously worked on a project and that project
         # still exists, populate the project entry with the relevant info.
@@ -75,7 +75,7 @@ class ProjectFrame(tk.Frame):
             if confirm:
                 with open(proj_file_path, "w") as f:
                     project = dict()
-                    json.dump(project, f)
+                    json.dump(project, f, indent=2)
             else:
                 # If the user didn't create a project file, abort project 
                 # selection
@@ -121,7 +121,7 @@ class ProjectFrame(tk.Frame):
             # Create project (JSON) file
             with open(full_path, "w") as f:
                 project = dict()
-                json.dump(project, f)
+                json.dump(project, f, indent=2)
 
         self.__update_project_params(parent)
         self.__update_project_entry()

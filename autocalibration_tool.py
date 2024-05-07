@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import messagebox, filedialog, dialog
 
 from project import project_file
+from dtrack_params import dtrack_params
 
 import autocalibration as ac
 
@@ -73,6 +74,10 @@ class AutocalibrationTool(tk.Toplevel):
             "Imagine you are using this calibration file without access to the" +\
             " original video. You may want to know date, time, location, experiment, etc. \n\n" +\
             "Include that information here! It will be encoded in the calibration file."
+        
+        if not dtrack_params["options.autocalibration.show_meta_text"]:
+            # User can opt to turn this off.
+            metadata_instructions = ""
 
         self.__txt_metadata.insert(tk.END, metadata_instructions)
         

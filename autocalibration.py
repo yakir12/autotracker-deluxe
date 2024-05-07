@@ -16,6 +16,8 @@ import shutil
 import calibration
 import textwrap
 
+from dtrack_params import dtrack_params
+
 def define_object_chessboard(n_rows, n_columns, square_size):
     """
     Create 'object' chessboard image such that one pixel == one millimetre. 
@@ -389,7 +391,14 @@ def generate_calibration_from_cache(chessboard_columns,
     # Avoid changing k2 and k3 radial distortion parameters and assume no
     # tangent distortion. This is drawn from Yakir and corroberated with some
     # online discussion on OpenCV calibration
-    flags = cv2.CALIB_FIX_K3 + cv2.CALIB_FIX_K2 + cv2.CALIB_ZERO_TANGENT_DIST
+    fix_k1 = cv2.CALIB_FIX_K1 * int(dtrack_params["options.autocalibration.fix_k1"])
+    fix_k2 = cv2.CALIB_FIX_K2 * int(dtrack_params["options.autocalibration.fix_k2"])
+    fix_k3 = cv2.CALIB_FIX_K3 * int(dtrack_params["options.autocalibration.fix_k3"])
+    zero_tangent = cv2.CALIB_ZERO_TANGENT_DIST * int(dtrack_params["options.autocalibration.fix_tangential"])
+
+    # These are user configurable but by default, only K1 is enabled and other
+    # params (k2, k3, and tangential distortion) are fixed.
+    flags = fix_k1 + fix_k2 + fix_k3 + zero_tangent
     
     rproj_err, mtx, dist, rvecs, tvecs =\
           cv2.calibrateCamera(object_points, 

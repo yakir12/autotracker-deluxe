@@ -174,7 +174,8 @@ class ConfigurationTool(tk.Toplevel):
         cmb_track_point_selection = ttk.Combobox(lbf_tracker_options,
                                                  values=["centre-of-mass",
                                                          "centre-of-bounding-box"],
-                                                 state="readonly")     
+                                                 state="readonly",
+                                                 textvariable=self.__stv_dtrack_track_point)     
         cmb_track_point_selection.set(
             dtrack_params["options.autotracker.track_point"])
         

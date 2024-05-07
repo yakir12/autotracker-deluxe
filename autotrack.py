@@ -51,7 +51,7 @@ def autotracker():
     working_csv = os.path.join(dtrack_params["project_directory"],
                                "raw_tracks.csv")
     desired_tracker = "BOOSTING"
-    track_point = "CENTRE"
+    track_point = dtrack_params["options.autotracker.track_point"]
 
     cap = cv2.VideoCapture(input_dir)
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -283,7 +283,7 @@ def autotracker():
 
                 # Use bbox centre as track point instead of trying to segment
                 # the beetle out of the region of interest.
-                if track_point == "CENTRE":
+                if track_point == "centre-of-bounding-box":
                     segmentation_success = False
                     centroid = (bbox[2]/2, bbox[3]/2)                    
                 

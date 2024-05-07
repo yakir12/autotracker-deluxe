@@ -97,7 +97,8 @@ In the terminal, run:
    
    The main window should open:
 
-![Main window](images/main_window.png)   
+![Main window](images/main_window.png)
+
 
 Use the 'Select project' button to select an existing project, 'New project' if you wish to create a new project. In either case, a graphical selector will open to allow you to select the project *directory* (the folder in which all project related stuff will be stored).
 
@@ -235,6 +236,56 @@ plots as required.
 **Note**
 The terminal will display the average displacement of your beetles in metres. This should approximately match the radius of your arena but it won't be exact because it depends on when you start and stop tracks. Note that if you have any partial tracks, this will also skew the result. I would guess (hope) that the displacement should be within 5cm of the true radius of the arena.
 
+## Configuration
+
+Clicking the 'Options' button at the bottom right-hand side of the main window will display a window with some software options.
+
+![The options window](images/options_window.png)
+
+Options are broken down by the tool to which they relate. The available options are discussed below and more are on the way (if you have suggestions, please post an issue as a feature request). **These options will persist across different projects!**
+
+Once you have changed any options you must click 'Confirm' to actually save them. These options are stored in the params file (`params.json`). 
+
+### Video selection
+#### Default video directory
+Here you can set the default directory in which the software will look for videos when using the video selection tool. This may be useful if you keep all of your videos stored in the same place on your hard drive. The default option '.' is shorthand for 'the current working directory' which will be the directory from which you are running the software. You can either type directly in the box or click 'Select' to get a file dialog. 
+
+### Autocalibration
+#### Show default metainformation text
+By default, the metainformation box in the autocalibration tool displays some instructive text. This can be annoying to delete once you know what to do, so set this if you want the text box to appear blank.
+
+#### Distortion coefficient settings
+The remaining settings relate to the camera model used during calibration. You should not need to modify these but it may be useful to do so for testing. The default camera model assumes more variability than there should actually be for the cameras we use.
+Therefore some (most) of the distortion parameters are fixed (disabled) by default. Including them in calibration tends to cause more harm than good. By default, only
+*k1* is included in camera calibration. If you 'fix' (disable) all four parameters
+then the camera model will assume that no lens distortion is added to your images 
+(which probably isn't true). Your resultant tracks will then also be distorted.
+
+Just *k1* is probably good enough. At most you may have to free (enable) *k2*.
+
+##### Fix K1
+Fixes radial distortion parameter *k1* to a constant value. 
+
+##### Fix K2
+Fixes radial distortion parameter *k2* to a constant value.
+
+##### Fix K3
+Fixes radial distortion parameter *k3* to a constant value.
+
+##### Fix tangential
+Autocalibration will assume zero tangential distortion. (If this is not true then set this camera aside for electrophysiology experiments.)
+
+### Autotracker
+#### Default autotracker target
+This determines the actual point which is tracked when you run the autotracker. The *centre-of-mass* option tracks the centre of mass of a segmented beetle (within the bounding box you define when running the autotracker). The *centre-of-bounding-box* option tracks the centre of the bounding box which assumes the beetle remains centred in the bounding box (which probably isn't true).
+
+*If the centre-of-mass is more accurate, why use the bounding box?*
+
+The segmentation used to extract the centre of mass can fail for very dark videos where there is poor contrast between the beetle and its background. The OpenCV trackers seem to be more robust so will continue to function even if the segmentation fails. In these cases, you can track the centre of the bounding box and still get a track where the segmentation is failing. Basically, **use centre-of-mass unless you're having problems, then switch to centre-of-bounding-box**.
+
+**Important:** There is no record of which method you used and you could (in theory) change the track point between different rolls of the same beetle. If you do this, make a note of it (assuming it matters to you).
+
+
 ## Miscellany
 ### Interlaced video
 Some videos are stored in an interlaced format. In the software, this appears as a 'combing' or 'tearing' effect:
@@ -253,8 +304,6 @@ Running the command above on a non-interlaced file doesn't seem to cause any pro
 
 ### Params file
 When you run the software it should create a file called 'params.json' in the software directory. Do not modify this file by hand. It stores the path of the current project and path to the project file which are relied on internally.
-
-This allows the software to remember what the last project was when you start the software.
 
 ### Project files
 Inside your project directories, a project file will be created (*.dt2p). This will store all of the information about the project (which video files to use, calibration board configuration, etc.). Again, do not modify this by hand.

@@ -53,13 +53,18 @@ class ProjectFrame(tk.Frame):
             initialdir = str(os.getcwd()),
             title = "Select project directory"
         )
+
+        # User cancelled
+        if directory == ():
+            return
+
         if not os.path.exists(directory):
             directory = ""
             print("Error: selected directory does not exist.")
 
         # Check to see if a project file exists
-        proj_file_name = directory.split("/")[-1] + ".dt2p"
-        proj_file_path = directory + "/" + proj_file_name
+        proj_file_name = os.path.basename(directory) + ".dt2p" 
+        proj_file_path = os.path.join(directory, proj_file_name)
         if not os.path.isfile(proj_file_path):
             # Check that path doesn't already exist
             confirm_message =\
@@ -99,11 +104,11 @@ class ProjectFrame(tk.Frame):
         )
 
         # User cancelled 
-        if not (".dt2p" in full_path):
+        if full_path == ():
             return
 
         # Check that the user really wants to create the project
-        parent = os.path.basename(full_path).split(".")[0]
+        parent = full_path.split(".")[0]
         confirm_message =\
               "A project directory will be created\n{}\n\n".format(parent)+\
               "Do you wish to proceed?"
@@ -149,7 +154,7 @@ class ProjectFrame(tk.Frame):
         :param project_directory:
         """
         dtrack_params["project_directory"] = project_directory
-        filename = project_directory.split("/")[-1] + ".dt2p"
-        filepath = project_directory + "/" + filename
+        filename = os.path.basename(project_directory) + ".dt2p"
+        filepath = os.path.join(project_directory,filename)
         dtrack_params["project_file"] = filepath
 

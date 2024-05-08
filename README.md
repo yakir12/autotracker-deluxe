@@ -285,6 +285,25 @@ The segmentation used to extract the centre of mass can fail for very dark video
 
 **Important:** There is no record of which method you used and you could (in theory) change the track point between different rolls of the same beetle. If you do this, make a note of it (assuming it matters to you).
 
+#### OpenCV Tracking backend
+The actual tracking component is handled by OpenCV. OpenCV has a number of built-in object trackers which may work better in different scenarios. Given the relative simplicity of the visual task, I'm not sure how much modifying the tracker will help. You may be able to speed up your trackin gthough.
+
+Some information on the different options can be found [here](https://broutonlab.com/blog/opencv-object-tracking/).
+
+
+#### Background computation method
+This option only applies if the autotracker target is set to *centre-of-mass*. 
+
+This determines how a background frame is synthesised. The 'first_N_median' option will take the median of the first N frames of your video, 'first_N_mean' will take the mean of the first N frames of your video, and 'random_N_mean' will take a random sample of N frames from your video and take the mean. 
+
+The first_N_* options tend to work well enough, but they can struggle if the lighting changes significantly after the start of your video. In these cases you may want to use 'random_N_mean' but this method is slower and will take longer with greater N. The speed penalty is only incurred when you start the autotracker as the background is pre-computed.
+
+#### N frames to use for background
+This option only applies if the autotracker target is set to *centre-of-mass*. 
+
+This is simply the number of frames (N) to be used by the background computation algorithm. E.g. if you set the background computation method to 'first_N_median', then this option 10, then your background will be the median frame of the first 10 frames of your video.
+
+
 
 ## Miscellany
 ### Interlaced video

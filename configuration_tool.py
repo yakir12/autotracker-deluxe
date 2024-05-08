@@ -70,9 +70,9 @@ class ConfigurationTool(tk.Toplevel):
                                     weight=1)
 
         # Project options info-string
-        str = "This pane allows you to configure options for DTrack2."
+        outstr = "This pane allows you to configure options for DTrack2."
         lbl_project_option_info = tk.Label(self.__frm_dtrack_options,
-                                           text=str, 
+                                           text=outstr, 
                                            anchor='w',
                                            relief='sunken')
         lbl_project_option_info.grid(column=0, row=0, sticky='new', pady=10, padx=10)      
@@ -167,7 +167,15 @@ class ConfigurationTool(tk.Toplevel):
         # Autotracker options
         #        
         self.__stv_dtrack_track_point = tk.StringVar()
+        self.__stv_cv_backend = tk.StringVar()
+        self.__stv_bg_computation_method = tk.StringVar()
+        self.__stv_bg_sample_size = tk.StringVar()
+
         self.__stv_dtrack_track_point.set(dtrack_params["options.autotracker.track_point"])
+        self.__stv_cv_backend.set(dtrack_params["options.autotracker.cv_backend"])
+        self.__stv_bg_computation_method.set(dtrack_params["options.autotracker.bg_computation_method"])
+        self.__stv_bg_sample_size.set(str(dtrack_params["options.autotracker.bg_sample_size"]))
+
         lbl_track_point_selection = tk.Label(lbf_tracker_options,
                                              text="Default autotracker target: ",
                                              anchor='w')
@@ -175,13 +183,61 @@ class ConfigurationTool(tk.Toplevel):
                                                  values=["centre-of-mass",
                                                          "centre-of-bounding-box"],
                                                  state="readonly",
-                                                 textvariable=self.__stv_dtrack_track_point)     
-        cmb_track_point_selection.set(
-            dtrack_params["options.autotracker.track_point"])
+                                                 textvariable=self.__stv_dtrack_track_point)
+        cmb_track_point_selection.set(self.__stv_dtrack_track_point.get())
+
+        lbl_cv_backend = tk.Label(lbf_tracker_options,
+                                             text="OpenCV tracking backend: ",
+                                             anchor='w')
+        cmb_cv_backend= ttk.Combobox(lbf_tracker_options,
+                                               values=["BOOSTING",
+                                                       "MIL",
+                                                       "KCF",
+                                                       "TLD",
+                                                       "MEDIANFLOW",
+                                                       "GOTURN",
+                                                       "MOSSE",
+                                                       "CSRT"],
+                                               state="readonly",
+                                               textvariable=self.__stv_cv_backend)
+        cmb_cv_backend.set(self.__stv_cv_backend.get())
+
+        lbl_bg_computation_method = tk.Label(lbf_tracker_options,
+                                             text="Background computation method: ",
+                                             anchor='w')
+        cmb_bg_computation_method = ttk.Combobox(lbf_tracker_options,
+                                               values=["first_N_median",
+                                                       "first_N_mean",
+                                                       "random_N_mean"],
+                                               state="readonly",
+                                               textvariable=self.__stv_bg_computation_method)
+        cmb_bg_computation_method.set(self.__stv_bg_computation_method.get())
+    
+        lbl_bg_sample_size = tk.Label(lbf_tracker_options,
+                                      text="N frames to use for background: ",
+                                      anchor='w')
+        ent_bg_sample_size =  tk.Entry(lbf_tracker_options,
+                                       textvariable=self.__stv_bg_sample_size,
+                                       validate='key',
+                                       validatecommand=(
+                                           self.register(
+                                               lambda input: input.isdigit() or input==''
+                                               ), '%P'))
+        ent_bg_sample_size.insert(0, self.__stv_bg_sample_size)
         
         
+
         lbl_track_point_selection.grid(column=0, row=0, sticky='nw')
         cmb_track_point_selection.grid(column=1, row=0, sticky='nw')
+
+        lbl_cv_backend.grid(column=0, row=1, sticky='nw')
+        cmb_cv_backend.grid(column=1, row=1, sticky='nw')
+
+        lbl_bg_computation_method.grid(column=0, row=2, sticky='nw')
+        cmb_bg_computation_method.grid(column=1, row=2, sticky='nw')
+
+        lbl_bg_sample_size.grid(column=0, row=3, sticky='nw')
+        ent_bg_sample_size.grid(column=1, row=3, sticky='nw')        
 
         
     def __confirm_callback(self):
@@ -196,6 +252,9 @@ class ConfigurationTool(tk.Toplevel):
         dtrack_params["options.autocalibration.fix_tangential"] = self.__blv_fix_tangential.get()
         dtrack_params["options.autocalibration.show_meta_text"] = self.__blv_show_meta_text.get()
         dtrack_params["options.autotracker.track_point"] = self.__stv_dtrack_track_point.get()
+        dtrack_params["options.autotracker.cv_backend"] = self.__stv_cv_backend.get()
+        dtrack_params["options.autotracker.bg_computation_method"] = self.__stv_bg_computation_method.get()
+        dtrack_params["options.autotracker.bg_sample_size"] = int(self.__stv_bg_sample_size.get())
 
         # Project settings
         project_file["options.autotracker.track_point"] = self.__stv_dtrack_track_point.get()

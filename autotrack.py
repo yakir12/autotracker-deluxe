@@ -50,8 +50,11 @@ def autotracker():
     input_dir = project_file["tracking_video"]
     working_csv = os.path.join(dtrack_params["project_directory"],
                                "raw_tracks.csv")
-    desired_tracker = "BOOSTING"
+    desired_tracker = dtrack_params["options.autotracker.cv_backend"]
     track_point = dtrack_params["options.autotracker.track_point"]
+    bg_computation_method = dtrack_params["options.autotracker.bg_computation_method"]
+    bg_sample_size = dtrack_params["options.autotracker.bg_sample_size"]
+    
 
     cap = cv2.VideoCapture(input_dir)
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -81,16 +84,16 @@ def autotracker():
     print("Chosen tracker: {}".format(desired_tracker))
 
 
-    # Extract greyscale background frame
-    # bg_frame = compute_background_frame(cap, 
-    #                                     method='first_N_median',
-    #                                     N=10)
-    # bg_gray = cv2.cvtColor(bg_frame, cv2.COLOR_BGR2GRAY)
-
-    # Background frame not currently in use as bbox centre is used.
+    # Extract background frame. 
+    # A background frame is always computed but if tracking is using the centre
+    # of the bbox, then the background subtration isn't used.
     bg_hsv = compute_background_frame(cap,
-                                      method='first_N_median',
-                                      N=10)
+                                      method=bg_computation_method,
+                                      N=bg_sample_size)
+    
+    # Background subtraction is performed in HSV colour space. Not sure if
+    # there's a difference in computing the bcackground frame in HSV as opposed
+    # to computing it in BGR then converting to HSV.
     bg_v = cv2.cvtColor(bg_hsv, cv2.COLOR_BGR2HSV)[:,:,2]
     
     #
@@ -451,7 +454,7 @@ def compute_background_frame(capture, method='first_N_median', N=10):
 
             counter += 1 # Increment counter
 
-        background_frame = mean_frame
+        background_frame = mean_frame.astype(np.uint8)
 
     else:
         print("Background construction method ({}) not recognised."

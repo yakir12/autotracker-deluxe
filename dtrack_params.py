@@ -12,6 +12,9 @@ class ParamFilePassthrough():
         self.__valid_keys = ["project_directory",
                              "project_file",
                              "options.autotracker.track_point",
+                             "options.autotracker.cv_backend",
+                             "options.autotracker.bg_computation_method",
+                             "options.autotracker.bg_sample_size",
                              "options.video.directory",
                              "options.autocalibration.fix_k1",
                              "options.autocalibration.fix_k2",
@@ -27,11 +30,15 @@ class ParamFilePassthrough():
 
         self.__defaults["options.video.directory"] = "."
         self.__defaults["options.autotracker.track_point"] = "centre-of-mass"
+        self.__defaults["options.autotracker.cv_backend"] = "BOOSTING"
+        self.__defaults["options.autotracker.bg_computation_method"] = "first_N_median"
+        self.__defaults["options.autotracker.bg_sample_size"] = 10
         self.__defaults["options.autocalibration.fix_k1"] = False
         self.__defaults["options.autocalibration.fix_k2"] = True
         self.__defaults["options.autocalibration.fix_k3"] = True
         self.__defaults["options.autocalibration.fix_tangential"] = True
         self.__defaults["options.autocalibration.show_meta_text"] = True
+        
         
 
         # If parameter file does not exist, create it as an emtpy json file.

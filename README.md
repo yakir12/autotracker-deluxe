@@ -126,6 +126,9 @@ Once you have selected your video files and determined whether you wish to make 
 
 **Note**: If you copied the files locally then the video filepaths stored by the software will point to the local copies. Thus, if you run the video selection tool again, the entries should show the local copy path rather than the one you originally selected.
 
+**Important**: If you later update the video files for a given project and attempt to copy them locally, this will overwrite the video files in the project directory. The software will ask for confirmation before video files are deleted.
+
+
 #### 2. Configure calibration board
 This tool will open a calibration board selector window.
 

@@ -142,6 +142,14 @@ class VideoSelector(tk.Toplevel):
             calib_video_filename = os.path.basename(calib_video)
             track_video_filename = os.path.basename(track_video)
 
+            if calib_video_filename == track_video_filename:
+                # If files have the same basename then make them unique
+                track_prefix = "track_"
+                calib_prefix = "calib_"
+
+                calib_video_filename = calib_prefix + calib_video_filename
+                track_video_filename = track_prefix + track_video_filename
+
 
             # Given that we have the project file record, why rename these at 
             # all? We don't have to assume video filenames anymore

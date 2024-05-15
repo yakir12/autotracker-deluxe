@@ -209,9 +209,10 @@ def zero_tracks(raw_track_file, dest_filepath, origin=(0,0)):
 
 
 def plot_tracks(input_file, 
-                draw_arena=True, 
+                draw_arena=False, 
                 arena_radius=50, 
-                draw_mean_displacement=False):
+                draw_mean_displacement=False,
+                scale=1000):
     """
     Helper method to test calibration, this is only intended to check distance
     tranformations have been performed successfully, this is not for any 
@@ -246,6 +247,9 @@ def plot_tracks(input_file,
         ax.plot(arena[0], arena[1], color='k')
         ax.plot(starter[0], starter[1], color='k')
         ax.set_aspect('equal') # If we're drawing the arena, fair assumption
+
+    if dtrack_params["options.processing.plot_grid"]:
+        ax.grid()
         
     displacements = []
     # Iterate over raw data and calibrate each set of x,y points
@@ -259,8 +263,11 @@ def plot_tracks(input_file,
 
         # Check lengths match (fail otherwise)
         assert len(x_data) == len(y_data)
+        x_data /= scale
+        y_data /= scale
 
-        ax.plot(x_data, y_data, alpha=0.5)
+        roll_no = columns[col_idx].split("_")[1]
+        ax.plot(x_data, y_data, alpha=0.5, label="Track {}".format(roll_no))
         
         # Track average displacement
 
@@ -276,10 +283,18 @@ def plot_tracks(input_file,
 
         col_idx += 2 # Iterate over pairs of columns
 
-    print("MEAN DISPLACEMENT: {:.2f}m".format(np.mean(displacements)/1000))
-    print("This should roughly equal your arena radius, if it doesn't, then" + 
-          " you will need to adjust your calibration.")
+    if dtrack_params["options.processing.include_legend"]:
+        ax.legend()
+
     print("Plotted: {}".format(input_file))
+
+    filename = dtrack_params["options.processing.filename"] + "." +\
+               dtrack_params["options.processing.filetype"]
+    filepath = os.path.join(dtrack_params["project_directory"], filename)
+
+    plt.savefig(filepath, dpi=400, bbox_inches="tight")
+
+    print("Plot saved as {}".format(filepath))
 
     plt.show()
 
@@ -303,8 +318,6 @@ def calibrate_and_smooth_tracks():
                                      'raw_tracks.csv')
     calibrated_filepath = os.path.join(dtrack_params["project_directory"],
                                        'calibrated_tracks.csv')
-    zeroed_filepath = os.path.join(dtrack_params["project_directory"],
-                                   'zeroed_tracks.csv')    
     smoothed_filepath = os.path.join(dtrack_params["project_directory"],
                                      'smoothed_tracks.csv')
 
@@ -312,7 +325,12 @@ def calibrate_and_smooth_tracks():
                      raw_data_filepath,
                      calibrated_filepath)
     
-    zero_tracks(calibrated_filepath, zeroed_filepath)
+    zeroed_filepath = calibrated_filepath
+    if dtrack_params['options.processing.zero']:
+        zeroed_filepath = os.path.join(dtrack_params["project_directory"],
+                                       'zeroed_tracks.csv')    
+        zero_tracks(calibrated_filepath, zeroed_filepath)
     
     smooth_tracks(zeroed_filepath, smoothed_filepath)
+
     plot_tracks(smoothed_filepath)

@@ -20,7 +20,12 @@ class ParamFilePassthrough():
                              "options.autocalibration.fix_k2",
                              "options.autocalibration.fix_k3",
                              "options.autocalibration.fix_tangential",
-                             "options.autocalibration.show_meta_text"
+                             "options.autocalibration.show_meta_text",
+                             "options.processing.plot_grid",
+                             "options.processing.include_legend",
+                             "options.processing.filename",
+                             "options.processing.filetype",
+                             "options.processing.zero",
                              ]
         
         # Set some sane defaults
@@ -29,15 +34,23 @@ class ParamFilePassthrough():
             self.__defaults[k] = ""
 
         self.__defaults["options.video.directory"] = "."
+
         self.__defaults["options.autotracker.track_point"] = "centre-of-mass"
         self.__defaults["options.autotracker.cv_backend"] = "BOOSTING"
         self.__defaults["options.autotracker.bg_computation_method"] = "first_N_median"
         self.__defaults["options.autotracker.bg_sample_size"] = 10
+
         self.__defaults["options.autocalibration.fix_k1"] = False
         self.__defaults["options.autocalibration.fix_k2"] = True
         self.__defaults["options.autocalibration.fix_k3"] = True
         self.__defaults["options.autocalibration.fix_tangential"] = True
         self.__defaults["options.autocalibration.show_meta_text"] = True
+
+        self.__defaults["options.processing.plot_grid"] = True
+        self.__defaults["options.processing.include_legend"] = True
+        self.__defaults["options.processing.filename"] = "processed_tracks"
+        self.__defaults["options.processing.filetype"] = "pdf"
+        self.__defaults["options.processing.zero"] = False
         
         
 

@@ -237,7 +237,61 @@ class ConfigurationTool(tk.Toplevel):
         cmb_bg_computation_method.grid(column=1, row=2, sticky='nw')
 
         lbl_bg_sample_size.grid(column=0, row=3, sticky='nw')
-        ent_bg_sample_size.grid(column=1, row=3, sticky='nw')        
+        ent_bg_sample_size.grid(column=1, row=3, sticky='nw')
+
+        #
+        # Track processing options
+        #
+        self.__blv_plot_grid = tk.BooleanVar()
+        self.__blv_include_legend = tk.BooleanVar()
+        self.__stv_plot_filename = tk.StringVar()
+        self.__stv_plot_filetype = tk.StringVar()
+        self.__blv_plot_zero_tracks = tk.BooleanVar()
+
+        self.__blv_plot_grid.set(dtrack_params["options.processing.plot_grid"])
+        self.__blv_include_legend.set(dtrack_params["options.processing.include_legend"])
+        self.__stv_plot_filename.set(dtrack_params["options.processing.filename"])
+        self.__stv_plot_filetype.set(dtrack_params["options.processing.filetype"])
+        self.__blv_plot_zero_tracks.set(dtrack_params["options.processing.zero"])
+
+        chb_plot_grid = tk.Checkbutton(lbf_processing_options,
+                                       text="Plot grid",
+                                       variable=self.__blv_plot_grid)
+        chb_include_legend = tk.Checkbutton(lbf_processing_options,
+                                            text="Include legend",
+                                            variable=self.__blv_include_legend)
+        
+        lbl_plot_filename = tk.Label(lbf_processing_options,
+                                     text="Plot filename: ",
+                                     anchor='w')
+        ent_plot_filename = tk.Entry(lbf_processing_options,
+                                     textvariable=self.__stv_plot_filename)
+        
+        lbl_plot_filetype = tk.Label(lbf_processing_options,
+                                     text="Plot file format: ",
+                                     anchor='w')
+        
+        cmb_plot_filetype = ttk.Combobox(lbf_processing_options,
+                                         values=['pdf',
+                                                 'eps',
+                                                 'svg',
+                                                 'png (400dpi)'],
+                                         textvariable=self.__stv_plot_filetype)
+        
+        cmb_plot_zero_tracks = tk.Checkbutton(lbf_processing_options,
+                                              variable=self.__blv_plot_zero_tracks,
+                                              text="All tracks start at origin")
+        
+
+        lbl_plot_filename.grid(row=0, column=0, sticky='nw')
+        ent_plot_filename.grid(row=0, column=1, sticky='nw')
+        lbl_plot_filetype.grid(row=1, column=0, sticky='nw')
+        cmb_plot_filetype.grid(row=1, column=1, sticky='nw')
+        chb_plot_grid.grid(row=2, column=0, sticky='nw')
+        chb_include_legend.grid(row=3, column=0, sticky='nw')
+
+        cmb_plot_zero_tracks.grid(row=4, column=0, columnspan=2, sticky='nw')
+        
 
         
     def __confirm_callback(self):
@@ -246,15 +300,23 @@ class ConfigurationTool(tk.Toplevel):
         """
         # Global settings
         dtrack_params["options.video.directory"] = self.__stv_video_directory.get()
+        
         dtrack_params["options.autocalibration.fix_k1"] = self.__blv_fix_k1.get()
         dtrack_params["options.autocalibration.fix_k2"] = self.__blv_fix_k2.get()
         dtrack_params["options.autocalibration.fix_k3"] = self.__blv_fix_k3.get()
         dtrack_params["options.autocalibration.fix_tangential"] = self.__blv_fix_tangential.get()
         dtrack_params["options.autocalibration.show_meta_text"] = self.__blv_show_meta_text.get()
+        
         dtrack_params["options.autotracker.track_point"] = self.__stv_dtrack_track_point.get()
         dtrack_params["options.autotracker.cv_backend"] = self.__stv_cv_backend.get()
         dtrack_params["options.autotracker.bg_computation_method"] = self.__stv_bg_computation_method.get()
         dtrack_params["options.autotracker.bg_sample_size"] = int(self.__stv_bg_sample_size.get())
+
+        dtrack_params["options.processing.plot_grid"] = self.__blv_plot_grid.get()
+        dtrack_params["options.processing.include_legend"] = self.__blv_include_legend.get()
+        dtrack_params["options.processing.filename"] = self.__stv_plot_filename.get()
+        dtrack_params["options.processing.filetype"] = self.__stv_plot_filetype.get()
+        dtrack_params["options.processing.zero"] = self.__blv_plot_zero_tracks.get()
 
         # Project settings
         project_file["options.autotracker.track_point"] = self.__stv_dtrack_track_point.get()

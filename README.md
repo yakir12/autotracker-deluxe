@@ -222,9 +222,11 @@ to the track file (`<project_directory>/raw_tracks.csv`).
 #### 5. Process tracks
 This option runs in full when you click 'Run'. At present this will:
 1. Calibrate the tracks (undistort, transform perspective, and scale to mm)
-2. Zero the tracks (translate them so they all start at the same origin, (0,0)).
-3. Smooth the tracks using a basic univariate spline
-4. Produce and display a plot showing the smoothed tracks.
+2. Smooth the tracks using a basic univariate spline
+3. Produce and display a plot showing the smoothed tracks.
+4. Compute some basic summary statistics for your tracks.
+
+If enabled in the options (see below) this tool will also zero all of your tracks so that they start at (0,0).
 
 The calibration, zeroing, and smoothing stages all produce CSV files with the results. You 
 can take these and open them in Excel or LibreOffice (or your preferred analysis
@@ -232,12 +234,13 @@ environment) and do whatever analysis/plotting you want. These files are
 in the project directory, named `calibrated_tracks.csv`, `zeroed_tracks.csv`, and `smoothed_tracks.csv` 
 respectively (there is also a file for raw tracks `raw_tracks.csv`)
 
-The plot is only used to see what the software has produced (i.e. to check that
-the software is working as expected), you are expected to produce your own 'nice' 
-plots as required.
+The software will also show a plot and a copy is stored in your project directory (by default this is called `processed_tracks.pdf`). This plot is here so you can visually inspect what the autotracker has done and see if there are any obvious problems before you work on the data. *This is not intended to be a publication-quality plot as I assume you'll have your own elements you want to emphasise!* You can configure the software to output an eps or svg file (see below) which can be imported in Inkscape or Adobe Illustrator so you can use the plot as a basis for your own nicer plots. 
 
-**Note**
-The terminal will display the average displacement of your beetles in metres. This should approximately match the radius of your arena but it won't be exact because it depends on when you start and stop tracks. Note that if you have any partial tracks, this will also skew the result. I would guess (hope) that the displacement should be within 5cm of the true radius of the arena.
+Basic summary statistics for each track (and averages over all tracks) will be shown in the terminal. These are stored in your project directory in `summary_statistics.csv`. Again, you can open these in Excel or LibreOffice or whatever analysis tool you prefer.
+
+**Note on time-dependent statistics:** Statistics which depend on time (time to exit arena and speed) are computed using the frame-rate of the tracking video. This is computed using OpenCV when you open the autotracker. If you've never opened the autotracker and try to run the analysis, then the time-based statistics will appear as `NaN` (not-a-number). To fix this, simply select the autotracker, click Run, and then close the autotracker window when it appears.
+
+**Note on variable frame-rates:** Some devices can record video with variable frame-rates in order to economise on storage space. So far as I know, OpenCV can't deal with varaible frame-rates and the cameras you use for experiments should not be configured to operate at variable frame-rates. That said, if your time-dependent statistics are returning some wild numbers, this may be a problem to look for.
 
 ## Configuration
 
@@ -305,6 +308,28 @@ The first_N_* options tend to work well enough, but they can struggle if the lig
 This option only applies if the autotracker target is set to *centre-of-mass*. 
 
 This is simply the number of frames (N) to be used by the background computation algorithm. E.g. if you set the background computation method to 'first_N_median', then this option 10, then your background will be the median frame of the first 10 frames of your video.
+
+### Track Processing
+#### Plot filename
+Track processing will automatically produce a plot which is saved to a file in the project directory. You can specify the name of that file here. 
+
+#### Plot file format
+Different file formats offer different advantages. Here you can choose from pdf, eps, svg, or png (at 400dpi).
+
+#### Plot grid
+When enabled, this option will include a grid on your plot which makes it easier to read off the x and y axes at different positions. This can be disabled if you just want the tracks.
+
+#### Include legend
+When enabled, this option will include a legend which tells you which colour is assigned to which track index. 
+
+**Note:** Matplotlib will cycle through ten unique colours before it starts to repeat. 
+If you have more than ten tracks for a given beetle then this means that some tracks
+will be plotted in the same colour. 
+
+#### All tracks start at origin
+This option will shift all tracks so that they start at (0,0). This can be useful if you want to quickly look at how the tracks are distributed but removes some information (e.g. placement variability with respect to the true arena centre). 
+
+*You shouldn't use this option unless you know all of your tracks start at the arena centre and end at the arena's edge.*
 
 
 

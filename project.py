@@ -22,7 +22,8 @@ class ProjectFilePassthrough():
                              "chessboard_size",
                              "calibration_cache",
                              "calibration_file",
-                             "options.autotracker.track_point"]
+                             "options.autotracker.track_point",
+                             "track_fps"]
         
         # Set some sensible defaults for things which may have
         # default values.
@@ -38,6 +39,7 @@ class ProjectFilePassthrough():
               os.path.join(self.__defaults["calibration_cache"], "calibration.dt2c")
         self.__defaults["options.autotracker.track_point"] =\
               dtrack_params["options.autotracker.track_point"]
+        self.__defaults["track_fps"] = -1
 
     def __getitem__(self,key):
         self.refresh()

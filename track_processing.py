@@ -242,27 +242,43 @@ def analyse_tracks(input_filepath, dest_filepath):
         xs = data.loc[:, columns[col_idx]].to_numpy()
         ys = data.loc[:, columns[col_idx+1]].to_numpy()
 
+        assert(len(xs[~np.isnan(xs)])  == len(ys[~np.isnan(ys)]))
+
+        # Strip out NaN values
+        xs = xs[~np.isnan(xs)]
+        ys = ys[~np.isnan(ys)]
+
         # Path length
         x_dists = np.power(np.ediff1d(xs), 2)
         y_dists = np.power(np.ediff1d(ys), 2)
         dists = np.sqrt(np.add(x_dists, y_dists))
 
-        print(np.sum(dists[~np.isnan(dists )]))
+        print(np.sum(dists))
         
         # Calibrated tracks are stored in mm
-        path_length = np.sum(dists[~np.isnan(dists)]) / 1000 
+        path_length = np.sum(dists) / 1000 
         stats.loc[track_label, 'Length (m)'] = path_length
 
         # Displacement
         euc_dist = lambda p, q: np.sqrt((p[0] - q[0])**2 + (p[1] - q[1])**2)
         start_point = (xs[0], ys[0])
-        end_point = (xs[~np.isnan(xs)][-1], ys[~np.isnan(ys)][-1])
+        end_point = (xs[-1], ys[-1])
         displacement = euc_dist(start_point, end_point) / 1000
         stats.loc[track_label, 'Displacement (m)'] = displacement
 
         # Straightness
         straightness = displacement/path_length
         stats.loc[track_label, 'Straightness'] = straightness
+
+        if project_file["track_fps"] != -1:
+            # Total time to complete this track assuming one track point
+            # per frame
+            time_for_track = len(xs) / project_file["track_fps"] 
+            stats.loc[track_label, 'Time to exit (s)'] = time_for_track
+
+            # Speed in m/s
+            speed = path_length / time_for_track
+            stats.loc[track_label, 'Speed (m/s)'] = speed
 
         col_idx += 2
     

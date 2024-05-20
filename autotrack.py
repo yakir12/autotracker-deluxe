@@ -55,9 +55,11 @@ def autotracker():
     bg_computation_method = dtrack_params["options.autotracker.bg_computation_method"]
     bg_sample_size = dtrack_params["options.autotracker.bg_sample_size"]
     
-
     cap = cv2.VideoCapture(input_dir)
-    fps = cap.get(cv2.CAP_PROP_FPS)
+
+    # Store FPS for analysis stage
+    project_file["track_fps"] = cap.get(cv2.CAP_PROP_FPS)
+
     length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     
     window_name = 'autotrack'

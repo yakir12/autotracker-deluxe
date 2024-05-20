@@ -253,8 +253,6 @@ def analyse_tracks(input_filepath, dest_filepath):
         y_dists = np.power(np.ediff1d(ys), 2)
         dists = np.sqrt(np.add(x_dists, y_dists))
 
-        print(np.sum(dists))
-        
         # Calibrated tracks are stored in mm
         path_length = np.sum(dists) / 1000 
         stats.loc[track_label, 'Length (m)'] = path_length
@@ -291,6 +289,8 @@ def analyse_tracks(input_filepath, dest_filepath):
         print(stats)
 
     stats.to_csv(dest_filepath)
+
+    print("Summary statistics stored in: {}".format(dest_filepath))
     
     
 

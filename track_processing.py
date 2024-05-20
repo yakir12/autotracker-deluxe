@@ -207,6 +207,74 @@ def zero_tracks(raw_track_file, dest_filepath, origin=(0,0)):
     # Write out new dataframe.
     zeroed_data.to_csv(dest_filepath)
 
+def analyse_tracks(input_filepath, dest_filepath):
+    """
+    Compute some basic summary stats on the tracks and store these in a file.
+    Currently computing path length, displacement, straightness, time to exit, 
+    and speed. These are stored in a dataframe which is output as CSV.
+    :param input_filepath: The path to the CSV file you want to use for analysis.
+    :param dest_filepath: The path where you want to store the statistics file.
+    """
+    data = pd.read_csv(input_filepath, index_col=[0])
+    columns = list(data.columns)
+    
+    # Generate index for new dataframe
+    n_tracks = int(len(columns)/2)
+    track_indices = np.arange(0, n_tracks)
+    track_labels = ["Track_" + str(x) for x in track_indices]
+    track_labels.append("Mean over all tracks")
+
+    # Generate analysis columns for new dataframe
+    headers = ["Length (m)", 
+               "Displacement (m)", 
+               "Straightness", 
+               "Time to exit (s)", 
+               "Speed (m/s)"]
+
+    stats = pd.DataFrame(index=track_labels, columns=headers)
+
+    col_idx = 0
+    while col_idx < len(columns):
+        track_no = columns[col_idx].split("_")[1]
+        track_label = "Track_" + track_no
+        
+        xs = data.loc[:, columns[col_idx]].to_numpy()
+        ys = data.loc[:, columns[col_idx+1]].to_numpy()
+
+        # Path length
+        x_dists = np.power(np.ediff1d(xs), 2)
+        y_dists = np.power(np.ediff1d(ys), 2)
+        dists = np.sqrt(np.add(x_dists, y_dists))
+
+        print(np.sum(dists[~np.isnan(dists )]))
+        
+        # Calibrated tracks are stored in mm
+        path_length = np.sum(dists[~np.isnan(dists)]) / 1000 
+        stats.loc[track_label, 'Length (m)'] = path_length
+
+        # Displacement
+        euc_dist = lambda p, q: np.sqrt((p[0] - q[0])**2 + (p[1] - q[1])**2)
+        start_point = (xs[0], ys[0])
+        end_point = (xs[~np.isnan(xs)][-1], ys[~np.isnan(ys)][-1])
+        displacement = euc_dist(start_point, end_point) / 1000
+        stats.loc[track_label, 'Displacement (m)'] = displacement
+
+        # Straightness
+        straightness = displacement/path_length
+        stats.loc[track_label, 'Straightness'] = straightness
+
+        col_idx += 2
+    
+    # Compute means
+    for col in stats.columns:
+        stats.loc['Mean over all tracks', col] = np.mean(stats.loc[:, col])
+
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None): 
+        print(stats)
+
+    stats.to_csv(dest_filepath)
+    
+    
 
 def plot_tracks(input_file, 
                 draw_arena=False, 
@@ -299,7 +367,6 @@ def plot_tracks(input_file,
     plt.show()
 
 
-
 def calibrate_and_smooth_tracks():
     calibration_filepath = project_file["calibration_file"]
     
@@ -320,6 +387,8 @@ def calibrate_and_smooth_tracks():
                                        'calibrated_tracks.csv')
     smoothed_filepath = os.path.join(dtrack_params["project_directory"],
                                      'smoothed_tracks.csv')
+    stats_filepath = os.path.join(dtrack_params["project_directory"],
+                                  "summary_statistics.csv")
 
     calibrate_tracks(calibration,
                      raw_data_filepath,
@@ -332,5 +401,7 @@ def calibrate_and_smooth_tracks():
         zero_tracks(calibrated_filepath, zeroed_filepath)
     
     smooth_tracks(zeroed_filepath, smoothed_filepath)
+
+    analyse_tracks(smoothed_filepath, stats_filepath)
 
     plot_tracks(smoothed_filepath)

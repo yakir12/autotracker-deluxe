@@ -222,7 +222,8 @@ def analyse_tracks(input_filepath, dest_filepath):
     n_tracks = int(len(columns)/2)
     track_indices = np.arange(0, n_tracks)
     track_labels = ["Track_" + str(x) for x in track_indices]
-    track_labels.append("Mean over all tracks")
+    track_labels.append("Mean")
+    track_labels.append("Std. Dev.")
 
     # Generate analysis columns for new dataframe
     headers = ["Length (m)", 
@@ -265,9 +266,10 @@ def analyse_tracks(input_filepath, dest_filepath):
 
         col_idx += 2
     
-    # Compute means
+    # Compute means and standard deviations
     for col in stats.columns:
-        stats.loc['Mean over all tracks', col] = np.mean(stats.loc[:, col])
+        stats.loc['Mean', col] = np.mean(stats.loc[:, col])
+        stats.loc['Std. Dev.', col] = np.std(stats.loc[:, col])
 
     with pd.option_context('display.max_rows', None, 'display.max_columns', None): 
         print(stats)

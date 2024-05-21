@@ -4,4 +4,5 @@ tk
 pandas
 scipy
 opencv-contrib-python
+pillow
 

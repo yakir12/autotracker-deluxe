@@ -328,7 +328,7 @@ def autotracker():
                                   int(bbox[1] + centroid[1]))
                 centroid_track.append(frame_centroid)
                 ts = cap.get(cv2.CAP_PROP_POS_MSEC)
-                print("Timestamp: {}".format(ts))
+                
                 timestamps.append(ts)
 
             elif tracking and bbox == None:

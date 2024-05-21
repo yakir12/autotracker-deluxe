@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import copy
 
 from random import randint
 
@@ -48,12 +49,13 @@ def autotracker():
     """
 
     input_dir = project_file["tracking_video"]
-    working_csv = os.path.join(dtrack_params["project_directory"],
-                               "raw_tracks.csv")
+    project_directory = dtrack_params["project_directory"]
+    
     desired_tracker = dtrack_params["options.autotracker.cv_backend"]
     track_point = dtrack_params["options.autotracker.track_point"]
     bg_computation_method = dtrack_params["options.autotracker.bg_computation_method"]
     bg_sample_size = dtrack_params["options.autotracker.bg_sample_size"]
+    track_interval = dtrack_params["options.autotracker.track_interval"]
     
     cap = cv2.VideoCapture(input_dir)
 
@@ -65,12 +67,20 @@ def autotracker():
     window_name = 'autotrack'
     trackbar_name = 'capture'    
 
-    # Trackbar callback
+    frame_idx = 0
+
+    # Trackbar callback, if chosen frame is not a multiple of the
+    # tracking interval, then jump to next frame which is.
     trackbar_external_callback = False
     def tb_callback(trackbar_value):
         if trackbar_external_callback:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, trackbar_value)
+            frame_idx = trackbar_value
+            frame_idx = frame_idx + (frame_idx % track_interval)
+        
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
             cv2.imshow(window_name, cap.read()[1])
+            frame_idx = cap.get(cv2.CAP_PROP_POS_FRAMES)
+
 
 
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
@@ -84,7 +94,6 @@ def autotracker():
         return
 
     print("Chosen tracker: {}".format(desired_tracker))
-
 
     # Extract background frame. 
     # A background frame is always computed but if tracking is using the centre
@@ -104,11 +113,23 @@ def autotracker():
     tracking = False
     segmentation_success = False
     bbox = None
+    
     centroid = np.nan
     centroid_track = []
+
+    timestamps = []
+
+    assume_bbox = False
+    first_bbox = None
         
     while cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE):
         success, clean_frame = cap.read()
+        frame_idx = cap.get(cv2.CAP_PROP_POS_FRAMES)
+
+        if (frame_idx % track_interval) != 0:
+            continue
+        
+        
         display_frame = clean_frame.copy()
         tracking_status_str = "(TRACKING) " if tracking else ""
 
@@ -166,6 +187,7 @@ def autotracker():
                     pause_frame = clean_frame.copy()
                     cap.set(cv2.CAP_PROP_POS_FRAMES, 
                             cv2.getTrackbarPos(trackbar_name, window_name))
+                    cap.read()
                     
                     tracking_context_str = 'begin'
                     tracking_status_str = ''
@@ -186,11 +208,16 @@ def autotracker():
                     elif kp == ord('t'):
                         # Tracking init
                         if not tracking:
-                            bbox = cv2.selectROI('Select ROI',
-                                                clean_frame, 
-                                                fromCenter=True, 
-                                                showCrosshair=True)
-                        
+                            if assume_bbox and (not first_bbox == None):
+                                bbox = first_bbox
+                            else:
+                                first_bbox = cv2.selectROI('Select ROI',
+                                                    clean_frame, 
+                                                    fromCenter=True, 
+                                                    showCrosshair=True)
+                                bbox = first_bbox
+                                
+                            
                             # Bbox is cv Rect, tuple (x, y, width, height) where
                             # x/y measured from top left of frame.
                             if not (bbox == (0,0,0,0)):
@@ -206,13 +233,16 @@ def autotracker():
                                 bbox = None
                         else:
                             # Write last track to file
-                            write_track_to_file(centroid_track, working_csv)                            
-
+                            write_track_and_time_to_file(centroid_track, 
+                                                         timestamps, 
+                                                         project_directory)
+                            
                             # Reset online tracking info.
                             tracking = False
                             bbox = None
                             centroid = np.nan 
                             centroid_track = []
+                            timestamps = []
 
                             
             elif kp == ord('q'):
@@ -297,6 +327,9 @@ def autotracker():
                 frame_centroid = (int(bbox[0] + centroid[0]),
                                   int(bbox[1] + centroid[1]))
                 centroid_track.append(frame_centroid)
+                ts = cap.get(cv2.CAP_PROP_POS_MSEC)
+                print("Timestamp: {}".format(ts))
+                timestamps.append(ts)
 
             elif tracking and bbox == None:
                 print("Bounding box is undefined, somehow tracking has"+
@@ -306,7 +339,7 @@ def autotracker():
 
 
     if tracking:
-        write_track_to_file(centroid_track, working_csv)
+        write_track_and_time_to_file(centroid_track, timestamps, project_directory)
         print("WARNING: You quit while tracking. The last track has been" + 
               " saved up to the point where you closed the window.")
 
@@ -469,15 +502,19 @@ def compute_background_frame(capture, method='first_N_median', N=10):
     return background_frame
 
 
-def write_track_to_file(points, filepath):
+def write_track_and_time_to_file(points, timestamps, basepath):
     """
     Write a track out to a csv file.
 
     :param points: The 2D points which make up the track.
-    :param filepath: The filepath for storage.
+    :param timestamps: The timestamp (in milliseconds) for each track point
+    :param basepath: The location to store the track files (project directory)
     """
+    trackpath = os.path.join(basepath, 'raw_tracks.csv')
+    timepath = os.path.join(basepath, 'timestamps.csv')
+
     # If file doesn't exist, we need to create it
-    new_file = not os.path.isfile(filepath)
+    new_file = not os.path.isfile(trackpath)
     if new_file:
         # Column names are 'track_i_d' where i is the 
         # index of the track and d is the dimension
@@ -487,15 +524,21 @@ def write_track_to_file(points, filepath):
         df = pd.DataFrame(columns=[x_label, y_label])
         df.loc[:, x_label] = [x for (x,_) in points]
         df.loc[:, y_label] = [y for (_,y) in points]        
-        df.to_csv(filepath)
-        print("New track file created at {}".format(filepath))
+        df.to_csv(trackpath)
+        print("New track file created at {}".format(trackpath))
+
+        time_label = 'track_0'
+        df = pd.DataFrame(columns=[time_label])
+        df.loc[:, time_label] = timestamps
+        df.to_csv(timepath)
+        print("New timestamp file created at {}".format(timepath)) 
         return 
 
     #
     # Otherwise, open file, determine track number, and write new data
     # to dataframe.
     #
-    df = pd.read_csv(filepath, index_col=[0])
+    df = pd.read_csv(trackpath, index_col=[0])
     columns = df.columns.to_list()
     track_idx = int(columns[-1].split("_")[1]) + 1
     
@@ -510,10 +553,27 @@ def write_track_to_file(points, filepath):
 
     # Add new columns to main dataframe.
     df = ragged_join(df,new_cols)
-    df.to_csv(filepath)
+    df.to_csv(trackpath)
 
-    print("Track {} added to {}.".format(track_idx, filepath))
+    print("Track {} added to {}.".format(track_idx, trackpath))
 
+    timefile_exists = os.path.exists(timepath)
+    if not timefile_exists:
+        time_label = 'track_{}'.format(track_idx)
+        df = pd.DataFrame(columns=[time_label])
+        df.loc[:, time_label] = timestamps
+        df.to_csv(timepath)
+        print("New timestamp file created at {}, starting from Track {}".format(timepath, track_idx)) 
+        return
+    
+    time_df = pd.read_csv(timepath, index_col=[0])
+    track_col = 'track_{}'.format(track_idx)
+    new_col = pd.DataFrame(columns=[track_col])
+    new_col.loc[:,track_col] = timestamps
+    df = ragged_join(time_df, new_col)
+    df.to_csv(timepath)
+
+    print("Timestamps stored for track {}".format(track_idx))
 
 def ragged_join(dfA, dfB):
     """

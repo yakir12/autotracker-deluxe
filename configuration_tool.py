@@ -170,11 +170,13 @@ class ConfigurationTool(tk.Toplevel):
         self.__stv_cv_backend = tk.StringVar()
         self.__stv_bg_computation_method = tk.StringVar()
         self.__stv_bg_sample_size = tk.StringVar()
+        self.__stv_track_interval = tk.StringVar()
 
         self.__stv_dtrack_track_point.set(dtrack_params["options.autotracker.track_point"])
         self.__stv_cv_backend.set(dtrack_params["options.autotracker.cv_backend"])
         self.__stv_bg_computation_method.set(dtrack_params["options.autotracker.bg_computation_method"])
         self.__stv_bg_sample_size.set(str(dtrack_params["options.autotracker.bg_sample_size"]))
+        self.__stv_track_interval.set(str(dtrack_params["options.autotracker.track_interval"]))
 
         lbl_track_point_selection = tk.Label(lbf_tracker_options,
                                              text="Default autotracker target: ",
@@ -224,8 +226,16 @@ class ConfigurationTool(tk.Toplevel):
                                                lambda input: input.isdigit() or input==''
                                                ), '%P'))
         ent_bg_sample_size.insert(0, self.__stv_bg_sample_size)
+
+        lbl_track_interval = tk.Label(lbf_tracker_options,
+                                      text="Tracking inverval: ",
+                                      anchor="w")
         
-        
+        spb_track_interval = ttk.Spinbox(lbf_tracker_options,
+                                         state='readonly',
+                                         from_=1,
+                                         to=20,
+                                         textvariable=self.__stv_track_interval)
 
         lbl_track_point_selection.grid(column=0, row=0, sticky='nw')
         cmb_track_point_selection.grid(column=1, row=0, sticky='nw')
@@ -239,6 +249,10 @@ class ConfigurationTool(tk.Toplevel):
         lbl_bg_sample_size.grid(column=0, row=3, sticky='nw')
         ent_bg_sample_size.grid(column=1, row=3, sticky='nw')
 
+        lbl_track_interval.grid(column=0, row=4, sticky='nw')
+        spb_track_interval.grid(column=1, row=4, sticky='nw')
+
+        
         #
         # Track processing options
         #
@@ -311,6 +325,7 @@ class ConfigurationTool(tk.Toplevel):
         dtrack_params["options.autotracker.cv_backend"] = self.__stv_cv_backend.get()
         dtrack_params["options.autotracker.bg_computation_method"] = self.__stv_bg_computation_method.get()
         dtrack_params["options.autotracker.bg_sample_size"] = int(self.__stv_bg_sample_size.get())
+        dtrack_params["options.autotracker.track_interval"] = int(self.__stv_track_interval.get())
 
         dtrack_params["options.processing.plot_grid"] = self.__blv_plot_grid.get()
         dtrack_params["options.processing.include_legend"] = self.__blv_include_legend.get()

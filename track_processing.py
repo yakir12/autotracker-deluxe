@@ -207,21 +207,23 @@ def zero_tracks(raw_track_file, dest_filepath, origin=(0,0)):
     # Write out new dataframe.
     zeroed_data.to_csv(dest_filepath)
 
-def analyse_tracks(input_filepath, dest_filepath):
+def analyse_tracks(input_filepath, timestamp_filepath, dest_filepath):
     """
     Compute some basic summary stats on the tracks and store these in a file.
     Currently computing path length, displacement, straightness, time to exit, 
     and speed. These are stored in a dataframe which is output as CSV.
     :param input_filepath: The path to the CSV file you want to use for analysis.
+    :param timestamp_filepath: The path to the CSV file storing the time information
+                               for each track
     :param dest_filepath: The path where you want to store the statistics file.
     """
-    data = pd.read_csv(input_filepath, index_col=[0])
-    columns = list(data.columns)
+    track_data = pd.read_csv(input_filepath, index_col=[0])
+    columns = list(track_data.columns)
     
     # Generate index for new dataframe
     n_tracks = int(len(columns)/2)
     track_indices = np.arange(0, n_tracks)
-    track_labels = ["Track_" + str(x) for x in track_indices]
+    track_labels = ["track_" + str(x) for x in track_indices]
     track_labels.append("Mean")
     track_labels.append("Std. Dev.")
 
@@ -234,13 +236,17 @@ def analyse_tracks(input_filepath, dest_filepath):
 
     stats = pd.DataFrame(index=track_labels, columns=headers)
 
+    time_file_exists = os.path.exists(timestamp_filepath)
+    if time_file_exists:
+        time_data = pd.read_csv(timestamp_filepath, index_col=[0])
+
     col_idx = 0
     while col_idx < len(columns):
         track_no = columns[col_idx].split("_")[1]
-        track_label = "Track_" + track_no
+        track_label = "track_" + track_no
         
-        xs = data.loc[:, columns[col_idx]].to_numpy()
-        ys = data.loc[:, columns[col_idx+1]].to_numpy()
+        xs = track_data.loc[:, columns[col_idx]].to_numpy()
+        ys = track_data.loc[:, columns[col_idx+1]].to_numpy()
 
         assert(len(xs[~np.isnan(xs)])  == len(ys[~np.isnan(ys)]))
 
@@ -268,9 +274,36 @@ def analyse_tracks(input_filepath, dest_filepath):
         straightness = displacement/path_length
         stats.loc[track_label, 'Straightness'] = straightness
 
-        if project_file["track_fps"] != -1:
-            # Total time to complete this track assuming one track point
-            # per frame
+        # Fill in time-based statistics if we know them.
+        if time_file_exists:
+            time_for_track = np.nan
+            speed = np.nan
+
+            # If the timeseries information exists
+            try:
+                # Try to extract timeseries for this track
+                ts = time_data.loc[:, track_label].to_numpy()
+                ts = ts[~np.isnan(ts)]
+
+                time_for_track = (ts[-1] - ts[0]) / 1000 # Time in seconds
+                speed = path_length/time_for_track
+            except KeyError:
+                # If track doesn't exist in timeseries file, check that we know
+                # the fps of the video and then use that to infer the time information.
+                
+                if project_file["track_fps"] != -1:
+                    time_for_track = len(xs) / project_file["track_fps"] 
+                    speed = path_length / time_for_track
+
+            # These will be based on the millisecond data if we have it, inferred
+            # from the fps if we don't, and if we don't know that then it will 
+            # be NaN.
+            stats.loc[track_label, 'Time to exit (s)'] = time_for_track
+            stats.loc[track_label, 'Speed (m/s)'] = speed                    
+        elif project_file["track_fps"] != -1:
+
+            # No time file exists, check for fps and infer timing from that.
+            # Time in s
             time_for_track = len(xs) / project_file["track_fps"] 
             stats.loc[track_label, 'Time to exit (s)'] = time_for_track
 
@@ -407,6 +440,9 @@ def calibrate_and_smooth_tracks():
                                      'smoothed_tracks.csv')
     stats_filepath = os.path.join(dtrack_params["project_directory"],
                                   "summary_statistics.csv")
+    
+    timestamp_filepath = os.path.join(dtrack_params["project_directory"],
+                                      "timestamps.csv")
 
     calibrate_tracks(calibration,
                      raw_data_filepath,
@@ -420,6 +456,6 @@ def calibrate_and_smooth_tracks():
     
     smooth_tracks(zeroed_filepath, smoothed_filepath)
 
-    analyse_tracks(smoothed_filepath, stats_filepath)
+    analyse_tracks(smoothed_filepath, timestamp_filepath, stats_filepath)
 
     plot_tracks(smoothed_filepath)

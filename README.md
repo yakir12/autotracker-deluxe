@@ -338,6 +338,19 @@ This option only applies if the autotracker target is set to *centre-of-mass*.
 
 This is simply the number of frames (N) to be used by the background computation algorithm. E.g. if you set the background computation method to 'first_N_median', then this option 10, then your background will be the median frame of the first 10 frames of your video.
 
+#### Tracking interval
+This determines the interval on which the tracking video will be played back. For example, if the tracking interval is 1, then the system will play every frame. If the interval is 4, then the system will play every 4th frame. 
+
+Increasing the tracking interval decreases the resolution of your track but this is not necessarily a problem. Tracking on every frame is noisy anyway and tracking every *n*th frame greatly speeds up the tracking process. 
+
+If you increase the tracking interval too much, then the tracker might fail (if the beetle has moved too far after the *n* frame jump).
+
+Track timing information is computed using millisecond timestamps on each frame of the video so changing this option should have no (or negligible, allowing for error) effect on the computed time for a track.
+
+>**Note** 
+>
+> This option may not work well if you are tracking the centre of the bounding box as opposed to computing the centre of mass.
+
 ### Track Processing
 #### Plot filename
 Track processing will automatically produce a plot which is saved to a file in the project directory. You can specify the name of that file here. 

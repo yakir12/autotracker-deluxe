@@ -15,6 +15,7 @@ class ParamFilePassthrough():
                              "options.autotracker.cv_backend",
                              "options.autotracker.bg_computation_method",
                              "options.autotracker.bg_sample_size",
+                             "options.autotracker.track_interval",
                              "options.video.directory",
                              "options.autocalibration.fix_k1",
                              "options.autocalibration.fix_k2",
@@ -25,7 +26,7 @@ class ParamFilePassthrough():
                              "options.processing.include_legend",
                              "options.processing.filename",
                              "options.processing.filetype",
-                             "options.processing.zero",
+                             "options.processing.zero"
                              ]
         
         # Set some sane defaults
@@ -39,6 +40,7 @@ class ParamFilePassthrough():
         self.__defaults["options.autotracker.cv_backend"] = "BOOSTING"
         self.__defaults["options.autotracker.bg_computation_method"] = "first_N_median"
         self.__defaults["options.autotracker.bg_sample_size"] = 10
+        self.__defaults["options.autotracker.track_interval"] = 1
 
         self.__defaults["options.autocalibration.fix_k1"] = False
         self.__defaults["options.autocalibration.fix_k2"] = True

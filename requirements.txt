@@ -5,4 +5,5 @@ pandas
 scipy
 opencv-contrib-python
 pillow
+tkinter
 

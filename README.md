@@ -17,6 +17,12 @@ If you've installed python and pip and the commands are giving you errors, try
 
 The prefix `$:` indicates a terminal command. You should enter everything after the colon.
 
+#### Known compatibility problems
+
+If you find any (suspected) compatibility problems, create a new GitHub issue. They will be added here as appropriate. 
+
+- **MacOS 11 Big Sur**: The version of OpenCV which is installed by pip is built for MacOS 12 and will not run on Big Sur. You may be able to install a specific version which works but you'd need to modify `requirements.txt` yourself in order to make this work. The format for `requirements.txt` can be found [here](https://pip.pypa.io/en/stable/reference/requirements-file-format/). 
+
 ### Download
 
 1. Click the 'Code' dropdown above.
@@ -48,7 +54,24 @@ Right click and select 'Open in Terminal'.
 
 ### Installing dependencies
 
-**Important! :** The tracker depends on the `opencv-contrib-python` package. If you already have a version of opencv installed via pip then you either need to uninstall that version of OpenCV or set up a virtual environment (see below). The `opencv-contrib-python` package should subsume the standard `opencv-python` package so the switch shouldn't cause problems with any other software.
+The Graphical User Interface (GUI) library that we are using is called [tkinter](https://docs.python.org/3/library/tkinter.html). It was chosen because it is usually packaged with Python, it's and because it has a good reputation for backwards compatibility.
+
+Tkinter [should automatically be included if you're installing on MacOS or Windows](https://tkdocs.com/tutorial/install.html) but may not be if you're using Linux.
+
+In this case you should install tkinter using your *system's package manager*. E.g. for Ubuntu:
+
+`
+$: sudo apt install python3-tk
+`
+
+Do not try to install tkinter with pip as it is part of the standard python library.
+
+The rest of the software dependencies can be installed using pip.
+
+
+> **Before you try to install!**
+>
+> The tracker depends on the `opencv-contrib-python` package. If you already have a version of opencv installed via pip then you either need to uninstall that version of OpenCV or set up a virtual environment (see below). The `opencv-contrib-python` package should subsume the standard `opencv-python` package so the switch shouldn't cause problems with any other software.
 
 In the terminal, run:
 
@@ -57,6 +80,10 @@ In the terminal, run:
 and press enter. You should only need to do this the first time you download the software.
 
 ---
+
+#### Extenally managed environment error
+When installing the requirements, pip can throw up an error saying that the environment is externally managed and nothing will be installed. In this case you should use a virtual environment (see below).
+
 #### (Optional) Using a virtual environment
 You may want to use a [virtual environment](https://docs.python.org/3/library/venv.html) for sequestration or testing. This creates a sandboxed python environment where modifications will not interact with your main python installation.
 
@@ -67,7 +94,8 @@ At the terminal (MacOS and Linux), run the following:
 `$: python -m venv ~/venvs/autotracker-deluxe --clear`
 
 
-This will create a virtual environment named `autotracker-deluxe`.
+This will create a virtual environment named `autotracker-deluxe`. If this failed, then `venv` may not have been packaged with your python installation and you'll need to install it.
+
 To activate the environment, you need to use:
 
 `$: source ~/venvs/autotracker-deluxe/bin/activate`
@@ -83,6 +111,7 @@ You can deactivate the environment using:
 `$: deactivate`
 
 You can use [Anaconda](https://www.anaconda.com/download) to achieve the same effect if you know what you're doing.
+
 
 ---
 

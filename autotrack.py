@@ -74,13 +74,8 @@ def autotracker():
     trackbar_external_callback = False
     def tb_callback(trackbar_value):
         if trackbar_external_callback:
-            frame_idx = trackbar_value
-            frame_idx = frame_idx + (frame_idx % track_interval)
-        
-            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+            cap.set(cv2.CAP_PROP_POS_FRAMES, trackbar_value)
             cv2.imshow(window_name, cap.read()[1])
-            frame_idx = cap.get(cv2.CAP_PROP_POS_FRAMES)
-
 
 
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
@@ -121,7 +116,7 @@ def autotracker():
 
     assume_bbox = False
     first_bbox = None
-        
+
     while cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE):
         success, clean_frame = cap.read()
         frame_idx = cap.get(cv2.CAP_PROP_POS_FRAMES)
@@ -184,10 +179,9 @@ def autotracker():
             if kp == ord('p'):
                 # Pause
                 while cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE):
-                    pause_frame = clean_frame.copy()
                     cap.set(cv2.CAP_PROP_POS_FRAMES, 
                             cv2.getTrackbarPos(trackbar_name, window_name))
-                    cap.read()
+                    success, pause_frame = cap.read()
                     
                     tracking_context_str = 'begin'
                     tracking_status_str = ''

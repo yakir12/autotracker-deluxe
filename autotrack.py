@@ -339,9 +339,9 @@ def autotracker():
 
 
     if tracking:
+        print("WARNING: You quit while tracking. Attempting to save final track...")
         write_track_and_time_to_file(centroid_track, timestamps, project_directory)
-        print("WARNING: You quit while tracking. The last track has been" + 
-              " saved up to the point where you closed the window.")
+        
 
     cv2.destroyAllWindows()
     cap.release()
@@ -510,6 +510,15 @@ def write_track_and_time_to_file(points, timestamps, basepath):
     :param timestamps: The timestamp (in milliseconds) for each track point
     :param basepath: The location to store the track files (project directory)
     """
+
+    # Should have one timestamp for each trackpoint
+    assert(len(points) == len(timestamps))
+
+    # Zero-length tracks or single points aren't allowed.
+    if len(points) < 2:
+        print("Track has < 2 points and will not be stored.")
+        return
+
     trackpath = os.path.join(basepath, 'raw_tracks.csv')
     timepath = os.path.join(basepath, 'timestamps.csv')
 

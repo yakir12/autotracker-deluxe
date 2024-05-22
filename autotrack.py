@@ -114,7 +114,8 @@ def autotracker():
 
     timestamps = []
 
-    assume_bbox = False
+    # Carry first defined bbox forward onto multiple tracks.
+    assume_bbox = dtrack_params["options.autotracker.remember_roi"]
     first_bbox = None
 
     while cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE):
@@ -189,16 +190,27 @@ def autotracker():
                         tracking_status_str = '(TRACKING)'
                         tracking_context_str = 'end'
 
+                    assume_bbox_string = ""
+                    if assume_bbox:
+                        assume_bbox_string = ", or r to (re)define ROI."
+
                     write_on_frame(pause_frame, 
-                                  '{} Press p to resume, t to {} track'
+                                  '{} Press p to resume, t to {} track{}'
                                   .format(tracking_status_str,
-                                          tracking_context_str)
+                                          tracking_context_str,
+                                          assume_bbox_string)
                                    )                
                     cv2.imshow(window_name, pause_frame)
                     kp = cv2.waitKey(1)
 
                     if kp == ord('p'):
                         break # Break to main play loop
+                    elif kp == ord('r'):
+                        first_bbox = cv2.selectROI('Select ROI',
+                                                clean_frame, 
+                                                fromCenter=True, 
+                                                showCrosshair=True)
+                        bbox = first_bbox
                     elif kp == ord('t'):
                         # Tracking init
                         if not tracking:

@@ -80,7 +80,7 @@ class ConfigurationTool(tk.Toplevel):
 
         # Construct and arrange option frames
         lbf_tracker_options = tk.LabelFrame(self.__frm_dtrack_options,
-                                            text="Autotracker")
+                                            text="Autotracker", padx=10)
         lbf_autocalibration_options = tk.LabelFrame(self.__frm_dtrack_options,
                                                     text="Autocalibration", padx=10)
         lbf_video_selection_options = tk.LabelFrame(self.__frm_dtrack_options,
@@ -171,12 +171,14 @@ class ConfigurationTool(tk.Toplevel):
         self.__stv_bg_computation_method = tk.StringVar()
         self.__stv_bg_sample_size = tk.StringVar()
         self.__stv_track_interval = tk.StringVar()
+        self.__blv_remember_roi = tk.BooleanVar()
 
         self.__stv_dtrack_track_point.set(dtrack_params["options.autotracker.track_point"])
         self.__stv_cv_backend.set(dtrack_params["options.autotracker.cv_backend"])
         self.__stv_bg_computation_method.set(dtrack_params["options.autotracker.bg_computation_method"])
         self.__stv_bg_sample_size.set(str(dtrack_params["options.autotracker.bg_sample_size"]))
         self.__stv_track_interval.set(str(dtrack_params["options.autotracker.track_interval"]))
+        self.__blv_remember_roi.set(dtrack_params["options.autotracker.remember_roi"])
 
         lbl_track_point_selection = tk.Label(lbf_tracker_options,
                                              text="Default autotracker target: ",
@@ -236,6 +238,11 @@ class ConfigurationTool(tk.Toplevel):
                                          from_=1,
                                          to=20,
                                          textvariable=self.__stv_track_interval)
+        
+        chb_remember_roi = tk.Checkbutton(lbf_tracker_options,
+                                          text='Remember ROI',
+                                          variable=self.__blv_remember_roi
+                                          )
 
         lbl_track_point_selection.grid(column=0, row=0, sticky='nw')
         cmb_track_point_selection.grid(column=1, row=0, sticky='nw')
@@ -251,6 +258,8 @@ class ConfigurationTool(tk.Toplevel):
 
         lbl_track_interval.grid(column=0, row=4, sticky='nw')
         spb_track_interval.grid(column=1, row=4, sticky='nw')
+
+        chb_remember_roi.grid(column=0, row=5, sticky='nw')
 
         
         #
@@ -326,6 +335,7 @@ class ConfigurationTool(tk.Toplevel):
         dtrack_params["options.autotracker.bg_computation_method"] = self.__stv_bg_computation_method.get()
         dtrack_params["options.autotracker.bg_sample_size"] = int(self.__stv_bg_sample_size.get())
         dtrack_params["options.autotracker.track_interval"] = int(self.__stv_track_interval.get())
+        dtrack_params["options.autotracker.remember_roi"] = self.__blv_remember_roi.get()
 
         dtrack_params["options.processing.plot_grid"] = self.__blv_plot_grid.get()
         dtrack_params["options.processing.include_legend"] = self.__blv_include_legend.get()

@@ -351,6 +351,13 @@ Track timing information is computed using millisecond timestamps on each frame 
 >
 > This option may not work well if you are tracking the centre of the bounding box as opposed to computing the centre of mass.
 
+#### Remember ROI
+By default, the tracker requires you to specify the region of interest (a bounding box in which the beetle sits) for every track. If you select this option then the autotracker will remember the first bounding box you select and assume it is valid for subsequent tracks.
+
+In brief, this means that the software assumes all of your beetles start rolling from the same place.
+
+If this option is enabled then you can press 'r' when the video is paused in order to re-define your bounding box if needs be. 
+
 ### Track Processing
 #### Plot filename
 Track processing will automatically produce a plot which is saved to a file in the project directory. You can specify the name of that file here. 

@@ -328,7 +328,7 @@ The segmentation used to extract the centre of mass can fail for very dark video
 **Important:** There is no record of which method you used and you could (in theory) change the track point between different rolls of the same beetle. If you do this, make a note of it (assuming it matters to you).
 
 #### OpenCV Tracking backend
-The actual tracking component is handled by OpenCV. OpenCV has a number of built-in object trackers which may work better in different scenarios. Given the relative simplicity of the visual task, I'm not sure how much modifying the tracker will help. You may be able to speed up your trackin gthough.
+The actual tracking component is handled by OpenCV. OpenCV has a number of built-in object trackers which may work better in different scenarios. Given the relative simplicity of the visual task, I'm not sure how much modifying the tracker will help. You may be able to speed up your tracking though.
 
 Some information on the different options can be found [here](https://broutonlab.com/blog/opencv-object-tracking/).
 

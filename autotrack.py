@@ -56,6 +56,7 @@ def autotracker():
     bg_computation_method = dtrack_params["options.autotracker.bg_computation_method"]
     bg_sample_size = dtrack_params["options.autotracker.bg_sample_size"]
     track_interval = dtrack_params["options.autotracker.track_interval"]
+    show_roi = dtrack_params["options.autotracker.show_roi"]
     
     cap = cv2.VideoCapture(input_dir)
 
@@ -258,9 +259,7 @@ def autotracker():
             # Perform tracking
             #
             if tracking and (not (bbox == None)):
-                # For debugging
-                roi_window = 'ROI'
-                cv2.namedWindow(roi_window,cv2.WINDOW_NORMAL)
+
 
                 track_success, bbox = tracker.update(clean_frame)
 
@@ -328,7 +327,10 @@ def autotracker():
                     segmentation_success = False
                     centroid = (bbox[2]/2, bbox[3]/2)                    
                 
-                cv2.imshow(roi_window, bin_roi)
+                if show_roi:
+                    roi_window = 'ROI'
+                    cv2.namedWindow(roi_window,cv2.WINDOW_NORMAL)
+                    cv2.imshow(roi_window, bin_roi)
 
                 frame_centroid = (int(bbox[0] + centroid[0]),
                                   int(bbox[1] + centroid[1]))

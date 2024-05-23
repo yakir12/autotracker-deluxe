@@ -172,6 +172,7 @@ class ConfigurationTool(tk.Toplevel):
         self.__stv_bg_sample_size = tk.StringVar()
         self.__stv_track_interval = tk.StringVar()
         self.__blv_remember_roi = tk.BooleanVar()
+        self.__blv_show_roi = tk.BooleanVar()
 
         self.__stv_dtrack_track_point.set(dtrack_params["options.autotracker.track_point"])
         self.__stv_cv_backend.set(dtrack_params["options.autotracker.cv_backend"])
@@ -179,6 +180,7 @@ class ConfigurationTool(tk.Toplevel):
         self.__stv_bg_sample_size.set(str(dtrack_params["options.autotracker.bg_sample_size"]))
         self.__stv_track_interval.set(str(dtrack_params["options.autotracker.track_interval"]))
         self.__blv_remember_roi.set(dtrack_params["options.autotracker.remember_roi"])
+        self.__blv_show_roi.set(dtrack_params["options.autotracker.show_roi"])
 
         lbl_track_point_selection = tk.Label(lbf_tracker_options,
                                              text="Default autotracker target: ",
@@ -243,6 +245,10 @@ class ConfigurationTool(tk.Toplevel):
                                           text='Remember ROI',
                                           variable=self.__blv_remember_roi
                                           )
+        
+        chb_show_roi = tk.Checkbutton(lbf_tracker_options,
+                                      text="Show ROI window",
+                                      variable=self.__blv_show_roi)
 
         lbl_track_point_selection.grid(column=0, row=0, sticky='nw')
         cmb_track_point_selection.grid(column=1, row=0, sticky='nw')
@@ -260,6 +266,8 @@ class ConfigurationTool(tk.Toplevel):
         spb_track_interval.grid(column=1, row=4, sticky='nw')
 
         chb_remember_roi.grid(column=0, row=5, sticky='nw')
+
+        chb_show_roi.grid(column=0, row=6, sticky='nw')
 
         
         #
@@ -336,6 +344,7 @@ class ConfigurationTool(tk.Toplevel):
         dtrack_params["options.autotracker.bg_sample_size"] = int(self.__stv_bg_sample_size.get())
         dtrack_params["options.autotracker.track_interval"] = int(self.__stv_track_interval.get())
         dtrack_params["options.autotracker.remember_roi"] = self.__blv_remember_roi.get()
+        dtrack_params["options.autotracker.show_roi"] = self.__blv_show_roi.get()
 
         dtrack_params["options.processing.plot_grid"] = self.__blv_plot_grid.get()
         dtrack_params["options.processing.include_legend"] = self.__blv_include_legend.get()

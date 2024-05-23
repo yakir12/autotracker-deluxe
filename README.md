@@ -358,6 +358,12 @@ In brief, this means that the software assumes all of your beetles start rolling
 
 If this option is enabled then you can press 'r' when the video is paused in order to re-define your bounding box if needs be. 
 
+#### Show ROI window
+If enabled, the autotracker will show a small window with the binarised image of the contents of the bounding box. This can be useful for diagnostic purposes (e.g. if it looks like the tracker is struggling with your video).
+
+In the binarised image, the 'blob' of the beetle and its ball should be clearly visible in white. If not, then the contrast may be too low for background subtraction to work consistently. If this is the case, you may want to switch to tracking the centre of the bounding box as opposed to the  centre of mass.
+
+
 ### Track Processing
 #### Plot filename
 Track processing will automatically produce a plot which is saved to a file in the project directory. You can specify the name of that file here. 

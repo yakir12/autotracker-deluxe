@@ -28,7 +28,8 @@ class ParamFilePassthrough():
                              "options.processing.include_legend",
                              "options.processing.filename",
                              "options.processing.filetype",
-                             "options.processing.zero"
+                             "options.processing.zero",
+                             "options.processing.smoothing_spline_degree"
                              ]
         
         # Set some sane defaults
@@ -57,7 +58,7 @@ class ParamFilePassthrough():
         self.__defaults["options.processing.filename"] = "processed_tracks"
         self.__defaults["options.processing.filetype"] = "pdf"
         self.__defaults["options.processing.zero"] = False
-        
+        self.__defaults["options.processing.smoothing_spline_degree"] = 3
         
 
         # If parameter file does not exist, create it as an emtpy json file.

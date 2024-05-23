@@ -116,6 +116,8 @@ def smooth_tracks(track_file,
 
     columns = list(data.columns)    
 
+    degree = dtrack_params["options.processing.smoothing_spline_degree"]
+
     # Iterate over raw data and calibrate each set of x,y points
     col_idx = 0
     while col_idx < len(columns):
@@ -140,7 +142,7 @@ def smooth_tracks(track_file,
         t = np.arange(duration)
 
         # Create a smoothing spline for the data
-        degree = 3
+        
         x_spline = UnivariateSpline(t, x_data, k=degree)
         y_spline = UnivariateSpline(t, y_data, k=degree)
 

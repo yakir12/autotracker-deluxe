@@ -386,6 +386,9 @@ This option will shift all tracks so that they start at (0,0). This can be usefu
 
 *You shouldn't use this option unless you know all of your tracks start at the arena centre and end at the arena's edge.*
 
+#### Smoothing spline degree
+The calibrated tracks are smoothed using a [UniveriateSpline](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.UnivariateSpline.html) from scipy. Changing this parameter allows you to change the degree (*k*) of the smoothing function.  
+
 
 
 ## Miscellany

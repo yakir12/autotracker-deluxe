@@ -278,12 +278,15 @@ class ConfigurationTool(tk.Toplevel):
         self.__stv_plot_filename = tk.StringVar()
         self.__stv_plot_filetype = tk.StringVar()
         self.__blv_plot_zero_tracks = tk.BooleanVar()
+        self.__stv_smoothing_spline_degree = tk.StringVar()
 
         self.__blv_plot_grid.set(dtrack_params["options.processing.plot_grid"])
         self.__blv_include_legend.set(dtrack_params["options.processing.include_legend"])
         self.__stv_plot_filename.set(dtrack_params["options.processing.filename"])
         self.__stv_plot_filetype.set(dtrack_params["options.processing.filetype"])
         self.__blv_plot_zero_tracks.set(dtrack_params["options.processing.zero"])
+        self.__stv_smoothing_spline_degree.set(str(dtrack_params["options.processing.smoothing_spline_degree"]))
+        
 
         chb_plot_grid = tk.Checkbutton(lbf_processing_options,
                                        text="Plot grid",
@@ -313,6 +316,14 @@ class ConfigurationTool(tk.Toplevel):
                                               variable=self.__blv_plot_zero_tracks,
                                               text="All tracks start at origin")
         
+        lbl_smoothing_spline_degree = tk.Label(lbf_processing_options,
+                                               text="Smoothing spline degree: ")
+        spb_smoothing_spline_degree = ttk.Spinbox(lbf_processing_options,
+                                                  textvariable=self.__stv_smoothing_spline_degree,
+                                                  from_=1,
+                                                  to=5,
+                                                  state='readonly')
+        
 
         lbl_plot_filename.grid(row=0, column=0, sticky='nw')
         ent_plot_filename.grid(row=0, column=1, sticky='nw')
@@ -322,6 +333,8 @@ class ConfigurationTool(tk.Toplevel):
         chb_include_legend.grid(row=3, column=0, sticky='nw')
 
         cmb_plot_zero_tracks.grid(row=4, column=0, columnspan=2, sticky='nw')
+        lbl_smoothing_spline_degree.grid(row=5, column=0, sticky='nw')
+        spb_smoothing_spline_degree.grid(row=5, column=1, sticky='nw')                                    
         
 
         
@@ -351,6 +364,7 @@ class ConfigurationTool(tk.Toplevel):
         dtrack_params["options.processing.filename"] = self.__stv_plot_filename.get()
         dtrack_params["options.processing.filetype"] = self.__stv_plot_filetype.get()
         dtrack_params["options.processing.zero"] = self.__blv_plot_zero_tracks.get()
+        dtrack_params["options.processing.smoothing_spline_degree"] = int(self.__stv_smoothing_spline_degree.get())
 
         # Project settings
         project_file["options.autotracker.track_point"] = self.__stv_dtrack_track_point.get()

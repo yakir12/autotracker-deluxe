@@ -267,9 +267,10 @@ The software will also show a plot and a copy is stored in your project director
 
 Basic summary statistics for each track (and averages over all tracks) will be shown in the terminal. These are stored in your project directory in `summary_statistics.csv`. Again, you can open these in Excel or LibreOffice or whatever analysis tool you prefer.
 
-**Note on time-dependent statistics:** Statistics which depend on time (time to exit arena and speed) are computed using the frame-rate of the tracking video. This is computed using OpenCV when you open the autotracker. If you've never opened the autotracker and try to run the analysis, then the time-based statistics will appear as `NaN` (not-a-number). To fix this, simply select the autotracker, click Run, and then close the autotracker window when it appears.
+**Note on time-dependent statistics:** Statistics which depend on time are computed by using the timestamp associated with each tracked frame. This should work regardless of whether you track every frame or every *n*th frame. I do not know if these timestamps account for variable framerates.
 
-**Note on variable frame-rates:** Some devices can record video with variable frame-rates in order to economise on storage space. So far as I know, OpenCV can't deal with varaible frame-rates and the cameras you use for experiments should not be configured to operate at variable frame-rates. That said, if your time-dependent statistics are returning some wild numbers, this may be a problem to look for.
+
+---
 
 ## Configuration
 
@@ -281,9 +282,13 @@ Options are broken down by the tool to which they relate. The available options 
 
 Once you have changed any options you must click 'Confirm' to actually save them. These options are stored in the params file (`params.json`). 
 
+---
+
 ### Video selection
 #### Default video directory
 Here you can set the default directory in which the software will look for videos when using the video selection tool. This may be useful if you keep all of your videos stored in the same place on your hard drive. The default option '.' is shorthand for 'the current working directory' which will be the directory from which you are running the software. You can either type directly in the box or click 'Select' to get a file dialog. 
+
+---
 
 ### Autocalibration
 #### Show default metainformation text
@@ -309,6 +314,8 @@ Fixes radial distortion parameter *k3* to a constant value.
 
 ##### Fix tangential
 Autocalibration will assume zero tangential distortion. (If this is not true then set this camera aside for electrophysiology experiments.)
+
+---
 
 ### Autotracker
 #### Default autotracker target
@@ -363,6 +370,7 @@ If enabled, the autotracker will show a small window with the binarised image of
 
 In the binarised image, the 'blob' of the beetle and its ball should be clearly visible in white. If not, then the contrast may be too low for background subtraction to work consistently. If this is the case, you may want to switch to tracking the centre of the bounding box as opposed to the  centre of mass.
 
+---
 
 ### Track Processing
 #### Plot filename
@@ -387,7 +395,31 @@ This option will shift all tracks so that they start at (0,0). This can be usefu
 *You shouldn't use this option unless you know all of your tracks start at the arena centre and end at the arena's edge.*
 
 #### Smoothing spline degree
-The calibrated tracks are smoothed using a [UniveriateSpline](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.UnivariateSpline.html) from scipy. Changing this parameter allows you to change the degree (*k*) of the smoothing function.  
+The calibrated tracks are smoothed using a [UniveriateSpline](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.UnivariateSpline.html) from scipy. Changing this parameter allows you to change the degree (*k*) of the smoothing function.
+
+Practically this can affect how 'smooth' your tracks appear but the main way to adjust that is to use the smoothing scale factor (see next entry).
+
+#### Smoothing scale factor
+When smoothing, there is a parameter *s* which controls the trade-off between the smoothness and accuracy of the output track (go [here for more information](https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html)). This parameter is largely found by trial and error and good values depend on the statistics of the track. The software assumes all points in the track should get equal weight in the smoothing process (all points are equally meaningful), so we guess that
+
+`s = scale * (m * std)`
+
+where *scale* is a scaling factor, *m* is the length of the track and *std* is the standard deviation of the data (*s* is computed separately for x and y coordinates).
+
+You can change *scale* to be between 0 and 1; it's up to you to choose a value which makes sense.
+
+>**Note:** This parameter is very sensitive. 
+>
+>`scale == 0`
+>
+>![Tracks without smoothing](images/no_smoothing.png)
+>
+>`scale == 0.3`
+>![Tracks with smoothing](images/with_smoothing.png)
+
+
+
+
 
 
 

@@ -117,6 +117,7 @@ def smooth_tracks(track_file,
     columns = list(data.columns)    
 
     degree = dtrack_params["options.processing.smoothing_spline_degree"]
+    smoothing_scale = dtrack_params["options.processing.smoothing_scale_factor"]
 
     # Iterate over raw data and calibrate each set of x,y points
     col_idx = 0
@@ -142,9 +143,11 @@ def smooth_tracks(track_file,
         t = np.arange(duration)
 
         # Create a smoothing spline for the data
-        
-        x_spline = UnivariateSpline(t, x_data, k=degree)
-        y_spline = UnivariateSpline(t, y_data, k=degree)
+        sf_x = smoothing_scale * (np.std(x_data) * len(x_data))
+        sf_y = smoothing_scale * (np.std(y_data) * len(y_data))
+
+        x_spline = UnivariateSpline(t, x_data, k=degree, s=sf_x)
+        y_spline = UnivariateSpline(t, y_data, k=degree, s=sf_y)
 
         # Compute spline for given time points.
         x_smooth = x_spline(t)
@@ -409,8 +412,12 @@ def plot_tracks(input_file,
 
     print("Plotted: {}".format(input_file))
 
+    filetype = dtrack_params["options.processing.filetype"]
+    if filetype == "png (400dpi)":
+        filetype = "png"
+
     filename = dtrack_params["options.processing.filename"] + "." +\
-               dtrack_params["options.processing.filetype"]
+               filetype
     filepath = os.path.join(dtrack_params["project_directory"], filename)
 
     plt.savefig(filepath, dpi=400, bbox_inches="tight")

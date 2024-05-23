@@ -29,7 +29,8 @@ class ParamFilePassthrough():
                              "options.processing.filename",
                              "options.processing.filetype",
                              "options.processing.zero",
-                             "options.processing.smoothing_spline_degree"
+                             "options.processing.smoothing_spline_degree",
+                             "options.processing.smoothing_scale_factor"
                              ]
         
         # Set some sane defaults
@@ -59,6 +60,7 @@ class ParamFilePassthrough():
         self.__defaults["options.processing.filetype"] = "pdf"
         self.__defaults["options.processing.zero"] = False
         self.__defaults["options.processing.smoothing_spline_degree"] = 3
+        self.__defaults["options.processing.smoothing_scale_factor"] = 0.03
         
 
         # If parameter file does not exist, create it as an emtpy json file.

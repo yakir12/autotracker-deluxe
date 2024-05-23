@@ -279,6 +279,7 @@ class ConfigurationTool(tk.Toplevel):
         self.__stv_plot_filetype = tk.StringVar()
         self.__blv_plot_zero_tracks = tk.BooleanVar()
         self.__stv_smoothing_spline_degree = tk.StringVar()
+        self.__stv_smoothing_scale_factor = tk.StringVar()
 
         self.__blv_plot_grid.set(dtrack_params["options.processing.plot_grid"])
         self.__blv_include_legend.set(dtrack_params["options.processing.include_legend"])
@@ -286,6 +287,7 @@ class ConfigurationTool(tk.Toplevel):
         self.__stv_plot_filetype.set(dtrack_params["options.processing.filetype"])
         self.__blv_plot_zero_tracks.set(dtrack_params["options.processing.zero"])
         self.__stv_smoothing_spline_degree.set(str(dtrack_params["options.processing.smoothing_spline_degree"]))
+        self.__stv_smoothing_scale_factor.set(str(dtrack_params["options.processing.smoothing_scale_factor"]))
         
 
         chb_plot_grid = tk.Checkbutton(lbf_processing_options,
@@ -324,6 +326,16 @@ class ConfigurationTool(tk.Toplevel):
                                                   to=5,
                                                   state='readonly')
         
+        lbl_smoothing_scale_factor = tk.Label(lbf_processing_options,
+                                              text="Smoothing scale factor: "
+                                              )
+        spb_smoothing_scale_factor = ttk.Spinbox(lbf_processing_options,
+                                                 state='readonly',
+                                                 from_=0,
+                                                 to=1,
+                                                 increment=0.01,
+                                                 textvariable=self.__stv_smoothing_scale_factor)
+        
 
         lbl_plot_filename.grid(row=0, column=0, sticky='nw')
         ent_plot_filename.grid(row=0, column=1, sticky='nw')
@@ -331,10 +343,11 @@ class ConfigurationTool(tk.Toplevel):
         cmb_plot_filetype.grid(row=1, column=1, sticky='nw')
         chb_plot_grid.grid(row=2, column=0, sticky='nw')
         chb_include_legend.grid(row=3, column=0, sticky='nw')
-
         cmb_plot_zero_tracks.grid(row=4, column=0, columnspan=2, sticky='nw')
         lbl_smoothing_spline_degree.grid(row=5, column=0, sticky='nw')
         spb_smoothing_spline_degree.grid(row=5, column=1, sticky='nw')                                    
+        lbl_smoothing_scale_factor.grid(row=6, column=0, sticky='nw')
+        spb_smoothing_scale_factor.grid(row=6, column=1, sticky='nw')
         
 
         
@@ -365,6 +378,7 @@ class ConfigurationTool(tk.Toplevel):
         dtrack_params["options.processing.filetype"] = self.__stv_plot_filetype.get()
         dtrack_params["options.processing.zero"] = self.__blv_plot_zero_tracks.get()
         dtrack_params["options.processing.smoothing_spline_degree"] = int(self.__stv_smoothing_spline_degree.get())
+        dtrack_params["options.processing.smoothing_scale_factor"] = float(self.__stv_smoothing_scale_factor.get())
 
         # Project settings
         project_file["options.autotracker.track_point"] = self.__stv_dtrack_track_point.get()

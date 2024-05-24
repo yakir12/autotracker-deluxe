@@ -127,12 +127,16 @@ def select_extrinsic_frame(video_path, calibration_cache, chessboard_size):
             cv2.imwrite(os.path.join(path, '000.png'), frame)                
 
             # Detect chessboard corners and save to file.
-            _, corners = cv2.findChessboardCorners(frame,
+            success, corners = cv2.findChessboardCorners(frame,
                                                    chessboard_size)
-            corners.dump(os.path.join(path, 'corners', '000.dat'))
-
-            frame_was_set = True
-            break
+            
+            if success:
+                corners.dump(os.path.join(path, 'corners', '000.dat'))
+                frame_was_set = True
+                break
+            else:
+                print("Chessboard pattern cannot be detected in this frame" +\
+                      " Select another frame!")
         elif kp == ord('q'):
             # Just break the control loop (close the window without doing anything)
             break

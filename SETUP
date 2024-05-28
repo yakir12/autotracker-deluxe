@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+echo "Checking for Python 3 installation..."
+
+python_installed=$(command -v python3)
+
+if [ "$python_installed" == "" ]
+    then
+        echo "Python 3 installation not found."
+        echo "Go to https://www.python.org/downloads/ and select the correct installation for your system".
+        exit 1
+fi
+
+# Echo version
+version_string=$(python3 --version)
+echo "$version_string found"
+
+# Check for pip3
+echo "Checking for Pip 3 installation"
+pip_installed=$(command -v pip3)
+if [ "$pip_installed" == "" ]
+    then
+        echo "Pip3 installation not found."
+        echo "Install pip3 with your package manager or make sure it is bundled with your python installation."
+        exit 1
+fi
+
+echo "Pip3 found"
+echo "$(pip3 --version)"
+
+echo ""
+
+# Create virtual environment 
+echo "Creating virtual environment here within venv/autotracker-deluxe"
+python3 -m venv venv/autotracker-deluxe --clear
+
+# Activate virtual environment
+source venv/autotracker-deluxe/bin/activate
+
+# Install requirements within virtual environment
+pip3 install -r requirements.txt
+
+# Deactivate virtual environment
+deactivate
+
+touch dtrack2
+echo "#!/usr/bin/env bash" > dtrack2
+echo "source venv/autotracker-deluxe/bin/activate" >> dtrack2
+echo "python3 main.py" >> dtrack2
+echo "deactivate" >> dtrack2
+
+chmod +x dtrack2
+
+echo ""
+echo ""
+echo "Setup completed successfully."
+echo "To run the software from the terminal, run:"
+echo "$ ./dtrack2"
+echo ""
+echo ""
+
+
+

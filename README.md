@@ -9,13 +9,11 @@ dung beetle group.
 ## Installation
 ### Prerequisites
 
-This software depends on Python 3 and pip. You must have these
+This software depends on Python 3 and pip3. You must have these
 installed to run the software (and install dependencies). 
 
-If you've installed python and pip and the commands are giving you errors, try 
-`python3` and `pip3` instead.
-
 The prefix `$:` indicates a terminal command. You should enter everything after the colon.
+
 
 #### Known compatibility problems
 
@@ -54,63 +52,38 @@ Right click and select 'Open in Terminal'.
 
 ### Installing dependencies
 
-The Graphical User Interface (GUI) library that we are using is called [tkinter](https://docs.python.org/3/library/tkinter.html). It was chosen because it is usually packaged with Python, it's and because it has a good reputation for backwards compatibility.
+The dependencies can be installed using a bash script. Make sure the terminal is open in the software directory, then run:
 
-Tkinter [should automatically be included if you're installing on MacOS or Windows](https://tkdocs.com/tutorial/install.html) but may not be if you're using Linux.
+`$: ./SETUP`
 
-In this case you should install tkinter using your *system's package manager*. E.g. for Ubuntu:
+This script will check for Python 3 and Pip installations, set up a virtual environment within the software directory, install the dependencies into the virtual environment, and create a launcher. If you open the file in a text editor you can see the source. 
 
-`
-$: sudo apt install python3-tk
-`
-
-Do not try to install tkinter with pip as it is part of the standard python library.
-
-The rest of the software dependencies can be installed using pip.
-
-
-> **Before you try to install!**
+>**Note on Tkinter**
 >
-> The tracker depends on the `opencv-contrib-python` package. If you already have a version of opencv installed via pip then you either need to uninstall that version of OpenCV or set up a virtual environment (see below). The `opencv-contrib-python` package should subsume the standard `opencv-python` package so the switch shouldn't cause problems with any other software.
-
-In the terminal, run:
-
-`$: pip install -r requirements.txt`
-
-and press enter. You should only need to do this the first time you download the software.
-
----
-
-#### Extenally managed environment error
-When installing the requirements, pip can throw up an error saying that the environment is externally managed and nothing will be installed. In this case you should use a virtual environment (see below).
-
-#### (Optional) Using a virtual environment
-You may want to use a [virtual environment](https://docs.python.org/3/library/venv.html) for sequestration or testing. This creates a sandboxed python environment where modifications will not interact with your main python installation.
-
-At the terminal (MacOS and Linux), run the following:
-
-`$: mkdir ~/venvs/`
-
-`$: python -m venv ~/venvs/autotracker-deluxe --clear`
+>The Graphical User Interface (GUI) library that we are using is called [tkinter](https://docs.python.org/3/library/tkinter.html). It was chosen because it is usually packaged with Python, and because it has a good reputation for backwards compatibility.
+>
+>Tkinter [should automatically be included if you're installing on MacOS](https://tkdocs.com/tutorial/install.html) but may not be if you're using Linux.
+>
+>In this case you should install tkinter using your *system's package manager*. E.g. for Ubuntu:
+>
+>`
+>$: sudo apt install python3-tk
+>`
+>
+>Do not try to install tkinter with pip as it is part of the standard python library.
 
 
-This will create a virtual environment named `autotracker-deluxe`. If this failed, then `venv` may not have been packaged with your python installation and you'll need to install it.
-
-To activate the environment, you need to use:
-
-`$: source ~/venvs/autotracker-deluxe/bin/activate`
-
-You should see `(autotracker-deluxe)` at your terminal prompt, for example:
-
-`(autotracker-deluxe) user@macbook:~/$ `
-
-Install the dependencies with the environment active. You'll need to activate the environment every time you want to run the software.
-
-You can deactivate the environment using:
-
-`$: deactivate`
-
-You can use [Anaconda](https://www.anaconda.com/download) to achieve the same effect if you know what you're doing.
+>**Setup and launcher scripts**
+>
+>To ease usage, python, pip, and virtual environment management are wrapped in bash scripts. If you don't want to use these, then the dependencies can be installed with 
+>
+>`$: pip3 install -r requirements.txt`
+>
+>and the software can be run using:
+>
+>`$: python3 main.py`
+>
+>*If you're trying to use the setup script and it doesn't work, post an issue!*
 
 
 ---
@@ -122,9 +95,9 @@ Open the code folder in the terminal as you did during the installation process 
 ### Startup and project selection
 In the terminal, run: 
    
-   `$: python main.py` 
+   `$: ./dtrack2` 
    
-   The main window should open:
+The main window should open:
 
 ![Main window](images/main_window.png)
 
@@ -140,7 +113,7 @@ Any tools you run will apply only to the currently active project.
 Once a project directory is selected, it should be displayed in the project directory entry in the main window.
 
 ### Tools
-Each stage can be engaged independently by selecting the appropriate radio button and clicking 'Run'. The instructions below assume you have done this.
+Each stage can be engaged independently by selecting the appropriate radio button and clicking 'Run'.
 
 #### 1. Choose video files
 This tool will open a small video selector window.

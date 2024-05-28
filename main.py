@@ -3,6 +3,7 @@ from project_frame import ProjectFrame
 from tool_frame import ToolFrame
 import signal
 
+
 def destruction_handler(event):
     root.destroy()
 

@@ -22,7 +22,6 @@ class ProjectFilePassthrough():
                              "chessboard_size",
                              "calibration_cache",
                              "calibration_file",
-                             "options.autotracker.track_point",
                              "track_fps"]
         
         # Set some sensible defaults for things which may have

@@ -133,6 +133,17 @@ This tool will open a calibration board selector window.
 
 You can use the spinboxes at the top to select the dimensions of your calibration board. The window will update to show you a visualisation of the pattern. The OpenCV chessboard detection will be overlayed on the image so you can see what pattern the software is actually looking for during calibration.
 
+>**How to choose your dimensions**
+>
+> The dimensions you chose should represent the largest *unobstructed* pattern in the video. 
+>
+> ![Example calibration board](images/example_board.png)
+>
+> In this case, the black tape border (and possibly the white cutout on the top right) will interfere with the chessboard detection algorithm. Therefore the largest unobstructed pattern here is 7 columns by 5 rows.
+>
+> Ideally, your calibration boards should have a thick white border around the edge.
+
+
 Changing the square size will change the visible size of the board pattern but pixel size on screen does not matter, this is just for visual feedback. The square size will be used internally to estimate the homography between object coordinates and image coordinates. 
 
 Once you have selected your rows, columns and square size, click 'Confirm'. Clicking 'Cancel' will discard any changes.

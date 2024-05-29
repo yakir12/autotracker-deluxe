@@ -52,25 +52,20 @@ Right click and select 'Open in Terminal'.
 
 ### Installing dependencies
 
+>**Linux**
+>
+>If working with Linux then make sure python3-venv and python3-tk are installed. On Ubuntu:
+>
+>`$: sudo apt install python3-venv python3-tk`
+>
+>These are included by default on MacOS and may be included by default in other linux distros.
+
 The dependencies can be installed using a bash script. Make sure the terminal is open in the software directory, then run:
 
 `$: ./SETUP`
 
 This script will check for Python 3 and Pip installations, set up a virtual environment within the software directory, install the dependencies into the virtual environment, and create a launcher. If you open the file in a text editor you can see the source. 
 
->**Note on Tkinter**
->
->The Graphical User Interface (GUI) library that we are using is called [tkinter](https://docs.python.org/3/library/tkinter.html). It was chosen because it is usually packaged with Python, and because it has a good reputation for backwards compatibility.
->
->Tkinter [should automatically be included if you're installing on MacOS](https://tkdocs.com/tutorial/install.html) but may not be if you're using Linux.
->
->In this case you should install tkinter using your *system's package manager*. E.g. for Ubuntu:
->
->`
->$: sudo apt install python3-tk
->`
->
->Do not try to install tkinter with pip as it is part of the standard python library.
 
 
 >**Setup and launcher scripts**

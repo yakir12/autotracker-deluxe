@@ -3,3 +3,5 @@ test.py
 params.json
 calibration_image_cache/*
 __pycache__/*
+venv/*
+dtrack2

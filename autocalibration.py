@@ -325,10 +325,10 @@ def cache_calibration_video_frames(video_path,
         corners.dump(corner_file)
         idx += 1
 
-        print("")
-        print("Calibration cache constructed succcessfully at:")
-        print("{}".format(frame_cache))
-        print("")
+    print("")
+    print("Calibration cache constructed succcessfully at:")
+    print("{}".format(frame_cache))
+    print("")
 
     return True
 
@@ -433,10 +433,19 @@ def generate_calibration_from_cache(chessboard_columns,
                                                     chessboard_size)
     
     if not success:
+        print("")
         print("Extrinsic calibration failed: chessboard could not be found" +
               " in undistorted image. Either the intrinsic calibration is bad" +
               " and has distorted the chessboard, or there is no chessboard " +
               "present.")
+        print("")
+        print("Double check you have set your chessboard dimensions correctly!")
+        print("See README.md as this can be unintuitive.")
+        print("")
+        print("You can also try changing the number of images used for calibration")
+        print("or modifying modifying the available calibration parameters in the")
+        print("options screen.")
+
         return False
     
     # Compute the perspective transformation between an undistorted image plane and the 

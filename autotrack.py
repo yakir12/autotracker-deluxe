@@ -207,11 +207,17 @@ def autotracker():
                     if kp == ord('p'):
                         break # Break to main play loop
                     elif kp == ord('r'):
+                        old_bbox = first_bbox
                         first_bbox = cv2.selectROI('Select ROI',
                                                 clean_frame, 
                                                 fromCenter=True, 
                                                 showCrosshair=True)
-                        bbox = first_bbox
+                        if first_bbox != (0,0,0,0):
+                            bbox = first_bbox
+                        else:
+                            # If user cancels, restore old bbox.
+                            first_bbox = old_bbox
+                            bbox = first_bbox
                     elif kp == ord('t'):
                         # Tracking init
                         if not tracking:
@@ -222,8 +228,8 @@ def autotracker():
                                                     clean_frame, 
                                                     fromCenter=True, 
                                                     showCrosshair=True)
-                                bbox = first_bbox
-                                
+                                bbox = first_bbox                            
+                               
                             
                             # Bbox is cv Rect, tuple (x, y, width, height) where
                             # x/y measured from top left of frame.
@@ -237,6 +243,7 @@ def autotracker():
                                 # constantly.
                                 kp = ord('z') 
                                 centroid = np.nan
+                                first_bbox = None
                                 bbox = None
                         else:
                             # Write last track to file

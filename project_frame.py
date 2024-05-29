@@ -104,7 +104,7 @@ class ProjectFrame(tk.Frame):
         )
 
         # User cancelled 
-        if full_path == ():
+        if (full_path == ()) or (full_path == ''):
             return
 
         # Check that the user really wants to create the project

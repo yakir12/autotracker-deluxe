@@ -380,9 +380,6 @@ class ConfigurationTool(tk.Toplevel):
         dtrack_params["options.processing.smoothing_spline_degree"] = int(self.__stv_smoothing_spline_degree.get())
         dtrack_params["options.processing.smoothing_scale_factor"] = float(self.__stv_smoothing_scale_factor.get())
 
-        # Project settings
-        project_file["options.autotracker.track_point"] = self.__stv_dtrack_track_point.get()
-
         self.destroy()
 
     def __select_video_directory_callback(self):

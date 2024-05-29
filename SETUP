@@ -45,7 +45,7 @@ deactivate
 touch dtrack2
 echo "#!/usr/bin/env bash" > dtrack2
 echo "source venv/autotracker-deluxe/bin/activate" >> dtrack2
-echo "python3 main.py" >> dtrack2
+echo "python3 src/main.py" >> dtrack2
 echo "deactivate" >> dtrack2
 
 chmod +x dtrack2

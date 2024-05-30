@@ -121,9 +121,14 @@ The complete path to the video files is stored, so if the file location is not g
 
 Once you have selected your video files and determined whether you wish to make local copies, click 'Confirm'. Clicking 'Cancel' will discard all changes. 
 
-**Note**: If you copied the files locally then the video filepaths stored by the software will point to the local copies. Thus, if you run the video selection tool again, the entries should show the local copy path rather than the one you originally selected.
+>**Notes**
+>
+> - **File copying** If you copied the files locally then the video filepaths stored by the software will point to the local copies. Thus, if you run the video selection tool again, the entries should show the local copy path rather than the one you originally selected.
+>
+> - **.MTS files** Dung beetle experiments are usually recorded using MTS/AVCHD. Reading these files using OpenCV is slow so some tools will slow down or become unresponsive when you are trying to work with MTS. You *can* in theory, it'll just be slow. It'll also be hard work for your computer so older machines might struggle. An easy solution is to convert the videos to another format, for example mp4. You can do this with whatever tool you want, ffmpeg is a good option:
+>
+>`$: ffmpeg -i input_video.MTS -vcodec mpeg4 -b:v 15M -acodec libmp3lame -b:a 192k output_video.mp4`
 
-**Important**: If you later update the video files for a given project and attempt to copy them locally, this will overwrite the video files in the project directory. The software will ask for confirmation before video files are deleted.
 
 
 #### 2. Configure calibration board
@@ -142,6 +147,8 @@ You can use the spinboxes at the top to select the dimensions of your calibratio
 > In this case, the black tape border (and possibly the white cutout on the top right) will interfere with the chessboard detection algorithm. Therefore the largest unobstructed pattern here is 7 columns by 5 rows.
 >
 > Ideally, your calibration boards should have a thick white border around the edge.
+>
+> In addition, if your chessboard is rotated by 90 degrees in your video (i.e. it's taller than it is wide), you can also simply switch the rows and columns so you have a 'portrait' chessboard.
 
 
 Changing the square size will change the visible size of the board pattern but pixel size on screen does not matter, this is just for visual feedback. The square size will be used internally to estimate the homography between object coordinates and image coordinates. 
@@ -173,6 +180,22 @@ The extrinsic claibration frame can be selected either from your calibration vid
 Once you've provided the necessary information, you can click 'Generate!'. This will create a directory called `calibration_cache` in your project directory which will contain the calibration file (`calibration.dt2c`), all of the images used for calibration (intrinsic and extrinsic) and all of the detected chessboard corners in image coordinates.
 
 *Generating a new calibration will overwrite any previous calibration for the current project. This includes the image cache.*
+
+> **Troubleshooting**
+>
+> This process can fail for two reasons: 
+>
+> 1. The system couldn't find enough images with chessboards in order to compute lens distortion parameters.
+>
+>    In this case it's likely that your chessboard is not configured correctly. Have a look at 'How to select your dimensions' above. This failure can also occur if the chessboard is damaged and therefore harder to detect. Reducing the number of frames you're looking for might help but in this case you will probably end up causing the second error type.
+>
+> 2. The computed distortion correction actually ends up distorting your extrinsic image so badly that the chessboard can't be found. 
+>    
+>    The autocalibration tool will first work out lens distortion (intrinsic calibration), then try to correct for this before working out the camera position transformation (extrinsic calibration). If the intrinsic calibration is bad, then this will distort your extrinsic image and make extrinsic calibration impossible. You can fix this by simply not correcting for lens distortion. To do this, go to the Options screen from the main window. Under Autocalibration, there are four options ('Fix [K1 | K2 | K3 | tangental]'). Make sure all of these boxes are checked then try to run the autocalibration again.
+>
+>    You should always try to correct for lens distortion first (have at least 'Fix K1' unchecked). If this fails, you can probably get away with not correcting for lens distortion if you *are not* using a wide angle lens.
+>
+>    This type of failure can occur if your chessboard is damaged (i.e. if the pattern is distorted).
 
 **Import existing calibration**
 If you already have a calibration which is working well, you can import this. This button will open a file dialog which will allow you to select the calibration file you want to import. 

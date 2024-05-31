@@ -1,4 +1,6 @@
 import tkinter as tk
+import webbrowser
+
 from wrapped_label import WrappedLabelFrame
 
 from video_selector import VideoSelector
@@ -26,7 +28,10 @@ class ToolFrame(tk.Frame):
                                     command=self.winfo_toplevel().destroy)  
         self.__btn_configure = tk.Button(self.__frm_right_button_frame,
                                          text='Options',
-                                         command=self.__run_configuration)      
+                                         command=self.__run_configuration)
+        self.__btn_help = tk.Button(self.__frm_right_button_frame,
+                                    text='Help',
+                                    command=lambda: webbrowser.open("documentation/main.html"))
 
         # Tool radio buttons
         self.__int_option = tk.IntVar(self, 1)
@@ -103,6 +108,7 @@ class ToolFrame(tk.Frame):
 
         # Contained in self.__frm_left_button_frame
         self.__btn_configure.grid(column=2, row=0, sticky='ne', pady=(5,5), padx=(0,10))
+        self.__btn_help.grid(column=1, row=0, sticky='ne', pady=(5,5), padx=(0,10))
 
     def __update_info(self):
         """

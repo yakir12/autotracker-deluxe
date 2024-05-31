@@ -1,15 +1,93 @@
 <html>
     <head>
+        <link rel="stylesheet" href="styles.css">
         <title>DungTrack 2 documentation: setup</title>
     </head>
+
     <body>
-        <h1>Software setup</h1>
+      <h1>Software setup</h1>
+      <hr>
+      <p><a href="main.html">Back to home page</a></p>
+      <hr>
 
-        <h1>Troubleshooting</h1>
+      <h2>Opening a terminal in the correct place</h2>
+        <blockquote>
+          To run the software, you need to use a 'terminal'. The
+          terminal is a command-line interface which allows you to
+          interact with your computer using text commands as opposed
+          to graphical elements (buttons, menus, etc.).
+        </blockquote>
 
-        <h1>Using git (optional)</h1>
+        If you already know how to use the terminal, switch into the autotracker-deluxe
+        directory and jump to "Installing dependencies" below.
+        <h3>MacOS</h3>
+        Open Finder and navigate to the folder you downloaded from github. Hold
+        control and click on the folder, then select 'Services' &rarr; 'New Terminal 
+        at Folder'. A terminal window should open.
+    
+        <h3>Linux (Ubuntu)</h3>
+        Open your file explorer, find the folder you downloaded, right click and
+        select 'Open in Terminal'. This may be distribution dependent.
+        <hr>
+        <h2 id="sec:dependencies">Installing dependencies</h2>
+        <blockquote>
+          The software depends on libraries which provide different utilities 
+          (plotting, statistics, numerical operations, computer vision etc.). 
+          These need to be installed on your computer (your local 'environment')
+          so that the software can run.
+        </blockquote>
+        <p>
+          The dependencies can be installed using
+          a <a href="https://en.wikipedia.org/wiki/Bash_(Unix_shell)">bash</a>
+          script. Make sure the terminal is open in the autotracker
+          directory, then run:
+        </p>
 
-        <p>Next page: getting started</p>
-        <p><a href='main.html'>Back to main page</a></p>
+        <code class="term">$ ./SETUP</code>
+
+        <p>
+            This script will:
+            <ol>
+                <li>Check for Python 3 and Pip 3 installations</li>
+                <li>
+                    Create a virtual environment (a sandbox in which you can install the dependencies without
+                    affecting other software which is installed)
+                </li>
+                <li>Install the dependencies within this virtual environment</li>
+                <li>Create a launcher for the tracking software</li>
+            </ol>
+
+            If you open the SETUP file in a text editor you can see what this 
+            script does.
+        </p>
+
+        <div class="note">
+            <h4>Note for Linux users</h4>
+            If working with linux then you need to make sure python3-venv and python3-tk
+            are installed. On Ubuntu you can achieve this by running:
+
+            <p><code>$ sudo apt install python3-venv python3-tk</code></p>
+        </div>        
+        <p></p>
+        <div class="note">
+            <h4>Setup and launcher scripts</h4>
+            To ease usage, python, pip, and virtual environment management are
+            wrapped within bash scripts. If you don't want to run these scripts,
+            then you can install the dependencies as normal using:
+            <p><code>$ pip3 install -r requirements.txt</code></p>
+            and you can run the software with:
+            <p><code>python3 main.py</code></p>
+
+            <em>
+                If you're trying to use the setup script and it doesn't work
+                then please <a href="https://github.com/refmitchell/autotracker-deluxe/issues/new/choose">post an issue</a>!
+            </em>
+        </div>
+
+        <hr>
+
+        <p>Next: <a href="usage.html">Starting the software and the main window</a></p>
+      <p><a href='main.html'>Back to home page</a></p>
+      <hr>
     </body>
 </html>

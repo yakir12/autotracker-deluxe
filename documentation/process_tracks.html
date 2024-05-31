@@ -1,0 +1,188 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="styles.css">
+        <title>Dung Track 2 documentation</title>
+    </head>
+    <body>
+      <h1>Process tracks</h1>
+      <hr>
+      <p><a href="main.html">Back to main page</a></p>
+      <p>Previous: <a href="autotracker.html">Autotracker</a></p>
+      <hr>
+
+      <p>
+        This tool can be launched from <a href="usage.html">Tool
+        panel</a>.  Select option 5, and click Run. 
+      </p>
+
+      <p>
+        This tool will:
+        <ol>
+          <li>
+            Calibrate the tracks (correct lens distortion, transform
+            perspective, and scale to mm)
+          </li>
+          <li>Smooth the tracks using a basic univariate spline</li>
+          <li>Produce and display (and save) a plot showing the smoothed tracks</li>
+          <li>Compute some basic summary statistics for your tracks</li>
+        </ol>
+      </p>
+      
+      <p>
+        Optionally, all of your tracks can also be "zeroed" (translated so they begin at (0,0)). 
+      </p>
+
+      <p>
+        Each intermediate stage produces a CSV file with the results, these are:
+        <ol>
+          <li>calibrated_tracks.csv</li>
+          <li>smoothed_tracks.csv</li>
+          <li>zeroed_tracks.csv (if enabled)</li>          
+        </ol>
+      </p>
+
+      <p>
+        The software will also show a plot and a copy is stored in
+        your project directory (by default this is called
+        "processed_tracks.pdf"). This plot is here so you can visually
+        inspect what the autotracker has done and see if there are any
+        obvious problems before you work on the data.
+      </p>
+      <div class="note">
+        This is not intended to be a publication-quality plot as I
+        assume you'll have your own elements you want to emphasise!
+        You can configure the software to output an eps or svg file
+        (see below) which can be imported in Inkscape or Adobe
+        Illustrator so you can use the plot as a basis for your own
+        nicer plots.
+      </div>
+
+      <p>
+        Basic summary statistics (length, displacement, straightness,
+        time to exit, and speed) are computed for each track. These
+        are displayed in the terminal but also saved in the project
+        directory in "summary_statistics.csv". The mean and standard
+        deviation over all tracks are also included in the final row. 
+      </p>
+
+      <h2>Available options</h2>
+      <h4>Plot filename</h4>
+      <p>
+        Track processing will automatically produce a plot which is saved to a
+        file in the project directory. You can specify the name of that file
+        here.
+      </p>
+      <h4>Plot file format</h4>
+      <p>
+        Different file formats offer different advantages. Here you
+        can choose from pdf, eps, svg, or png (at 400dpi).
+      </p>
+
+      <h4>Plot grid</h4>
+      <p>
+        When enabled, this option will include a grid on your plot
+        which makes it easier to read off the x and y axes at
+        different positions. This can be disabled if you just want the
+        tracks.
+      </p>
+
+      <h4>Include legend</h4>
+      <p>
+        When enabled, this option will include a legend which tells
+        you which colour is assigned to which track index.
+      </p>
+
+      <div class="note">
+        Matplotlib will cycle through ten unique colours before it starts to repeat. 
+        If you have more than ten tracks for a given beetle then this means that some tracks
+        will be plotted in the same colour.
+      </div>
+
+<h4>All tracks start at origin ("zero tracks")</h4>
+      <p>
+        This option will shift all tracks so that they start at
+        (0,0). This can be useful if you want to quickly look at how
+        the tracks are distributed but removes some information
+        (e.g. placement variability with respect to the true arena
+        centre).
+      </p>
+
+      <div class="note">
+        You shouldn't use this option unless you know all of your
+        tracks start at the arena centre and end at the arena's edge.
+      </div>
+
+      <h4> Smoothing spline degree</h4>
+      <p>
+        The calibrated tracks are smoothed using a
+        <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.UnivariateSpline.html">
+          UnivariateSpline
+        </a>
+        from scipy. Changing this parameter allows you to change the
+        degree (<em>k</em>) of the smoothing function.
+      </p>
+      <p>
+        Practically this can affect how "smooth" your tracks appear
+        but the main way to adjust that is to use the smoothing scale
+        factor (see next entry).
+      </p>
+
+      <h4>Smoothing scale factor</h4>
+      <p>
+        When smoothing, there is a parameter <code>s</code> which
+        controls the trade-off between the smoothness and accuracy of
+        the output track
+        (go <a href="https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html">
+          here for more information
+        </a>).
+      </p>
+      <p>
+      This parameter is largely found by trial and error and
+      "good" values depend on the statistics of the track. The software
+      assumes all points in the track should get equal weight in the
+      smoothing process (all points are equally meaningful), so we
+      guess that
+      </p>
+      <p>
+        <code>
+          s = scale * (m * std)
+        </code>
+      </p>
+      <p>
+        where <code>scale</code> is a scaling factor, <code>m</code> is the length of the
+        track and <code>std</code> is the standard deviation of the data (<code>s</code> is
+        computed separately for x and y coordinates).
+      </p>
+      <p>
+        You can change *scale* to be between 0 and 1; it's up to you to choose
+        a value which makes sense.
+      </p>
+
+      <div class="note">
+        <p>
+          <b>This parameter is very sensitive!</b>
+        </p>
+
+        <p>
+          Setting <code>scale == 0</code>
+        </p>
+
+        <div align="center">
+          <img width=80% src="images/no_smoothing.png">
+        </div>
+        <hr>
+        <p>
+          Setting <code>scale == 0.3</code>
+        </p>
+        <div align="center">
+          <img width=80% src="images/with_smoothing.png">
+        </div>
+      </div>
+
+      
+      <hr>
+      <p>Next: <a href="process_tracks.html">Process tracks</a></p>
+      <p><a href="main.html">Back to main page</a></p>
+      <hr>
+    </body>
+</html>

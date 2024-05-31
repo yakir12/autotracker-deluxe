@@ -1,0 +1,106 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="styles.css">
+        <title>Dung Track 2 documentation</title>
+    </head>
+    <body>
+      <h1>Parameter file and project files</h1>
+      <hr>
+      <p><a href="main.html">Back to main page</a></p>
+      <!-- <p>Previous: <a href=""></a></p> -->
+      <hr>
+      <!--HEADER-->
+
+      <p>
+        The software stores information about its own configuration
+        and information about each project
+        in <a href="https://en.wikipedia.org/wiki/JSON">JSON files</a>.
+      </p>
+
+      <p>
+        You <em>can</em> edit these files manually but shouldn't. 
+      </p>
+
+      <p>
+        These files can provide a local <em>state</em> on your machine
+        which might mean something that worked during development
+        doesn't work for you. If this happens, you should file a
+        <a href="https://github.com/refmitchell/autotracker-deluxe/issues/new/choose">bug
+        report</a>.
+      </p>
+      
+      <h2>Parameter file</h2>
+      <p>
+        An example parameter file looks like this:
+      </p>
+
+      <pre>
+<code class="blockcode">
+  {
+  "project_directory": "/home/robert/autotracker-deluxe/data/p01",
+  "project_file": "/home/robert/autotracker-deluxe/data/p01/p01.dt2p",
+  "options.autotracker.track_point": "centre-of-mass",
+  "options.autotracker.cv_backend": "BOOSTING",
+  "options.autotracker.bg_computation_method": "random_N_mean",
+  "options.autotracker.bg_sample_size": 20,
+  "options.video.directory": "/home/robert/postdoc/source",
+  "options.autocalibration.fix_k1": true,
+  "options.autocalibration.fix_k2": true,
+  "options.autocalibration.fix_k3": true,
+  "options.autocalibration.fix_tangential": true,
+  "options.autocalibration.show_meta_text": false,
+  "options.processing.plot_grid": true,
+  "options.processing.include_legend": true,
+  "options.processing.filename": "processed_tracks",
+  "options.processing.filetype": "pdf",
+  "options.processing.zero": true,
+  "options.autotracker.track_interval": 1,
+  "options.autotracker.remember_roi": true,
+  "options.autotracker.show_roi": false,
+  "options.processing.smoothing_spline_degree": 3,
+  "options.processing.smoothing_scale_factor": 0.3
+  }
+
+</code>
+      </pre>
+
+      <div class="note">
+        Occassionally, things can go wrong with the params file. This
+        is usually because an item has been removed, or a new item has
+        been added incorrectly during development. In these cases it's
+        usually easiest to delete the file and let the software build
+        a new one.
+      </div>
+      
+      <h2>Project files</h2>
+      <p>
+        An example project file looks like this:
+      </p>
+
+            <pre>
+<code class="blockcode">
+{
+  "chessboard_rows": 6,
+  "chessboard_columns": 9,
+  "chessboard_square_size": "39",
+  "calibration_video": "/home/robert/source/output.mov",
+  "tracking_video": "/home/robert/source/20220228_1roll_midroll_B01.mov",
+  "calibration_cache": "/home/robert/autotracker-deluxe/data/p01/calibration_cache",
+  "calibration_file": "/home/robert/autotracker-deluxe/data/p01/calibration_cache/calibration.dt2c",
+  "chessboard_size": [
+    8,
+    5
+  ],
+  "track_fps": 24.99790074733395
+}
+
+</code>
+      </pre>
+
+      <!--FOOTER-->
+      <hr>
+      <!-- <p>Next: <a href=""></a></p> -->
+      <p><a href="main.html">Back to main page</a></p>
+      <hr>
+    </body>
+</html>

@@ -1,0 +1,53 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="styles.css">
+        <title>Dung Track 2 documentation</title>
+    </head>
+    <body>
+      <h1>Interlaced video</h1>
+      <hr>
+      <p><a href="main.html">Back to main page</a></p>
+      <!-- <p>Previous: <a href=""></a></p> -->
+      <hr>
+      <!--HEADER-->
+
+      <p>
+        Many of the cameras will
+        record <a href="https://en.wikipedia.org/wiki/Interlaced_video">interlaced
+        videos</a>.
+      </p>
+
+      <p>
+        This is fine for tracking but causes problems with calibration
+        as individual frames can appear "combed" or "torn". For
+        example
+      </p>
+
+      <div align="center">
+        <img width=60% src="images/interlacing.png">
+      </div>
+
+      <p>
+        This can cause the chessboard detection algorithm to fail or
+        mess up the calibration even if the chessboard is successfully
+        detected.
+      </p>
+
+      <p>
+        You can de-interlace videos with <a href="https://handbrake.fr/">HandBrake</a>. 
+      </p>
+
+      <p>
+        Alternatively you can use ffmpeg directly:
+      </p>
+      <p>
+        <code class="term">$ ffmpeg -i input.file -vf yadif output.file</code>
+      </p>
+       
+      <!--FOOTER-->
+      <hr>
+      <!-- <p>Next: <a href=""></a></p> -->
+      <p><a href="main.html">Back to main page</a></p>
+      <hr>
+    </body>
+</html>

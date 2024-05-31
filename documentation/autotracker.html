@@ -1,0 +1,310 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="styles.css">
+        <title>Dung Track 2 documentation</title>
+    </head>
+    <body>
+      <h1>Autotracker</h1>
+      <hr>
+      Previous: <a href="calibration_manager.html">Calibration manager</a>
+      <hr>
+      <p>
+        This tool can be launched from <a href="usage.html">Tool
+        panel</a>.  Select option 4, and click Run. This tool will
+        open window playing a your tracking video (at high speed).
+      </p>
+
+      <p>
+        Tracks are stored in your project directory, in a file called
+        "raw_tracks.csv".  You can open this file in Excel or
+        LibreOffice if you want to edit it or perform your own analysis.
+        Timestamps are stored in a file called "timestamps.csv".
+      </p>
+
+      <h2>Using the autotracker</h2>
+      <p>
+        To track your video you perform the following steps:
+      </p>
+
+      <p>
+        <ol>
+          <li>Let the video play or skip to a point you wish to start tracking</li>
+          <li>Press P to pause the video, then T to start a track.</li>
+          <li>
+            Select a rectangle (region of interest, ROI) which
+            contains the beetle (be generous). The selection starts
+            from the centre of the region so click and drag from the
+            beetle. Press Enter and close the window.
+          </li>
+          <li>
+            Press P to play. The bounding box will be overlayed on the
+            video and should track the beetle. The point which is
+            tracked is the centre of the bounding box which is also
+            drawn.
+          </li>
+          <li>Press T to finish the current track.</li>
+          <li>Goto (2)</li>
+        </ol>
+      </p>
+
+      <p>
+        You can produce any number of tracks from the video. The tracks will be appended
+        to the track file.
+      </p>
+
+      <h2>Track file format</h2>
+      <p>
+        Tracks are stored in a CSV file which can be read by a variety
+        of different applications.
+      </p>
+      <p>
+        The tracker adds two columns for each track. One for the X
+        coordinate and one for the Y coordinate. The frame of
+        reference is the image (i.e. if you want real-world
+        coordinates you'll need to calibrate).
+      </p>
+      <p>
+        Each column header is of the form 'track_<em>i</em>_<em>axis</em>' where
+        <em>i</em> is the track index and <em>axis</em> denotes
+        whether this is the X or Y coordinate.
+      </p>
+
+      <h2>Timestamps</h2>
+      <p>
+        Timestamps are stored in a separate CSV file called "timestamps.csv".
+      </p>
+      <p>
+        The tracker adds one column for each track. Each column header is of the
+        form 'track_<em>i</em>' where <em>i</em> is the track index.
+      </p>
+      <p>
+        Timestamps are given in milliseconds and these are extracted using
+        <code>cv2.CAP_PROP_POS_MSEC</code>. This means that timestamps should be
+        independent of framerate or tracking interval (see below).
+      </p>
+
+      <h2>Correcting mistakes</h2>
+      <p>
+        Unfortunately, there isn't currently an easy way to correct
+        errors. If the tracker completely fails, you can delete the
+        last track by editing the raw track (and timestamp) file
+        manually. This means you can only remove a whole track, not
+        correct individual points.
+      </p>
+ 
+      <div class="note">
+        <h4>Why does the tracker fail?</h4>
+
+        It's easiest to understand why the tracker may fail by
+        understanding (broadly) how it works.  There are two stages to
+        tracking.
+        
+        <h5>Coarse tracking</h5>
+
+        <p>
+        Coarse object tracking is provided
+        by <a href="https://docs.opencv.org/4.x/">OpenCV</a>.  This
+        level of tracking is what allows the bounding box to follow
+        the beetle.  There are many different "backends" to choose
+        from (see options below) which work differently and present
+        different advantages. Very broadly, they try to detect pixel
+        changes and use this to guide the bounding box. This can also
+        involve some learning (How do pixels typically move?). This
+        requires a moving object to have sufficient contrast that
+        pixel motion can actually be detected. Thus, these trackers
+        might struggle with situations like a beetle under a polariser
+        or in a very dark environment (the blackout tent with no
+        NightShot).
+        </p>
+
+        <h5>Beetle detection</h5>
+
+        <p>
+        While the bounding box tracking is pretty good, it can be
+        quite noisy with respect to the motion of the blob (beetle) we
+        actually want to track. Therefore, we also perform background
+        subtraction to segment the beetle (and its ball) from the
+        background.
+        </p>
+
+        <p>
+        This requires defining the background. There are a few ways to
+        do this (and this can be configured in the software, see below).
+        </p>
+        <p>
+          One option is to take a single frame and assume this is what
+          your background pixels look like. This can work in some
+          scenarios but if your background changes (which it probably
+          does, even in an image we perceive to be stable), this will
+          fail.
+        </p>
+        <p>
+          A better option is to compute an average background frame.
+          You can take a mean of a random selection of frames from
+          your video. This can still fail if the video is too dark or
+          if there are a significant number of frames in your video
+          which do not accurately describe your background.
+        </p>
+        <p>
+          For example, if your tracking video has a section at the
+          start where you're waving a calibration board around, these
+          frames can be incorporated into the background (and the
+          chessboard isn't exactly representative). The larger the
+          average you take, the more robust it should theoretically be
+          but the slower it will be.
+        </p>
+
+      </div>
+
+
+      <h2>Available options</h2>
+
+      You can configure some elements of the autotracker from the options screen.
+      <h4>Default autotracker target</h4>
+      <p>
+        This determines the actual point which is tracked when you run
+        the autotracker.
+        <ul>
+          <li>
+            The <em>centre-of-mass</em> option tracks the centre
+            of mass of a segmented beetle (within the bounding box you
+            define when running the autotracker).
+          </li>
+          <li>
+            The <em>centre-of-bounding-box</em> option tracks the centre of
+            the bounding box which assumes the beetle remains centred in
+            the bounding box (which probably isn't true).
+          </li>
+        </ul>
+      </p>
+
+      <div class="warning">
+        There is no record of which track point was used to produce a given track.
+        If this important to you, you need to make a note of it.
+      </div>
+
+      <h4>OpenCV tracking backend</h4>
+      <p>
+        The coarse object tracking is handled by OpenCV. OpenCV has a
+        number of built-in object trackers which may work better in
+        different scenarios. Given the relative simplicity of the visual
+        task, I'm not sure how much modifying the tracker will help. You
+        may be able to speed up your tracking though.
+      </p>
+      <p>
+        <a href="https://broutonlab.com/blog/opencv-object-tracking/">This
+        blog post</a> has some information on how these trackers
+        differ.
+      </p>
+
+      <h4>Background computation method</h4>
+      <p>
+        <em>This option only applies if your autotracker target is set to centre-of-mass.</em>
+      </p>
+      <p>
+        This determines how a background frame is synthesised.
+        <ul>
+          <li>
+            <em>first_N_median</em> option will take the median of the first N
+            frames of your video.
+          </li>
+          <li>
+            <em>first_N_mean</em> will take the mean of the
+            first N frames of your video,
+          </li>
+          <li>
+            <em>random_N_mean</em> will take a random sample of N
+            frames from your video and take the mean.
+          </li>
+        </ul>
+
+      </p>
+      <p>
+        The <em>first_N_*</em> options tend to work well enough, but
+        they can struggle if the lighting changes significantly after
+        the start of your video (or if the starting frames of your
+        video are not representative of the frames where you want to
+        track, e.g. calibration boards).
+      </p>
+      <p>
+        In these cases you may want
+        to try <em>random_N_mean</em> but this method is slower and will take
+        longer with greater N. The speed penalty is only incurred when
+        you start the autotracker as the background is pre-computed.
+      </p>
+      <p>
+        If you have any other suggestions for ways to do this, then please
+        <a href="https://github.com/refmitchell/autotracker-deluxe/issues/new/choose">post
+        a feature request</a>.
+      </p> 
+        
+      <h4>N frames to use for background</h4>
+      <p>
+        <em>This option only applies if your autotracker target is set to centre-of-mass.</em>      
+      </p>
+      <p>
+        This is simply the number of frames (N) to be used by the
+        background computation algorithm. E.g. if you set the
+        background computation method to <em>first_N_median</em>, then this
+        option to 10, then your background will be the median frame of
+        the first 10 frames of your video.
+      </p>
+
+      <h4>Tracking interval</h4>
+      <p>
+        This option allows you to play every <em>n</em>th frame of the
+        tracking video. Set to 1, every frame will be played back. Set
+        to 4, every 4th frame will be played back.
+      </p>
+      <p>
+        Increasing the tracking interval decreases the resolution of
+        your track but this is not necessarily a problem. Tracking on
+        every frame is noisy anyway and tracking every <em>n</em>th frame
+        greatly speeds up the tracking process.
+      </p>
+      <p>
+        If you increase the tracking interval too much, then the
+        tracker might fail (if the beetle has moved too far after the
+        <em>n</em> frame jump).
+      </p>
+      <p>
+        <div class="note">
+          Track timing information should not be adversely affected by
+          selecting this option.
+        </div>
+      </p>
+      <p>
+        <div class="note">
+          This option may not work well if you are tracking the centre
+          of the bounding box as opposed to the centre of mass.
+        </div>
+      </p>
+
+      <h4>Remember ROI</h4>
+      <p>
+        By default, the tracker requires you to specify the region of
+        interest (a bounding box in which the beetle sits) for every
+        track. If you enable this option then the autotracker will
+        remember the first bounding box you select and assume it is
+        valid for subsequent tracks.  That is, the software assumes
+        all of your beetles start rolling from the same place.
+      </p>
+
+      <p>
+        If this option is enabled then you can press R when the video is
+        paused in order to re-define your bounding box if needs be.
+      </p>
+
+      <div class="note">
+        If this option is enabled then the text instructions displayed
+        when tracking will change to include the option to redefine
+        your ROI. If the option is disabled, the text won't be
+        displayed.
+      </div>
+      
+      <hr>
+      <p>Next: <a href="process_tracks.html">Process tracks</a></p>
+      <p><a href="main.html">Back to main page</a></p>
+      <hr>
+    </body>
+</html>

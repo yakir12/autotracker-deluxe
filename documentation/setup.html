@@ -11,13 +11,6 @@
       <hr>
 
       <h2>Opening a terminal in the correct place</h2>
-        <blockquote>
-          To run the software, you need to use a 'terminal'. The
-          terminal is a command-line interface which allows you to
-          interact with your computer using text commands as opposed
-          to graphical elements (buttons, menus, etc.).
-        </blockquote>
-
         If you already know how to use the terminal, switch into the autotracker-deluxe
         directory and jump to "Installing dependencies" below.
         <h3>MacOS</h3>
@@ -30,12 +23,6 @@
         select 'Open in Terminal'. This may be distribution dependent.
         <hr>
         <h2 id="sec:dependencies">Installing dependencies</h2>
-        <blockquote>
-          The software depends on libraries which provide different utilities 
-          (plotting, statistics, numerical operations, computer vision etc.). 
-          These need to be installed on your computer (your local 'environment')
-          so that the software can run.
-        </blockquote>
         <p>
           The dependencies can be installed using
           a <a href="https://en.wikipedia.org/wiki/Bash_(Unix_shell)">bash</a>
@@ -74,9 +61,9 @@
             To ease usage, python, pip, and virtual environment management are
             wrapped within bash scripts. If you don't want to run these scripts,
             then you can install the dependencies as normal using:
-            <p><code>$ pip3 install -r requirements.txt</code></p>
+            <p><code class="term">$ pip3 install -r requirements.txt</code></p>
             and you can run the software with:
-            <p><code>python3 main.py</code></p>
+            <p><code class="term">$ python3 main.py</code></p>
 
             <em>
                 If you're trying to use the setup script and it doesn't work

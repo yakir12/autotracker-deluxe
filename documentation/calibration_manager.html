@@ -1,0 +1,229 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="styles.css">
+    <title>Dung Track 2 documentation</title>
+  </head>
+  <body>
+    <h1>Calibration manager and autocalibration tool</h1>
+    <hr>
+    <p><a href="main.html">Back to main page</a></p>
+    <p>
+      Previous: <a href="calibration_board_configuration.html">Calibration board configuration</a>
+    </p>
+    <hr>
+    <p>
+      The calibration manager allows you to generate a calibration
+      file from your calibration video, import a calibration file from
+      a separate project, or visually inspect the results of your
+      calibration on a candidate image.
+    </p>
+
+    <div align="center">
+      <img width="80%" src="images/calibration_manager.png">
+    </div>
+    <p></p>
+    <div align="center">
+      <img width="80%" src="images/calibration_manager_2.png">
+    </div>
+
+    <h4>Generate new calibration</h4>
+    <p>
+      This option will allow you to generate a calibration file from
+      your calibration video using the Autocalibration tool.
+    </p>
+    <div align="center">
+      <img width="70%" src="images/autocalibration_tool.png">
+    </div>
+    <p>
+      This tool will open your calibration video, select N random
+      frames in which chessboards can be found, then store the images
+      and the detected chessboard corners (in
+      project_directory/calibration_cache).
+    </p>
+
+    <p>
+      You need to provide:
+
+      <ol>
+        <li>The number of frames you wish to use</li>
+        <li>Some information describing the calibration</li>
+        <li>A video frame where the chessboard is on the ground (for
+          extrinsic calibration)</li>
+      </ol>
+    </p>
+
+    <p>
+      The extrinsic claibration frame can be selected either from your
+      calibration video (recommended) or from a file. To select a
+      frame from your calibration video, use 'Select video frame',
+      then use the trackbar to seek your frame in the video. Press 's'
+      to save the frame; you should see the Extrinsic frame field
+      update in the tool.
+    </p>
+
+    <p>
+      Once you've provided the necessary information, you can click
+      'Generate!'. This will create a directory called
+      calibration_cache in your project directory which will contain
+      the calibration file (calibration.dt2c), all of the images used
+      for calibration (intrinsic and extrinsic) and all of the
+      detected chessboard corners in image coordinates.
+    </p>
+
+    <p>
+      <em>
+        Generating a new calibration will overwrite any previous
+        calibration for the current project. This includes the image
+        cache.
+      </em>
+    </p>
+
+    <div class="note">
+      <h4>My calibration keeps failing!</h4>
+      <p>
+        This process can fail for two reasons:
+      </p>
+      <ol>
+        <li>
+          <p>
+            The system couldn't find enough images with chessboards in
+            order to compute lens distortion parameters.
+          </p>
+          <p>
+            In this case it's likely that your chessboard is not
+            configured correctly. Have a look at 'How to choose your
+            dimensions' <a href="calibration_board_configuration.html">here</a>. 
+          </p>
+          <p>
+            This failure can also occur if the chessboard is damaged
+            and therefore harder to detect. Reducing the number of frames
+            you're looking for might help but in this case you will
+            probably end up causing the second error type.
+          </p>
+        </li>
+        <li>
+          <p>
+            The computed distortion correction actually ends up
+            distorting your extrinsic image so badly that the
+            chessboard can't be found.
+          </p>
+
+          <p>
+            The autocalibration tool will first work out lens
+            distortion (intrinsic calibration), then try to correct
+            for this before working out the camera position
+            transformation (extrinsic calibration). If the intrinsic
+            calibration is bad, then this will distort your extrinsic
+            image and make extrinsic calibration impossible.</p>
+          <p>
+            You can fix this by simply not correcting for lens
+            distortion. To do this, go to the Options screen from the
+            main window. Under Autocalibration, there are four 'Fix'
+            options ('Fix [K1 | K2 | K3 | tangental]'). Make sure all
+            of these boxes are checked then try to run the
+            autocalibration again.
+          </p>
+
+          <div class="warning">
+            You should always <em>try</em> to correct for lens distortion first (have
+            at least 'Fix K1' unchecked). If this fails, you can probably get
+            away with not correcting for lens distortion if you are not
+            using a wide angle lens.
+          </div>
+          
+          <p>
+            This type of failure can occur if your chessboard is
+            damaged (i.e. if the pattern is distorted).
+          </p>
+
+    </div>
+
+    <h4>Import existing calibration</h4>
+    <p>
+      If you already have a calibration which is working well, you can
+      import this.  This button will open a file dialog which will
+      allow you to select the calibration file you want to import.
+    </p>
+    <p>
+      Calibration files are stored in the project directory &rarr;
+      calibration_cache &rarr; calibration.dt2c.  Find the calibration
+      file you want and click 'Open' in the file dialog.
+    </p>
+
+    <h4>Check calibration</h4>
+    <p>
+      This option will allow you to visually inspect your calibration
+      to determine how good it is. You can also define a perfect
+      circle to overlap with your arena.  Instructions and textual
+      output are shown in the terminal.
+    </p>
+
+    <div align='center'>
+      <img width=80% src="images/check_calibration.png">
+    </div>
+
+    <h2>Available options (Autocalibration tool)</h2>
+    <h4>Show default metainformation text</h4>
+    <p>
+      By default, the metainformation box in the autocalibration tool
+      displays some instructive text. This can be annoying to delete
+      once you know what to do, so uncheck this if you want the text box
+      to appear blank.
+    </p>
+   
+    <h4>Distortion coefficient settings</h4>
+    <p>
+      The remaining settings relate to the camera model used during
+      calibration. You should not need to modify these but it may be
+      necessary if the autocalibration tool is failing (see note above).
+    </p>
+
+    <h5>Fix K1</h5>
+    <p>Fixes radial distortion parameter <em>k1</em> to a constant value.</p>
+
+    <h5>Fix K2</h5>
+    <p>Fixes radial distortion parameter <em>k2</em> to a constant value.</p>
+
+    <h5>Fix K3</h5>
+    <p>Fixes radial distortion parameter <em>k3</em> to a constant value.</p>
+
+    <h5>Fix tangential</h5>
+    <p>
+      Autocalibration will assume zero tangential distortion. (If this
+      is not true then set this camera aside for electrophysiology
+      experiments.)
+    </p>
+    
+    <div class="note">
+      <h4>Why are most of these "fixed" by default?</h4>
+      <p>
+        In this context, "fixing" means that these parameters are set
+        to a constant value and not used by the calibration system.
+      </p>
+      <p>
+        The default camera model assumes more variability than there
+        should actually be for the cameras we use. Including all of
+        the parameters in calibration tends to cause more harm than
+        good. (The system tries to account for distortion which isn't
+        actually there and ends up causing distortion.)
+      </p>
+      <p>
+        By default, only <em>k1</em> is included in camera
+        calibration. If you fix all four parameters then the camera
+        model will assume that no lens distortion is added to your
+        images.  This likely isn't true but it can be necessary if
+        your calibration board is damaged, making it impossible to
+        accurately compute lens distortion.
+      </p>
+    </div>
+
+    <hr>
+    <p>
+      Next: <a href="autotracker.html">Autotracker</a>
+    </p>
+    <p>
+      <a href="main.html">Back to home page</a>
+    </p>
+    <hr>
+  </body>
+</html>

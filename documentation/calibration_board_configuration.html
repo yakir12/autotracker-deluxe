@@ -1,0 +1,56 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="styles.css">
+    <title>Dung Track 2 documentation</title>
+  </head>
+  <body>
+    <h1>Configure calibration board</h1>
+    <hr>
+    <p><a href="main.html">Back to home page</a></p>
+    <p>
+    Previous: <a href="video_selector.html">Choose video files</a>
+    </p>
+    <hr>
+    <p>
+      This tool can be launched from <a href="usage.html">Tool
+      panel</a>.  Select option 2, and click Run.  This tool will open
+      a calibration board selector window.
+    </p>
+    <div align="center">
+      <img width="60%" src="images/calibration_window.png">
+    </div> 
+    <p>
+      You can use the spinboxes at the top to select the dimensions of your
+      calibration board. The window will update to show you a visualisation 
+      of the pattern. The OpenCV chessboard detection will be overlayed on 
+      the image so you can see what pattern the software is actually looking 
+      for during calibration.
+    </p>
+    <div class="note">
+      <h4>How to choose your dimensions</h4>
+      The dimensions you choose should represent the largest <em>unobstructed</em>
+      calibration pattern in the video.
+      <p></p>
+      <div align="center">
+        <img width=60% src="images/example_board.png">
+      </div>
+
+      <p></p>
+      In this case, the black tape border (and possibly the white cutout on the
+      top right) will interfere with the chessboard detection algorithm. Therefore
+      the largest unobstructed pattern is 7 columns by 5 rows.
+      <p></p>
+      Ideally, your calibration boards should have a thick white border around
+      the edge.
+    </div>
+    
+    <hr>
+    <p>
+      Next: <a href="calibration_manager.html">Calibration manager</a>
+    </p>
+    <p>
+        <a href="main.html">Back to home page</a>
+    </p>
+    <hr>
+    </body>
+</html>

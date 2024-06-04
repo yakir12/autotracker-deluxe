@@ -1,0 +1,130 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="styles.css">
+        <title>Dung Track 2 documentation</title>
+    </head>
+    <body>
+      <h1>Appendix: MTS Files</h1>
+      <hr>
+      <p><a href="main.html">Back to main page</a></p>
+      <!-- <p>Previous: <a href=""></a></p> -->
+      <hr>
+      <!--HEADER-->
+
+      <p>
+        By default, the cameras used by the dung beetle group record
+        in <a href="https://en.wikipedia.org/wiki/AVCHD">AVCHD</a>
+        format.
+      </p>
+
+      <p>
+        This produces video files with the MTS extension.
+      </p>
+
+      <p>
+        This file format is great for recording high-definition video
+        with relatively small file sizes, however, it requires more
+        overhead to decode than alternative formats (e.g. mpeg4).
+      </p>
+
+      <p>
+        This can cause the software to slow down considerably when
+        running any tools which interact with video files using OpenCV. For example,
+        <ul>
+          <li>
+            Autocalibration (jumps about in a video stream to find calibration frames).
+          </li>
+          <li>
+            Selecting your extrinsic calibration frame (seeking
+            through a video for the right frame).
+          </li>
+          <li>
+            The autotracker (playing back the video).
+          </li>
+        </ul>
+
+        The added overhead may be enough to crash the software
+        completely (depending on how powerful your computer is).
+      </p>
+
+      <p>
+        An easy solution is to convert your video files before
+        tracking. 
+      </p>
+
+      <p>
+        There are plenty of tools which can do
+        this <a href="https://handbrake.fr/">HandBrake</a> is a good
+        graphical tool which can convert video files. (Try to install
+        via your OS's package manager if you can.)
+      </p>
+
+      <p>
+        You can also do this with ffmpeg.
+      </p>
+
+      <p>
+        <code class="term">
+          $ ffmpeg -i input_video.MTS -vcodec mpeg4 -b:v 15M
+          -acodec libmp3lame -b:a 192k output_video.mp4
+        </code>
+      </p>
+
+      <p>
+        Simply copy and paste this command, replace "input_video" with
+        the name of your MTS file and "output_video" with the name you
+        want the output to have.
+      </p>
+ 
+
+      <div class="note">
+        <h4>Spaces in filenames</h4>
+        <p>
+          Spaces have semantic meaning in the terminal. They allow the
+          system to parse different parts of the command. The parser
+          can't know which spaces are meaningful and which ones
+          aren't.  Having spaces in your filenames can cause the
+          system to parse some parts of the command incorrectly.
+        </p>
+
+        <p>
+          In general, it's easiest just to avoid having spaces in filenames.
+          Use "_" or "-" instead.
+        </p>
+
+        <p>
+          If you do have spaces in your filename, for example "Satyrus
+          night experiments 2018.MTS" then you need to enclose the
+          filename in quotation marks (")
+        </p>
+
+        <p>
+          <code class="term">
+            $ ffmpeg -i "Satyrus night experiments 2018.MTS" -vcodec mpeg4 # And so on...
+          </code>
+        </p>
+
+        <p>
+          Alternatively, you can use backslashes (\) to "escape" the space characters
+        </p>
+
+        <p>
+          <code class="term">
+            $ ffmpeg -i Satyrus\ night\ experiments\ 2018.MTS -vcodec mpeg4 # And so on...
+          </code>
+        </p>
+        
+      <p>
+        The backslash tells the parser to ignore the space character
+        immediately following. Just don't put spaces in your
+        filenames. Please. 
+      </p>
+      </div>
+
+      <!--FOOTER-->
+      <hr>
+      <!-- <p>Next: <a href=""></a></p> -->
+      <p><a href="main.html">Back to main page</a></p>
+      <hr>
+    </body>
+</html>

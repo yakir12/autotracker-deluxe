@@ -1,5 +1,6 @@
 import tkinter as tk
 import webbrowser
+import os
 
 from wrapped_label import WrappedLabelFrame
 
@@ -31,7 +32,9 @@ class ToolFrame(tk.Frame):
                                          command=self.__run_configuration)
         self.__btn_help = tk.Button(self.__frm_right_button_frame,
                                     text='Help',
-                                    command=lambda: webbrowser.open("documentation/main.html"))
+                                    command=lambda: webbrowser.open(
+                                        os.path.join("documentation", "main.html")
+                                    ))
 
         # Tool radio buttons
         self.__int_option = tk.IntVar(self, 1)

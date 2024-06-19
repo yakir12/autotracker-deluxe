@@ -154,9 +154,10 @@
         computed separately for x and y coordinates).
       </p>
       <p>
-        You can change *scale* to be between 0 and 1; it's up to you to choose
+        You can change <code>scale</code> to be between 0 and 1; it's up to you to choose
         a value which makes sense.
       </p>
+
 
       <div class="note">
         <p>
@@ -178,7 +179,52 @@
           <img width=80% src="images/with_smoothing.png">
         </div>
       </div>
+      
+      <div class="note">
+        <b>
+          If you apply too much smoothing, it will distort the
+          start-points of your tracks.
+        </b>
+        <p>
+          In the images above, you should be able to see that the
+          starts of the tracks have been shifted by the smoothing
+          process such that they no longer start at the origin. This
+          is because smoothing is applied after the tracks are shifted
+          to start at the origin.
+        </p>
+      </div>
 
+      <h4>Flip plot X/Y axis</h4>
+      <p>
+        When you plot your data, the tracks may appear different to the
+        path you watched the beetle take. The path shape will be correct
+        but it might be mirrored in one or both axes. There are two
+        reasons this happens:
+      </p>
+      <ol>
+        <li>
+          OpenCV and Matplotlib use different coordinate systems so
+          this guarantees that the data will be flipped in the x and y
+          axis. (This is why these boxes are enabled by default.)
+        </li>
+        <li>
+          Calibration can introduce an additional flip in one or both
+          axes if the orientation of the chessboard in the video does
+          not match the orientation of the chessboard generated
+          internally*. 
+        </li>
+      </ol>
+      <p>
+        You should enable/disable these as you see fit. They won't
+        change the statistics computed on the data, just the
+        visualisation.
+      </p>
+
+      <p>
+        *Why not just invert the chessboard? Because it makes no
+        difference and it's easier to re-plot the data than regenerate
+        the calibration.
+      </p>
       
       <hr>
       <p>Next: <a href="process_tracks.html">Process tracks</a></p>

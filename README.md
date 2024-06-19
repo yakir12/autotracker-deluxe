@@ -7,11 +7,15 @@ viable autotracking solution up and running for the dung beetle group.
 ### Prerequisites
 
 This software depends on Python 3 and Pip 3. You must have these
-installed to run the software (and install dependencies). 
+installed to run the software (and install dependencies). On MacOS
+and Windows, you can download and install the python binaries from
+[their website](https://www.python.org/downloads/). On Linux, you can 
+install python from the package manager.
 
 The prefix `$` indicates a terminal command. You should enter
-everything after the dollar sign.
-
+everything after the dollar sign. This prompt may look different
+on different systems (e.g. on Linux `$` is typical, `%` on MacOS, 
+and on Windows it will be `>`).
 
 #### Known compatibility problems
 
@@ -56,7 +60,15 @@ Right click and select 'Open in Terminal'.
 
 This may be distribution dependent.
 
-### Installing dependencies
+#### Windows
+In windows, the terminal is known as 'Command Prompt'. To open, 
+open your file explorer, navigate to the code folder. Click on the
+address bar (or use ALT+D). Type 'cmd' and press Enter. 
+(**Note:**  The text in the address bar will be highlighted, then 
+overwritten when you type the command. When the terminal window opens, 
+the directory will be displayed before the command prompt.)
+
+### Installing dependencies and running the software (MacOS and Linux)
 
 If working with Linux then make sure python3-venv and python3-tk are
 installed. On Ubuntu:
@@ -89,7 +101,7 @@ Click on "Help" for more information. This should open the DTrack2 documentation
 in your web browser.
 
 
-**Setup and launcher scripts**
+**Setup and launcher scripts (MacOS and Linux)**
 
 To ease usage, python, pip, and virtual environment management are
 wrapped in bash scripts. If you don't want to use these, then the
@@ -99,9 +111,15 @@ dependencies can be installed with
 
 and the software can be run using:
 
-`$ python3 main.py`
+`$ python3 src/main.py`
 
 *If you're trying to use the setup script and it doesn't work, post an issue!*
 
+## Installing dependencies and running the software (Windows)
+To install the dependencies, at the command prompt, enter 
 
+`$ pip install -r requirements.txt`
 
+To run the software, use:
+
+`$ py src\main.py`

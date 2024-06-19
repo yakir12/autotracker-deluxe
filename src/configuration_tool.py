@@ -280,6 +280,8 @@ class ConfigurationTool(tk.Toplevel):
         self.__blv_plot_zero_tracks = tk.BooleanVar()
         self.__stv_smoothing_spline_degree = tk.StringVar()
         self.__stv_smoothing_scale_factor = tk.StringVar()
+        self.__blv_flip_x_axis = tk.BooleanVar()
+        self.__blv_flip_y_axis = tk.BooleanVar()
 
         self.__blv_plot_grid.set(dtrack_params["options.processing.plot_grid"])
         self.__blv_include_legend.set(dtrack_params["options.processing.include_legend"])
@@ -288,6 +290,8 @@ class ConfigurationTool(tk.Toplevel):
         self.__blv_plot_zero_tracks.set(dtrack_params["options.processing.zero"])
         self.__stv_smoothing_spline_degree.set(str(dtrack_params["options.processing.smoothing_spline_degree"]))
         self.__stv_smoothing_scale_factor.set(str(dtrack_params["options.processing.smoothing_scale_factor"]))
+        self.__blv_flip_x_axis.set(dtrack_params["options.processing.flip_x_axis"])
+        self.__blv_flip_y_axis.set(dtrack_params["options.processing.flip_y_axis"])
         
 
         chb_plot_grid = tk.Checkbutton(lbf_processing_options,
@@ -335,6 +339,12 @@ class ConfigurationTool(tk.Toplevel):
                                                  to=1,
                                                  increment=0.01,
                                                  textvariable=self.__stv_smoothing_scale_factor)
+        chb_flip_x_axis = tk.Checkbutton(lbf_processing_options,
+                                         text="Flip plot X axis",
+                                         variable=self.__blv_flip_x_axis)
+        chb_flip_y_axis = tk.Checkbutton(lbf_processing_options,
+                                         text="Flip plot Y axis",
+                                         variable=self.__blv_flip_y_axis)
         
 
         lbl_plot_filename.grid(row=0, column=0, sticky='nw')
@@ -348,6 +358,8 @@ class ConfigurationTool(tk.Toplevel):
         spb_smoothing_spline_degree.grid(row=5, column=1, sticky='nw')                                    
         lbl_smoothing_scale_factor.grid(row=6, column=0, sticky='nw')
         spb_smoothing_scale_factor.grid(row=6, column=1, sticky='nw')
+        chb_flip_x_axis.grid(row=7, column=0, sticky='nw')
+        chb_flip_y_axis.grid(row=8, column=0, sticky='nw')
         
 
         
@@ -379,6 +391,8 @@ class ConfigurationTool(tk.Toplevel):
         dtrack_params["options.processing.zero"] = self.__blv_plot_zero_tracks.get()
         dtrack_params["options.processing.smoothing_spline_degree"] = int(self.__stv_smoothing_spline_degree.get())
         dtrack_params["options.processing.smoothing_scale_factor"] = float(self.__stv_smoothing_scale_factor.get())
+        dtrack_params["options.processing.flip_x_axis"] = self.__blv_flip_x_axis.get()
+        dtrack_params["options.processing.flip_y_axis"] = self.__blv_flip_y_axis.get()
 
         self.destroy()
 

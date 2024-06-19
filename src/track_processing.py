@@ -376,7 +376,7 @@ def plot_tracks(input_file,
         ax.grid()
         
     displacements = []
-    # Iterate over raw data and calibrate each set of x,y points
+
     col_idx = 0    
     while col_idx < len(columns):
         # Extract datapoints and convert to numpy arrays
@@ -384,6 +384,12 @@ def plot_tracks(input_file,
         y_data = data.loc[:,columns[col_idx+1]]
         x_data = x_data.to_numpy(dtype=np.float64, na_value=np.nan)
         y_data = y_data.to_numpy(dtype=np.float64, na_value=np.nan)
+
+        if dtrack_params["options.processing.flip_x_axis"]:
+            x_data *= -1
+
+        if dtrack_params["options.processing.flip_y_axis"]:
+            y_data *= -1
 
         # Check lengths match (fail otherwise)
         assert len(x_data) == len(y_data)

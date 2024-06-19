@@ -30,7 +30,9 @@ class ParamFilePassthrough():
                              "options.processing.filetype",
                              "options.processing.zero",
                              "options.processing.smoothing_spline_degree",
-                             "options.processing.smoothing_scale_factor"
+                             "options.processing.smoothing_scale_factor",
+                             "options.processing.flip_y_axis",
+                             "options.processing.flip_x_axis"
                              ]
         
         # Set some sane defaults
@@ -61,6 +63,8 @@ class ParamFilePassthrough():
         self.__defaults["options.processing.zero"] = False
         self.__defaults["options.processing.smoothing_spline_degree"] = 3
         self.__defaults["options.processing.smoothing_scale_factor"] = 0.03
+        self.__defaults["options.processing.flip_y_axis"] = True
+        self.__defaults["options.processing.flip_x_axis"] = True        
         
 
         # If parameter file does not exist, create it as an emtpy json file.

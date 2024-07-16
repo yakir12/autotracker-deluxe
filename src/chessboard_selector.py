@@ -1,3 +1,10 @@
+"""
+chessboard_selector.py
+
+Provides a Tkinter window which allows the user to specify their calibration
+board with visual feedback. 
+"""
+
 import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
@@ -144,6 +151,9 @@ class ChessboardSelector(tk.Toplevel):
         self.__btn_cancel.grid(row=0, column=1, sticky='nw')
 
     def __update_checkerboard(self):
+        """
+        Redraw the chessboard in the window
+        """
         # Make the chessboard, note that the 'square_size' parameter chosen 
         # is arbitrary. This is just for display so it doesn't matter.
         sq_size = int(self.__spb_sq_size_selector.get())# 30
@@ -173,6 +183,11 @@ class ChessboardSelector(tk.Toplevel):
         
                         
     def __confirm_callback(self):
+        """
+        Confirm button callback. Save selected parameters to project file and 
+        close the window.
+        """
+
         project_file["chessboard_rows"] = int(self.__spb_row_selector.get())
         project_file["chessboard_columns"] = int(self.__spb_col_selector.get())
         project_file["chessboard_square_size"] = self.__spb_sq_size_selector.get()
@@ -183,6 +198,9 @@ class ChessboardSelector(tk.Toplevel):
         self.destroy()
 
     def __cancel_callback(self):
+        """
+        Cancel button callback. Destroy window without saving any settings.
+        """
         self.destroy()
         
 

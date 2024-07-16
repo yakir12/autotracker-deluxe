@@ -1,3 +1,9 @@
+"""
+tool_frame.py
+
+Provides a Tkinter UI for selecting and running different tools.
+"""
+
 import tkinter as tk
 import webbrowser
 import os

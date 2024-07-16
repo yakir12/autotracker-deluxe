@@ -1,3 +1,14 @@
+"""
+wrapped_label.py
+
+Provides a (limited) label implementation which allows text re-wrap as the 
+parent widget is resized.
+
+Tkinter does not provide a way to have multi-line labels which wrap dynamically
+as the window resizes. This could perhaps be improved by using a readonly 
+Entry widget.
+"""
+
 import tkinter as tk
 
 class WrappedLabelFrame(tk.Frame):

@@ -1,3 +1,14 @@
+"""
+video_selector.py
+
+Provides a small Tkinter window which allows the user to select their 
+calibration and tracking videos.
+
+Because the functionality for selecting each video is the same, this is
+abstracted to a 'SelectorFrame' class which is then used to build to build
+a window with two video selectors.
+"""
+
 import os
 import shutil
 import tkinter as tk

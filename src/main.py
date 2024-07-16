@@ -1,7 +1,13 @@
+"""
+main.py
+
+Entry point which defines the main window, made of a project frame and a
+tool frame.
+"""
+
 import tkinter as tk
 from project_frame import ProjectFrame
 from tool_frame import ToolFrame
-import signal
 
 
 def destruction_handler(event):

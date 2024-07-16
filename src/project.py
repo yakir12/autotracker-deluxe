@@ -1,3 +1,14 @@
+"""
+project.py
+
+Provides a (project-level) parameter file passthrough class. This provides 
+an object via which a class can interact with the project file with some
+safeguards (key checks and default values).
+
+The module also defines an instance of this class 'project_file' which you can
+import to other modules.
+"""
+
 import json
 import os
 

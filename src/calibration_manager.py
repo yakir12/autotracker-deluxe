@@ -1,3 +1,17 @@
+"""
+calibration_manager.py
+
+The calibration manager is a tool for generating, importing, and verifying 
+calibration files. 
+
+For the most part functionality is pretty straightforward (file handling and
+os interaction). 
+
+Calibration generation and verification are handled by the AutocalibrationTool
+(see autocalibration_tool.py).
+
+"""
+
 import os
 import shutil
 

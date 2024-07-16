@@ -1,3 +1,11 @@
+"""
+configuration_tool.py
+
+Provides a window with configuration options divided according to the tool to 
+which they apply.
+"""
+
+
 import tkinter as tk
 from tkinter import ttk, filedialog
 

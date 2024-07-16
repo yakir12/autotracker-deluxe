@@ -1,3 +1,11 @@
+"""
+project_frame.py
+
+Provides a Tkinter UI frame with utilities to open existing projects or create 
+new projects.
+"""
+
+
 import tkinter as tk
 import os
 from tkinter import filedialog, messagebox
@@ -32,7 +40,7 @@ class ProjectFrame(tk.Frame):
 
         n_cols = 5
         for i in range(n_cols):
-            if (i == 1) or (i==2) or (i==3):
+            if (i == 1) or (i==2) or (i==3): # Or 'if i in range(4)'...
                 self.__labelframe.columnconfigure(i, weight=1)
                 continue
             self.__labelframe.columnconfigure(i, weight=0)

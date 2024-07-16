@@ -1,3 +1,10 @@
+"""
+old_calibration.py
+
+A copy of Vishaal's old calibration routine which was retained for reference.
+Could probably be removed at this point.
+"""
+
 import cv2
 import numpy as np
 import os

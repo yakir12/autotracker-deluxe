@@ -1,3 +1,15 @@
+"""
+track_processing.py
+
+Provides utilities for track post-processing and basic analysis. Specifically, 
+tracks can be calibrated, smoothed, and 'zeroed'.
+
+Basic analysis includes the computation of track length, displacement, 
+straightness, speed, and time-to-exit. All results (except time-to-exit)
+depend heavily on the calibration being good. 
+
+"""
+
 from tkinter import messagebox
 
 import os

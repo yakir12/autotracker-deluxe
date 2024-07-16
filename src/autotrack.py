@@ -1,6 +1,13 @@
+"""
+autotrack.py
+
+All autotracking functionality (the spawning of the OpenCV window and then 
+playback management). Note that the autotracker depends on parameters
+set in the project file (videos) and the params file.
+"""
+
 import cv2
 import numpy as np
-import copy
 
 from random import randint
 

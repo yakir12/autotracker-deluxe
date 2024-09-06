@@ -49,7 +49,7 @@ class ChessboardSelector(tk.Toplevel):
         self.__lbf_dims_selector.columnconfigure(1, weight=1)
         
         # Dimension selector children
-        self.__chessboard_min = 3 # Minimum for inner corner detection to make sense.
+        self.__chessboard_min = 4 # Minimum for inner corner detection to make sense.
         self.__chessboard_max = 30 # Arbitrarily chosen
 
         self.__stv_row = tk.StringVar()
